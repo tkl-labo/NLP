@@ -1,4 +1,6 @@
-NLP coding program
+NLP
 ===
 
+NLPコーディング演習の共有レポジトリです。
+各人、課題毎にedit_distance, n_gram, hmm というディレクトリの中に自分の名前のディレクトリを作ってそこで作業してください。
 
