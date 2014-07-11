@@ -50,7 +50,7 @@ def print_alignment (source, target, path):
         target_aligned += target[j] if action != 'i' else " " * width (source[i])
         if action != 'd': i += 1
         if action != 'i': j += 1
-    sys.stdout.write ("\n\taction:\t%s\n\tsource:\t%s\n\ttarget:\t%s\n"
+    sys.stdout.write ("\taction:\t%s\n\tsource:\t%s\n\ttarget:\t%s\n"
                       % (path_aligned,
                          source_aligned.encode ('utf-8'),
                          target_aligned.encode ('utf-8')))
@@ -63,10 +63,10 @@ for line in iter (sys.stdin.readline, ""): # no buffering
         d, bptr = min_edit_dist (ws[0], ws[1])
         sys.stderr.write ("dist ('%s', '%s') = %d\n" %
                           (ws[0].encode ('utf-8'), ws[1].encode ('utf-8'), d))
-        sys.stderr.write ("\nalignment:\n")
+        sys.stderr.write ("alignment:\n")
         for path in alignment_path (len (ws[0]), len (ws[1]), bptr):
             print_alignment (ws[0], ws[1], path)
-            sys.stdout.write ("\n-- stop enumeration? [y]: ")
+            sys.stdout.write ("-- stop enumeration? [y]: ")
             if sys.stdin.readline ()[:-1] == 'y': break
     else:
         sys.stderr.write ("Usage:\n")

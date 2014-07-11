@@ -68,8 +68,8 @@ int main (int argc, char** argv) {
       results[i] = result_t::value_type (min_edit_dist (line, words[i]), i);
     std::sort (results.begin (), results.end ());
     for (result_t::iterator it = results.begin (); it != results.end (); ++it) {
-      std::fprintf (stdout, "\n\t%s: %ld\n", words[it->second], it->first);
-      std::fprintf (stdout, "\nstop enumeration? [y]: ");
+      std::fprintf (stdout, "\t%s: %ld\n", words[it->second], it->first);
+      std::fprintf (stdout, "-- stop enumeration? [y]: ");
       std::fgets (line, 1024, stdin);
       if (std::feof (stdin) || line[0] == 'y') break;
     }
