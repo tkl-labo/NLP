@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+import sys,os
+#import math,re,datetime
+from hiragana_distance import hiragana_distance
+
+test1 = {u"けいたいｄんわ":u"けいたいでんわ",u"つｒぽよ":u"つらぽよ",u"つらぴょ":u"つらぽよ",u"まじきょ":u"まじかよ",u"そんなことあｒのか":u"そんなことあるのか",u"きｂしい":u"きびしい",u"うそｄｓ":u"うそだ",u"ほんちうなの":u"ほんとうなの"}
+
+def words(text):
+
+
+if __name__ == "__main__":
