@@ -74,7 +74,7 @@ def get_similar_words(word, vocabulary):
 if __name__ == '__main__':
 
 	if len(argv) != 2:
-		print('Usage: python3 edit_distance.py <word>')
+		print('Usage: python3 spell_correction.py <word>')
 		raise SystemExit(0)
 	
 	vocabulary = get_vocabulary('data/vocab.nytimes.txt')
