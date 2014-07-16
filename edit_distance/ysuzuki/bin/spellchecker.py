@@ -8,21 +8,21 @@ import romkan,unicodedata
 def train(features):
     print "START TRAINING"
     worddic = dict()
-    for line in features:
+    for linenum,line in enumerate(features):
         items = line.strip().split("\t")
         string = items[0].decode("utf8")
         string_roma = unicodedata.normalize("NFKC",romkan.to_roma(string))
         freq = float(items[1])
         worddic[string_roma] = freq
-        if len(worddic) % 10000 == 0:
-            print len(worddic)
-    print "FINISH TRAINING"
+        if linenum % 10000 == 0:
+            print "{:>2}%".format(linenum/10000)
+    print "FINISH TRAINING\n"
     return worddic
 
 WORDDIC = train(open("../ngram_data/kana_freq.tsv","r"))
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-## the probability of mistype
+## define the probability of mistyping
 EDIT1_PROB = 0.15
 EDIT2_PROB = 0.05
 
@@ -86,8 +86,7 @@ def test(testset):
         hiragana_candidates(string,3)    
 
 if __name__ == "__main__":
-    test1 = {u"けいたいｄんわ":u"けいたいでんわ",
-             u"つらぴょ":u"つらぽよ",
+    test1 = {u"つらぴょ":u"つらぽよ",
              u"まじきょ":u"まじかよ",
              u"ぽけん":u"ポケモン",
              u"うそｄｓ":u"うそだ",
@@ -95,12 +94,12 @@ if __name__ == "__main__":
              u"ゆうおｋりん":u"ゆうこりん",
              u"でｈそ":u"でしょ",
              u"りらｋま":u"りらっくま",
-             u"いてもあｗ":u"?",
              u"いｔｓも":u"いつも",
              u"なんｄあｙろ":u"なんでやろ"}
 
     if len(sys.argv) == 2:
         word = sys.argv[1]
+        print word
         hiragana_candidates(word,3)
     elif len(sys.argv) == 1:
         test(test1)
