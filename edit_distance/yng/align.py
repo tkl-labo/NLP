@@ -17,8 +17,8 @@ def min_edit_dist (target, source):
     # initialize
     for i in range (1, n+1): dist[i][0] = dist[i-1][0] + ins_cost (target[i-1])
     for j in range (1, m+1): dist[0][j] = dist[0][j-1] + del_cost (source[j-1])
-    for i in range (1, n+1): bptr[i][0] = ['i']
-    for j in range (1, m+1): bptr[0][j] = ['d']
+    for i in range (1, n+1): bptr[i][0] = ['+']
+    for j in range (1, m+1): bptr[0][j] = ['-']
     # execute dynamic programming
     for i in range (1, n + 1):
         for j in range (1, m + 1):
@@ -26,16 +26,16 @@ def min_edit_dist (target, source):
             dist_s = dist[i-1][j-1] + sub_cost (target[i-1], source[j-1])
             dist_d = dist[i][j - 1] + del_cost (source[j-1])
             dist[i][j] = min (dist_i, dist_s, dist_d)
-            if dist[i][j] == dist_i: bptr[i][j] += 'i'
-            if dist[i][j] == dist_s: bptr[i][j] += 's'
-            if dist[i][j] == dist_d: bptr[i][j] += 'd'
+            if dist[i][j] == dist_i: bptr[i][j] += '+'
+            if dist[i][j] == dist_s: bptr[i][j] += '=' if target[i-1] == source[j-1] else 'x'
+            if dist[i][j] == dist_d: bptr[i][j] += '-'
     return dist[n][m], bptr
 
 def alignment_path (n, m, bptr):
     if n == m == 0: yield ""
     for action in bptr[n][m]:
-        for path in alignment_path (n if action == 'd' else n-1,
-                                    m if action == 'i' else m-1,
+        for path in alignment_path (n if action == '-' else n-1,
+                                    m if action == '+' else m-1,
                                     bptr):
             yield path + action
 
@@ -45,11 +45,11 @@ def width (c):
 def print_alignment (source, target, path):
     i, j, path_aligned, source_aligned, target_aligned = 0, 0, "", "", ""
     for action in path:
-        path_aligned   += action + " " * (width (target[j] if action == 'd' else source[i]) - 1)
-        source_aligned += source[i] if action != 'd' else " " * width (target[j])
-        target_aligned += target[j] if action != 'i' else " " * width (source[i])
-        if action != 'd': i += 1
-        if action != 'i': j += 1
+        path_aligned   += action + " " * (width (target[j] if action == '-' else source[i]) - 1)
+        source_aligned += source[i] if action != '-' else " " * width (target[j])
+        target_aligned += target[j] if action != '+' else " " * width (source[i])
+        if action != '-': i += 1
+        if action != '+': j += 1
     sys.stdout.write ("\taction:\t%s\n\tsource:\t%s\n\ttarget:\t%s\n"
                       % (path_aligned,
                          source_aligned.encode ('utf-8'),

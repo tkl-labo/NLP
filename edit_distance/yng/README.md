@@ -13,14 +13,14 @@ minimum edit distance and its applications
   - efficient generator-based alignment enumeration
   - multi-byte string support
   - interactive shell
-  
+
             > 僕は友達が少ない はがない
             dist ('僕は友達が少ない', 'はがない') = 4
             alignment:
-                action:	i s i i s i s s 
-                source:	僕は友達が少ない
-                target:	  は    が  ない
-            -- stop enumeration? [y]: 
+                action: + = + + = + = =
+                source: 僕は友達が少ない
+                target:   は    が  ない
+            -- stop enumeration? [y]:
 + spell.cc - a simple interactive spell checker
   - enumerate similar strings in a given dictionary for a given string
   - scalable to a large-scale dictionary with millions of strings
