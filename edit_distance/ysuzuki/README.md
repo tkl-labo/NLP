@@ -29,9 +29,9 @@ $ python hiragana_distance.py ｍｊｋｙ まじかよ
 ```
 
 ## spellchecker.py
-*ひらがな/カタカナ のスペルミスについて，正しいスペルを確率付きで複数候補を提示する*
+**ひらがな/カタカナ のスペルミスについて，正しいスペルを確率付きで複数候補を提示する**
 
-###Usage (ただし，辞書を読み込むのに数十秒かかります…)
+###Usage (ただし，辞書を読み込むのに数十秒かかる…)
 
 ```
 $ python spellchecker.py <word>
@@ -48,7 +48,7 @@ $ python spellchecker.py
 
 ```
 
-###テスト例
+###テスト例(ありそうなスペルミス)
 
 ```
 ################見方#################
@@ -106,15 +106,6 @@ romaji:majikyo
  3 : まじかよう(majikayou)          1.52358878047e-08
 
 
-##適当に打って文字列を作製した例##
-
-いてもあｗ, correct:?
-romaji:itemoaw
- 1 : いてもらわ(itemorawa)          5.78963736575e-08
- 2 : いてもあん(itemoan)            3.65661307311e-08
- 3 : いてもかわ(itemokawa)          1.82830653656e-08
-
-
 ##辞書が貧弱なので，NO RESULTが結構出る##
 
 つらぴょ, correct:つらぽよ
@@ -131,4 +122,6 @@ NO RESULT
 
 ```
 
-参考:http://norvig.com/spell-correct.html
+参考:How to Write a Spelling Corrector
+http://norvig.com/spell-correct.html
+
