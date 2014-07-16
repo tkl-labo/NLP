@@ -2,10 +2,10 @@
 
 ## edit_distance.py
 
-unicode対応，編集距離を算出
+編集距離を算出(unicode対応)
 
 ```
-Usage: python edit_distance.py <word1> <word2>
+$ python edit_distance.py <word1> <word2>
 ```
 
 ```
@@ -17,7 +17,7 @@ $ python edit_distance.py まじか まじで
 ひらがな/カタカナをローマ字の入力に直して編集距離を算出
 
 ```
-Usage : python hiragana_distance.py <word1> <word2>
+$ python hiragana_distance.py <word1> <word2>
 ```
 
 ```
@@ -29,10 +29,13 @@ $ python hiragana_distance.py ｍｊｋｙ まじかよ
 ```
 
 ## spellchecker.py
-ひらがな/カタカナ のスペルミスについて，正しいスペルを確率付きで複数候補を提示する
+*ひらがな/カタカナ のスペルミスについて，正しいスペルを確率付きで複数候補を提示する*
 
-Usage (ただし，辞書を読み込むのに数十秒かかります…)
+###Usage (ただし，辞書を読み込むのに数十秒かかります…)
+
 ```
+$ python spellchecker.py <word>
+
 $ python spellchecker.py こんにｃｈわ
 romaji:kon'nichwa
  0 : こんにちわ(kon'nichiwa)        1.18839924876e-07
@@ -45,7 +48,8 @@ $ python spellchecker.py
 
 ```
 
-テスト例
+###テスト例
+
 ```
 ################見方#################
 <スペルミス>, correct: <正しいスペル>
