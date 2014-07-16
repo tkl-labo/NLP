@@ -113,3 +113,5 @@ romaji:keitaidnwa
 NO RESULT
 
 ```
+
+参考:http://norvig.com/spell-correct.html
