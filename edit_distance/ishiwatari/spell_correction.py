@@ -38,14 +38,16 @@ def compute_dist(w1, w2):
 				distance[i][j-1] + DEL_COST( w2[j-1] )
 				)
 
-	print('distance between ', w1, ' and ',w2, ' : ', distance[ len(w1) ][ len(w2) ])
+	# print('distance between ', w1, ' and ',w2, ' : ', distance[ len(w1) ][ len(w2) ])
 	return distance[ len(w1) ][ len(w2) ]
+
 
 # read the vocabulary file.
 def get_vocabulary(file):
 	data = open(file).read().splitlines()
 	# print(data)
 	return data
+
 
 # find similar words.
 def get_similar_words(word, vocabulary):
@@ -54,19 +56,21 @@ def get_similar_words(word, vocabulary):
 		return True
 
 	else:
+		print('Do you mean...')
 		candidates = []
-		min_distance = 99999999999
-
 		for w in vocabulary:
-			distance = compute_dist(word, w)
-			if distance == min_distance:
-				candidates.append(w)
 
-			elif distance < min_distance:
-				candidates = [w]
-				min_distance = distance
+			# compute distance only if the gap of length of the 2 words are smaller than 3.
+			if abs( len(word)-len(w) ) <= 2:
+				distance = compute_dist(word, w)
 
-			# print(candidates, len(candidates) )
+				if distance == 2:
+					candidates.append(w)
+					print(w,' (',int(distance), ')')
+
+				elif distance == 1:
+					candidates.insert(0, w)
+					print(w,' (',int(distance), ')')
 
 		return candidates
 
@@ -83,5 +87,5 @@ if __name__ == '__main__':
 	if candidates == True:
 		print('The word',argv[1],'exists in vocabulary.')
 	else:
-		print('Do you mean ', candidates,' ?')
+		print('correction candidates: ', candidates)
 
