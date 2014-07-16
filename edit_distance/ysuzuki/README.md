@@ -14,8 +14,8 @@ $ python edit_distance.py まじか まじで
 
 ```
 Usage : python hiragana_distance.py <word1> <word2>
-ひらがな/カタカナをローマ字の入力に直して編集距離を算出
 ```
+ひらがな/カタカナをローマ字の入力に直して編集距離を算出
 
 ```
 $ python hiragana_distance.py けいたいでんわ けいたいｄんわ
