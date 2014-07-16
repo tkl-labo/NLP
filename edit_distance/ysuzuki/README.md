@@ -31,7 +31,7 @@ $ python hiragana_distance.py ｍｊｋｙ まじかよ
 ## spellchecker.py
 **ひらがな/カタカナ のスペルミスについて，正しいスペルの候補を確率付きで複数提示する**
 
-###Usage (ただし，辞書を読み込むのに数十秒かかる…)
+###Usage (ただし，辞書を読み込むのに20秒位かかる…)
 
 ```
 $ python spellchecker.py <word>
