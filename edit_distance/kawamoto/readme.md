@@ -6,7 +6,7 @@ EDIT DISTANCE
 
 * edit_distance_3.4.py
    * python3*で実行。日本語入力に対応。
-
+test
 
 
  
