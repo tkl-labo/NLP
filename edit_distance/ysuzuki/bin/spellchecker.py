@@ -76,7 +76,7 @@ def hiragana_candidates(word,num):
             romaji = word_prob_tuple[0]
             p = word_prob_tuple[1]
             kana = romkan.to_hiragana(romaji).encode("utf8")
-            print " {} : {:<10}{:<20} {:<}".format(i,kana,"("+romaji+")",p)
+            print " {} : {:<10}{:<20} {:<}".format(i+1,kana,"("+romaji+")",p)
     else:
         print "NO RESULT"
 
