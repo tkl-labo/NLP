@@ -1,4 +1,8 @@
+#Hiragana-SpellChecker
+
 ## edit_distance.py
+
+unicode対応，編集距離を算出
 
 ```
 Usage: python edit_distance.py <word1> <word2>
@@ -27,9 +31,18 @@ $ python hiragana_distance.py ｍｊｋｙ まじかよ
 ## spellchecker.py
 ひらがな/カタカナ のスペルミスについて，正しいスペルを確率付きで複数候補を提示する
 
+Usage (ただし，辞書を読み込むのに数十秒かかります…)
 ```
-Usage : python spellchecker.py <word1>
-(ただし，辞書を読み込むのに数十秒かかる…)
+$ python spellchecker.py こんにｃｈわ
+romaji:kon'nichwa
+ 0 : こんにちわ(kon'nichiwa)        1.18839924876e-07
+ 1 : こんにちわ(kon'nichiwa)        3.96133082921e-08
+ 2 : こんにちゎ(kon'nichixwa)       6.09435512185e-09
+
+#引数を指定しないとtest caseを表示
+$ python spellchecker.py
+(testcase result)
+
 ```
 
 テスト例

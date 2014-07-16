@@ -99,4 +99,8 @@ if __name__ == "__main__":
              u"いｔｓも":u"いつも",
              u"なんｄあｙろ":u"なんでやろ"}
 
-    test(test1)
+    if len(sys.argv) == 2:
+        word = sys.argv[1]
+        hiragana_candidates(word,3)
+    elif len(sys.argv) == 1:
+        test(test1)
