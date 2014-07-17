@@ -125,3 +125,24 @@ NO RESULT
 参考:How to Write a Spelling Corrector
 http://norvig.com/spell-correct.html
 
+##簡単な解説
+c = correct word
+w = word spell
+
+P(c|w) = P(w|c)*P(c)
+
+1.P(c): language model
+       それぞれの語が出現する確率
+       今回はひらがなorカタカナの1~7gramの出現確率を
+       研究室のtwitter data(2013/07/17)から学習した
+       学習した結果のリストは
+       ngram_data/kana_freq.tsv(10万語) にある
+
+2.P(w|c): error model
+	  スペルミスをしない確率>>編集距離1のスペルミスをする確率>>編集距離2のスペルミスをする確率
+	  であると過程
+
+	  編集距離に応じて，適当に下記のように設定した
+	  edit_distance=1 :	0.2
+	  edit_distance=2 :	0.05
+
