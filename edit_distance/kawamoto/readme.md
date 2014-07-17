@@ -6,7 +6,13 @@ EDIT DISTANCE
 
 * edit_distance_3.4.py
    * python3*で実行。日本語入力に対応。
-test
 
+* distance.py
+   * python3*で実行。関数として書きなおしたバージョン
+
+* kanji.py
+   * 漢字を読んだ上で編集距離を測る。実行にはkakasiにPATHが通っている必要がある。
+   * 大したことやってなくて、ただkakasiを呼ぶのを間に通しているだけ。
+   * kakasi <http://kakasi.namazu.org/index.html.ja>
 
  
