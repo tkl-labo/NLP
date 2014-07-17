@@ -12,6 +12,7 @@ EDIT DISTANCE
 
 * kanji.py
    * 漢字を読んだ上で編集距離を測る。実行にはkakasiにPATHが通っている必要がある。
+   * 大したことやってなくて、ただkakasiを呼ぶのを間に通しているだけ。
    * kakasi <http://kakasi.namazu.org/index.html.ja>
 
  
