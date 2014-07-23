@@ -6,14 +6,19 @@ import subprocess
 
 def test():
     for data in dataFetcher("20120612"):
-        print "####"+data+"####\n"
+        #print "####"+data+"####\n"
         n = ngramCorpus(data)
-        #print n.surface,n.surface[0]
+        print n.surface,n.surface[0]
         #print n.postag,n.postag[0]
         #print n.postag_detail,n.postag_detail[0]
         #print "-------------"
-        3gram = n.ngramMaker(3)
-        print ",".join(3gram)
+        gram = n.ngramMaker(3)
+        #print gram,type(gram)
+        if gram != []:
+            for g in gram:
+                print ",".join(g)
+        else:
+            print []
 
 
 def dataFetcher(date):
@@ -59,7 +64,7 @@ class ngramCorpus:
         self.verb_description = []
         self.verb_form = []
         
-        items = sentence.strip().split("\n")[:-2] # EOFは除外
+        items = sentence.strip().split("\n")[:-1] # EOFは除外
         for item in items:
             surface,description = item.split("\t")
             postag,postag_detail,verb_description,verb_form = description.split(",")
@@ -69,12 +74,59 @@ class ngramCorpus:
             self.verb_description.append(verb_description)
             self.verb_form.append(verb_form)
 
-    def ngramMaker(self,n):
+    def ngramMaker(self,n,with_pseudo_flag=True):
         ngramlist = []
-        if len(self.surface) <= n:
+        if len(self.surface) < n:
+            return []
+
+        if with_pseudo_flag: #文頭文末を<s>,</s>と擬似的な単語として扱う
+            surface = ["<s>"] * (n - 1) + self.surface + ["</s>"] * (n - 1)
+            for i in range(len(surface)-(n-1)):
+                ngramlist.append(tuple(surface[i:i+n]))
+            return ngramlist
+        else:
             for i in range(len(self.surface)-(n-1)):
-                ngramlist.append(self.surface[i:i+n]
-        return ngramlist
+                ngramlist.append(tuple(self.surface[i:i+n]))
+            return ngramlist
+
+# date とn を指定，一気に1~n gramまでcountし，tsv fileに書き込む
+def counter(date,n):
+    # initialize
+    fpathlist = []
+    for i in range(n):
+        path = open("../works/"+str(i)+"gram/"+date,"w")
+        fpathlist.append(path)
+
+    ngramCountDics = []
+    for i in range(n):
+        ngramCountDics.append(dict())
+
+    # count
+    for sentence in dataFetcher(date):
+        nc = ngramCorpus(sentence)
+        for i in range(n):
+            ngramlist = nc.ngramMaker(n+1): # ngramをcountしたいとき，n + 1 の連続した語が必要
+            for ngram in ngramlist:
+                if ngram in ngramCountDics[i-1]: # 0 gramはないので，数字の都合上 i-1
+                    ngramCountDics[ngram] += 1
+                else:
+                    ngramCountDics[ngram] = 1
+
+    # write the result to tsv file
+    for i in range(n):
+        for ngram in ngramCountDics[i-1]:
+            fpathlist[i-1].write("\t".join(ngram) + "\n")
+
+    # all done log (for makefile)
+    flog = open("../works/log/counter/"+date,"w")
+    flog.close()
 
 if __name__ == "__main__":
-    test()
+    #test()
+    cmd = sys.argv[1]
+    date = sys.argv[2]
+
+    if cmd == "counter":
+        counter(date,5)
+    elif cmd == "merger":
+        pass
