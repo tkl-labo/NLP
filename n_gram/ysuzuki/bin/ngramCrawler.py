@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 # -*- coding:utf-8 -*-
 import sys,os
 import math,re,datetime
-import subprocess
+import subprocess,time
 
 def test():
     for data in dataFetcher("20120612"):
@@ -29,6 +29,9 @@ def dataFetcher(date):
         raise ValueError("date must be YYYYMMDD format")
 
     filepath = "../ngramCorpus/{}/{}/{}.cdr.gz".format(year,month,day)
+
+    #only in test
+    #filepath = "./test.gz"
 
     # file open
     #高速化のため，gzipではなくsubprocessでzcatを利用
@@ -92,30 +95,39 @@ class ngramCorpus:
 # date とn を指定，一気に1~n gramまでcountし，tsv fileに書き込む
 def counter(date,n):
     # initialize
+    start_time = time.clock()
+
     fpathlist = []
-    for i in range(n):
+    for i in range(1,n+1):
         path = open("../works/"+str(i)+"gram/"+date,"w")
         fpathlist.append(path)
 
     ngramCountDics = []
-    for i in range(n):
+    for i in range(1,n+1):
         ngramCountDics.append(dict())
 
     # count
+    sentence_number = 0
     for sentence in dataFetcher(date):
+        sentence_number += 1
+        if sentence_number % 100000 == 0:
+            print "{} {} {:.1f}min".format(date,sentence_number,(time.clock()-start_time)/60)
         nc = ngramCorpus(sentence)
-        for i in range(n):
-            ngramlist = nc.ngramMaker(n+1): # ngramをcountしたいとき，n + 1 の連続した語が必要
+        for i in range(1,n+1):
+            ngramlist = nc.ngramMaker(i+1) # ngramをcountしたいとき，n + 1 の連続した語が必要
             for ngram in ngramlist:
                 if ngram in ngramCountDics[i-1]: # 0 gramはないので，数字の都合上 i-1
-                    ngramCountDics[ngram] += 1
+                    ngramCountDics[i-1][ngram] += 1
                 else:
-                    ngramCountDics[ngram] = 1
+                    ngramCountDics[i-1][ngram] = 1
+
 
     # write the result to tsv file
-    for i in range(n):
+    print "WRITE THE RESULT"
+    for i in range(1,n+1):
+        print i,len(ngramCountDics[i-1])
         for ngram in ngramCountDics[i-1]:
-            fpathlist[i-1].write("\t".join(ngram) + "\n")
+            fpathlist[i-1].write("\t".join(ngram) + "\t" + str(ngramCountDics[i-1][ngram]) + "\n")
 
     # all done log (for makefile)
     flog = open("../works/log/counter/"+date,"w")
@@ -127,6 +139,6 @@ if __name__ == "__main__":
     date = sys.argv[2]
 
     if cmd == "counter":
-        counter(date,5)
+        counter(date,3)
     elif cmd == "merger":
         pass

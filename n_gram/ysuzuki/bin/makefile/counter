@@ -1,0 +1,94 @@
+all:../works/log/counter/20121201.done ../works/log/counter/20121202.done ../works/log/counter/20121203.done ../works/log/counter/20121204.done ../works/log/counter/20121205.done ../works/log/counter/20121206.done ../works/log/counter/20121207.done ../works/log/counter/20121208.done ../works/log/counter/20121209.done ../works/log/counter/20121210.done ../works/log/counter/20121211.done ../works/log/counter/20121212.done ../works/log/counter/20121213.done ../works/log/counter/20121214.done ../works/log/counter/20121215.done ../works/log/counter/20121216.done ../works/log/counter/20121217.done ../works/log/counter/20121218.done ../works/log/counter/20121219.done ../works/log/counter/20121220.done ../works/log/counter/20121221.done ../works/log/counter/20121222.done ../works/log/counter/20121223.done ../works/log/counter/20121224.done ../works/log/counter/20121225.done ../works/log/counter/20121226.done ../works/log/counter/20121227.done ../works/log/counter/20121228.done ../works/log/counter/20121229.done ../works/log/counter/20121230.done ../works/log/counter/20121231.done
+
+../works/log/counter/20121201.done:
+	./ngramCrawler.py counter 20121201
+
+../works/log/counter/20121202.done:
+	./ngramCrawler.py counter 20121202
+
+../works/log/counter/20121203.done:
+	./ngramCrawler.py counter 20121203
+
+../works/log/counter/20121204.done:
+	./ngramCrawler.py counter 20121204
+
+../works/log/counter/20121205.done:
+	./ngramCrawler.py counter 20121205
+
+../works/log/counter/20121206.done:
+	./ngramCrawler.py counter 20121206
+
+../works/log/counter/20121207.done:
+	./ngramCrawler.py counter 20121207
+
+../works/log/counter/20121208.done:
+	./ngramCrawler.py counter 20121208
+
+../works/log/counter/20121209.done:
+	./ngramCrawler.py counter 20121209
+
+../works/log/counter/20121210.done:
+	./ngramCrawler.py counter 20121210
+
+../works/log/counter/20121211.done:
+	./ngramCrawler.py counter 20121211
+
+../works/log/counter/20121212.done:
+	./ngramCrawler.py counter 20121212
+
+../works/log/counter/20121213.done:
+	./ngramCrawler.py counter 20121213
+
+../works/log/counter/20121214.done:
+	./ngramCrawler.py counter 20121214
+
+../works/log/counter/20121215.done:
+	./ngramCrawler.py counter 20121215
+
+../works/log/counter/20121216.done:
+	./ngramCrawler.py counter 20121216
+
+../works/log/counter/20121217.done:
+	./ngramCrawler.py counter 20121217
+
+../works/log/counter/20121218.done:
+	./ngramCrawler.py counter 20121218
+
+../works/log/counter/20121219.done:
+	./ngramCrawler.py counter 20121219
+
+../works/log/counter/20121220.done:
+	./ngramCrawler.py counter 20121220
+
+../works/log/counter/20121221.done:
+	./ngramCrawler.py counter 20121221
+
+../works/log/counter/20121222.done:
+	./ngramCrawler.py counter 20121222
+
+../works/log/counter/20121223.done:
+	./ngramCrawler.py counter 20121223
+
+../works/log/counter/20121224.done:
+	./ngramCrawler.py counter 20121224
+
+../works/log/counter/20121225.done:
+	./ngramCrawler.py counter 20121225
+
+../works/log/counter/20121226.done:
+	./ngramCrawler.py counter 20121226
+
+../works/log/counter/20121227.done:
+	./ngramCrawler.py counter 20121227
+
+../works/log/counter/20121228.done:
+	./ngramCrawler.py counter 20121228
+
+../works/log/counter/20121229.done:
+	./ngramCrawler.py counter 20121229
+
+../works/log/counter/20121230.done:
+	./ngramCrawler.py counter 20121230
+
+../works/log/counter/20121231.done:
+	./ngramCrawler.py counter 20121231
