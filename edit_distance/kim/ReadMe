@@ -1,0 +1,9 @@
+Minimum Edit Distance
+
+Min_EditDistance.java
+Calculate edit distance between two words.
+Cost weights for Substitution, Insertion and Deletion are all 1.
+
+Min_EditDistanceV2.java
+Calculate edit distance between two words.
+Users can specify the cost weights.
