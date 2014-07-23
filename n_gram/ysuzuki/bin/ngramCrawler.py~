@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+import sys,os
+#import math,re,datetime
+
+def fetcher(date):
+    year = date[0:2]
+    month = date[2:4]
+    day = date[4:6]
+
+    filepath = "../ngramCorpus/{}/{}/{}.cdr.gz".format(year,month,day)
+
+    # file open 高速化のため，gzipではなくsubprocessでzcatを利用
+    #f = gzip.open(filepath,"r")
+    if sys.version.startswith("3"):
+        import io
+        io_method = io.BytesIO
+    else:
+        import cStringIO
+        io_method = cStringIO.StringIO
+    p = subprocess.Popen(["zcat",filepath],stdout = subprocess.PIPE)
+    f = io_method(p.communicate()[0])
+
+
+    while True:
+        
+
+if __name__ == "__main__":
