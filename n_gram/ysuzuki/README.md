@@ -1,10 +1,12 @@
-B1;2c学習に時間がかかってしまい，ngramの学習までしかできませんでした
+学習に時間がかかってしまい，ngramの学習までしかできませんでした
 
-##作ったコード
+#作ったコード
 
-###ngramCrawler.py
+##ngramCrawler.py
 
-研究室の解析済みツイートコーパスの情報を，扱いやすい形で取り出してくれる
+研究室の解析済みツイートコーパスの情報を，扱いやすい形で取り出してくれるwrapper(?)
+
+###関数，class
 
 ####def dataFetcher(date)
 
@@ -13,12 +15,14 @@ B1;2c学習に時間がかかってしまい，ngramの学習までしかでき�
 ####class ngramCorpus
 
 ツイートコーパスのsentenceを引数に取ると，情報を整理してくれるclass
+
 ngramMakerメソッドでnを指定すると，n個のwordのtupleを返してくれる
 
 ####def counter(date,n)
 
 dateとnを指定すると，その日付のツイートコーパスに対して，1~n gramまで出現回数をカウントし，tsv fileに書き込む
 
+###appendix
 
 研究室のツイートデータに対しても同じようなものを作ってよく使っている(/home/ysuzuki/local/arilib/python2.7/tweet.py)
 
@@ -49,6 +53,6 @@ d 1/2 84.8MB /home/ysuzuki/yotsuya/twi.data/20140717.s.294.gz 3.7min
 
 ```
 
-###makefile.py
+##makefile.py
 
 同じプログラムに異なる日付の引数を与えて，並列化できるようなMakefileを作ってくれる
