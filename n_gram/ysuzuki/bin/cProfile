@@ -1,0 +1,112 @@
+OPEN FILE: ../ngramCorpus/2011/01/01.cdr.gz
+WRITE THE RESULT
+1 171653
+2 290920
+3 347802
+         7980435 function calls (7980432 primitive calls) in 11.264 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    2.362    2.362   11.264   11.264 ngramCrawler.py:3(<module>)
+        1    2.864    2.864    8.890    8.890 ngramCrawler.py:96(counter)
+   130026    2.340    0.000    2.648    0.000 ngramCrawler.py:80(ngramMaker)
+    43342    1.039    0.000    1.799    0.000 ngramCrawler.py:63(__init__)
+    43343    0.422    0.000    0.845    0.000 ngramCrawler.py:24(dataFetcher)
+   810375    0.497    0.000    0.497    0.000 {method 'join' of 'str' objects}
+   931644    0.479    0.000    0.479    0.000 {method 'split' of 'str' objects}
+  3775004    0.468    0.000    0.468    0.000 {method 'append' of 'list' objects}
+   810375    0.202    0.000    0.202    0.000 {method 'write' of 'file' objects}
+        3    0.000    0.000    0.170    0.057 subprocess.py:473(_eintr_retry_call)
+        1    0.000    0.000    0.169    0.169 subprocess.py:767(communicate)
+        1    0.169    0.169    0.169    0.169 {method 'read' of 'file' objects}
+   487494    0.154    0.000    0.154    0.000 {method 'readline' of 'cStringIO.StringI' objects}
+   530835    0.116    0.000    0.116    0.000 {method 'strip' of 'str' objects}
+   165295    0.087    0.000    0.087    0.000 {range}
+252037/252036    0.040    0.000    0.040    0.000 {len}
+        1    0.007    0.007    0.013    0.013 subprocess.py:387(<module>)
+        4    0.010    0.003    0.010    0.003 {open}
+        1    0.004    0.004    0.005    0.005 pickle.py:25(<module>)
+        1    0.000    0.000    0.003    0.003 subprocess.py:648(__init__)
+        1    0.000    0.000    0.003    0.003 subprocess.py:1186(_execute_child)
+        1    0.001    0.001    0.001    0.001 {posix.read}
+        1    0.001    0.001    0.001    0.001 {posix.fork}
+      117    0.000    0.000    0.001    0.000 re.py:134(match)
+      117    0.000    0.000    0.001    0.000 re.py:226(_compile)
+        1    0.000    0.000    0.000    0.000 sre_compile.py:493(compile)
+        1    0.000    0.000    0.000    0.000 sre_compile.py:478(_code)
+        3    0.000    0.000    0.000    0.000 sre_compile.py:178(_compile_charset)
+        3    0.000    0.000    0.000    0.000 sre_compile.py:207(_optimize_charset)
+      2/1    0.000    0.000    0.000    0.000 sre_compile.py:32(_compile)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:675(parse)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:301(_parse_sub)
+      117    0.000    0.000    0.000    0.000 {method 'match' of '_sre.SRE_Pattern' objects}
+        1    0.000    0.000    0.000    0.000 sre_parse.py:379(_parse)
+        1    0.000    0.000    0.000    0.000 sre_compile.py:359(_compile_info)
+        1    0.000    0.000    0.000    0.000 subprocess.py:1370(wait)
+        1    0.000    0.000    0.000    0.000 sre_compile.py:258(_mk_bitmap)
+        2    0.000    0.000    0.000    0.000 subprocess.py:1160(pipe_cloexec)
+        1    0.000    0.000    0.000    0.000 subprocess.py:1098(_get_handles)
+      117    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {posix.waitpid}
+        4    0.000    0.000    0.000    0.000 subprocess.py:1147(_set_cloexec_flag)
+        1    0.000    0.000    0.000    0.000 {dir}
+        2    0.000    0.000    0.000    0.000 {method 'close' of 'file' objects}
+       19    0.000    0.000    0.000    0.000 sre_parse.py:182(__next)
+       15    0.000    0.000    0.000    0.000 sre_parse.py:201(get)
+        1    0.000    0.000    0.000    0.000 pickle.py:827(Unpickler)
+        1    0.000    0.000    0.000    0.000 {posix.fdopen}
+        1    0.000    0.000    0.000    0.000 subprocess.py:1207(_close_in_parent)
+        8    0.000    0.000    0.000    0.000 {fcntl.fcntl}
+      3/2    0.000    0.000    0.000    0.000 sre_parse.py:140(getwidth)
+        2    0.000    0.000    0.000    0.000 {posix.pipe}
+        3    0.000    0.000    0.000    0.000 {posix.close}
+        1    0.000    0.000    0.000    0.000 subprocess.py:753(__del__)
+        1    0.000    0.000    0.000    0.000 pickle.py:171(Pickler)
+        1    0.000    0.000    0.000    0.000 {cStringIO.StringIO}
+        1    0.000    0.000    0.000    0.000 subprocess.py:1329(_handle_exitstatus)
+        6    0.000    0.000    0.000    0.000 sre_parse.py:130(__getitem__)
+        1    0.000    0.000    0.000    0.000 subprocess.py:647(Popen)
+        8    0.000    0.000    0.000    0.000 sre_parse.py:195(match)
+       11    0.000    0.000    0.000    0.000 {isinstance}
+        1    0.000    0.000    0.000    0.000 sre_parse.py:178(__init__)
+        1    0.000    0.000    0.000    0.000 {posix.sysconf}
+        2    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 sre_compile.py:354(_simple)
+        1    0.000    0.000    0.000    0.000 {gc.enable}
+        1    0.000    0.000    0.000    0.000 {time.clock}
+        2    0.000    0.000    0.000    0.000 sre_compile.py:472(isstring)
+        3    0.000    0.000    0.000    0.000 sre_parse.py:138(append)
+       13    0.000    0.000    0.000    0.000 sre_compile.py:24(_identityfunction)
+        1    0.000    0.000    0.000    0.000 {_sre.compile}
+        2    0.000    0.000    0.000    0.000 {getattr}
+        1    0.000    0.000    0.000    0.000 {method 'remove' of 'set' objects}
+        4    0.000    0.000    0.000    0.000 sre_parse.py:126(__len__)
+        2    0.000    0.000    0.000    0.000 {method 'extend' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 ngramCrawler.py:62(ngramCorpus)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:67(__init__)
+        1    0.000    0.000    0.000    0.000 subprocess.py:400(CalledProcessError)
+        1    0.000    0.000    0.000    0.000 {posix.WIFSIGNALED}
+        1    0.000    0.000    0.000    0.000 {method 'update' of 'set' objects}
+        1    0.000    0.000    0.000    0.000 {hasattr}
+        2    0.000    0.000    0.000    0.000 sre_parse.py:90(__init__)
+        1    0.000    0.000    0.000    0.000 subprocess.py:1343(_internal_poll)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:134(__setitem__)
+        7    0.000    0.000    0.000    0.000 {ord}
+        4    0.000    0.000    0.000    0.000 {min}
+        1    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 pickle.py:58(PickleError)
+        1    0.000    0.000    0.000    0.000 {method 'count' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 subprocess.py:458(_cleanup)
+        1    0.000    0.000    0.000    0.000 {posix.WEXITSTATUS}
+        1    0.000    0.000    0.000    0.000 {posix.WIFEXITED}
+        1    0.000    0.000    0.000    0.000 pickle.py:82(_Stop)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 pickle.py:69(UnpicklingError)
+        1    0.000    0.000    0.000    0.000 pickle.py:1261(_EmptyClass)
+        1    0.000    0.000    0.000    0.000 {gc.disable}
+        1    0.000    0.000    0.000    0.000 {gc.isenabled}
+        1    0.000    0.000    0.000    0.000 pickle.py:62(PicklingError)
+
+

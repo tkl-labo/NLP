@@ -87,7 +87,7 @@ class ngramCorpus:
             for i in range(len(surface)-(n-1)):
                 ngramlist.append(tuple(surface[i:i+n]))
             return ngramlist
-        else:
+        else: # <s>. </s> をつけない
             for i in range(len(self.surface)-(n-1)):
                 ngramlist.append(tuple(self.surface[i:i+n]))
             return ngramlist
@@ -112,6 +112,7 @@ def counter(date,n):
         sentence_number += 1
         if sentence_number % 100000 == 0:
             print "{} {} {:.1f}min".format(date,sentence_number,(time.clock()-start_time)/60)
+
         nc = ngramCorpus(sentence)
         for i in range(1,n+1):
             ngramlist = nc.ngramMaker(i+1) # ngramをcountしたいとき，n + 1 の連続した語が必要
