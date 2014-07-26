@@ -15,7 +15,7 @@ bigramを数え上げるプログラム。二次元辞書を用いた実装に�
 関連情報
 --------
 ### 二次元辞書
-1. [リンク1](<a href="# http://materia.jp/blog/20121119.html" target="_blank" rel="noreferrer" style="cursor:help;display:inline !important;"># http://materia.jp/blog/20121119.html</a> "Pythonで多次元の辞書を扱う [Python]")
+1. [リンク1](http://materia.jp/blog/20121119.html "Pythonで多次元の辞書を扱う [Python]")
  
 ライセンス
 ----------
