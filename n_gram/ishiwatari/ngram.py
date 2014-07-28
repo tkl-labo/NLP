@@ -7,30 +7,35 @@ def count_ngram(filename,n):
 
 	# get each string
 	while 1:
-		s = get_str(f)
-		if s == 'EOF':
-			break
 
-		# make n-gram
-		s = append_BOS_EOS(s,n)
-		# print(s)
-		length = len(s)
+		try:
+			s = get_str(f)
+			if s == 'EOF':
+				break
 
-		# count ngram and n-1gram
-		for i in range(length-n+1):
-			ngram = ' '.join( s[i:i+n] )
-			if ngram in count_ngram:
-				count_ngram[ngram] += 1
-			else : 
-				count_ngram[ngram] = 1
+			# make n-gram
+			s = append_BOS_EOS(s,n)
+			# print(s)
+			length = len(s)
 
-			n_1gram = ' '.join( s[i+1:i+n] )
-			# print(n_1gram)
-			# if n_1gram != ' '.join(['EOS']* (n-1) ): # Last one must be something like 'EOS EOS', so ignore it.
-			if n_1gram in count_n_1gram:
-				count_n_1gram[n_1gram] += 1
-			else : 
-				count_n_1gram[n_1gram] = 1
+			# count ngram and n-1gram
+			for i in range(length-n+1):
+				ngram = ' '.join( s[i:i+n] )
+				if ngram in count_ngram:
+					count_ngram[ngram] += 1
+				else : 
+					count_ngram[ngram] = 1
+
+				n_1gram = ' '.join( s[i+1:i+n] )
+				# print(n_1gram)
+				# if n_1gram != ' '.join(['EOS']* (n-1) ): # Last one must be something like 'EOS EOS', so ignore it.
+				if n_1gram in count_n_1gram:
+					count_n_1gram[n_1gram] += 1
+				else : 
+					count_n_1gram[n_1gram] = 1
+
+		except:
+			print("EXCEPTION:",s)
 
 	# print(count_ngram, count_n_1gram)
 	return count_ngram, count_n_1gram
@@ -118,8 +123,10 @@ def main():
 
 	n = 3
 
-	count_3gram, count_2gram = count_ngram('data/mini2012.txt',n)
-	perplexity('data/mini2012.txt', n, count_3gram, count_2gram)
+	count_3gram, count_2gram = count_ngram('/disk5/ishiwatari/nlp-meeting/data/debug_data.txt',n)
+	# count_3gram, count_2gram = count_ngram('data/mini2012.txt',n)
+	# count_3gram, count_2gram = count_ngram('/disk5/ishiwatari/nlp-meeting/data/error_test.txt',n)
+	# perplexity('/disk5/ishiwatari/nlp-meeting/data/mini2013.txt', n, count_3gram, count_2gram)
 
 
 if __name__ == '__main__':
