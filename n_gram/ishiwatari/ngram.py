@@ -120,7 +120,6 @@ def perplexity(filename, n, count_ngram, count_n_1gram):
 
 
 def main():
-
 	n = 3
 
 	count_3gram, count_2gram = count_ngram('/disk5/ishiwatari/nlp-meeting/data/debug_data.txt',n)
