@@ -52,11 +52,6 @@ def get_str(file):
 
 	return str_list[:-1]
 
-
-		
-
-
-
 	if len(str_list) == 0:
 		return 'EOF'
 
@@ -121,7 +116,7 @@ def perplexity(filename, n, count_ngram, count_n_1gram):
 
 def main():
 
-	n = 2
+	n = 3
 
 	count_3gram, count_2gram = count_ngram('data/mini2012.txt',n)
 	perplexity('data/mini2012.txt', n, count_3gram, count_2gram)
