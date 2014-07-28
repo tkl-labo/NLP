@@ -65,7 +65,8 @@ def get_str(file):
 
 # append BOS and EOS to a list of strings
 def append_BOS_EOS(str_list,n):
-	return ['BOS']*(n-1) + str_list + ['EOS']*(n-1)
+	# return ['BOS']*(n-1) + str_list + ['EOS']*(n-1)
+	return ['BOS']*(n-1) + str_list + ['EOS']
 
 # e.g.) get ['I','am','a'] and return count(I am a) / count(I am)
 def ngram_prob(str_list, count_ngram, count_n_1gram):
@@ -120,6 +121,7 @@ def perplexity(filename, n, count_ngram, count_n_1gram):
 
 
 def main():
+
 	n = 3
 
 	count_3gram, count_2gram = count_ngram('/disk5/ishiwatari/nlp-meeting/data/debug_data.txt',n)
