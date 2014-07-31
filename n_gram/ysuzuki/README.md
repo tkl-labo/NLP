@@ -102,15 +102,15 @@ Perplexityというclassを作った
 
 ####class Perplecity
 
-+ def \_\_init\_\_ 
++ def **\_\_init\_\_**
 
   ngramの出現頻度の辞書を創る
 
-+ def laplace_prob
++ def **laplace_prob**
 
   laplace_smoothingを施した，ngramのprobabilityを返す
 
-+ def perplecity
++ def **perplexity**
 
    dateを引数にとって，各日のコーパスデータを取ってきて，perplexityを計算する
 
@@ -129,4 +129,4 @@ http://www.slp.ics.tut.ac.jp/shiryou/extra_2011/2011-WS-02.pdf
 
    未知語が出たらskipしてなかったことにする
 
-最初，1を実装しようとするも，間に合わなそうなので2を採用した
+最初，1を実装しようとするも，間に合わなそうだったので2を採用（結局間に合わなかった…）
