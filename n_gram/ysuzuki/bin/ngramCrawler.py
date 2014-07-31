@@ -29,10 +29,11 @@ def dataFetcher(date):
     if len(date) != 8:
         raise ValueError("date must be YYYYMMDD format")
 
-    filepath = "../ngramCorpus/{}/{}/{}.cdr.gz".format(year,month,day)
+    #filepath = "../ngramCorpus/{}/{}/{}.cdr.gz".format(year,month,day)
 
     #only in test
     #filepath = "./test.gz"
+    filepath = "/home/ynaga/ngrams/data/2012-01-01.cdr.1000000.gz"
 
     # file open
     #高速化のため，gzipではなくsubprocessでzcatを利用
@@ -62,9 +63,11 @@ def dataFetcher(date):
             sentence += line
             yield sentence
         except UnicodeDecodeError:
-            while line.strip() != u"EOS":
-                line = f.readline()
-            continue
+            #while line.strip() != u"EOS":
+            #    line = f.readline()
+            #continue
+            print "UnicodeDecodeError"
+            print line.encode("utf8")
 
 class ngramCorpus:
     def __init__(self,sentence):
@@ -73,7 +76,6 @@ class ngramCorpus:
         self.postag_detail = []
         self.verb_description = []
         self.verb_form = []
-
         
         items = sentence.strip().split(u"\n")[:-1] # EOFは除外
             
@@ -88,8 +90,8 @@ class ngramCorpus:
 
     def ngramMaker(self,n,with_pseudo_flag=True):
         ngramlist = []
-        if len(self.surface) < n:
-            return []
+        #if len(self.surface) + (n-1) + 1 < n:
+        #    return []
 
         if with_pseudo_flag: #文頭文末を<s>,</s>と擬似的な単語として扱う
             surface = [u"<s>"] * (n - 1) + self.surface + [u"</s>"] * 1
@@ -136,8 +138,9 @@ def counter(date,n):
     print "WRITE THE RESULT"
     for i in range(1,n+1):
         print i,len(ngramCountDics[i-1])
-        for ngram in ngramCountDics[i-1]:
-            fpathlist[i-1].write(u"\t".join(ngram).encode("utf8") + "\t" + str(ngramCountDics[i-1][ngram]) + "\n")
+        for ngram in sorted(ngramCountDics[i-1]):
+            #fpathlist[i-1].write(u"\t".join(ngram).encode("utf8") + "\t" + str(ngramCountDics[i-1][ngram]) + "\n")
+            fpathlist[i-1].write(str(ngramCountDics[i-1][ngram]) + "\t" + " ".join(ngram).encode("utf8") + "\n")
 
     # all done log (for makefile)
     flog = open("../works/log/counter/"+date+".done","w")
