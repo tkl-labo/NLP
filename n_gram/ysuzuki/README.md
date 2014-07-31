@@ -102,22 +102,31 @@ Perplexityというclassを作った
 
 ####class Perplecity
 
-+ def __init__ ngramの出現頻度の辞書を創る
++ def \_\_init\_\_ 
 
-+ def laplace_prob laplace_smoothingを施した，ngramのprobabilityを返す
+  ngramの出現頻度の辞書を創る
 
-+ def perplecity dateを引数にとって，各日のコーパスデータを取ってきて，perplexityを計算する
++ def laplace_prob
+
+  laplace_smoothingを施した，ngramのprobabilityを返す
+
++ def perplecity
+
+   dateを引数にとって，各日のコーパスデータを取ってきて，perplexityを計算する
 
 
-## 未知語の扱い
+### 未知語の扱い
 
 http://www.slp.ics.tut.ac.jp/shiryou/extra_2011/2011-WS-02.pdf
 
 などを参考にすると，
 
 1. 未知語の集合を一つの単語(UNK)と見なす方法
-   test dataをスイープして，未知語の数と種類を数え，出現頻度の辞書に加える
+ 
+  test dataをスイープして，未知語の数と種類を数え，出現頻度の辞書に加える
+
 2. 未知語をskip する方法
+
    未知語が出たらskipしてなかったことにする
 
 最初，1を実装しようとするも，間に合わなそうなので2を採用した
