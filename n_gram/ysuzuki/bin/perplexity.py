@@ -14,7 +14,13 @@ class Perplexity:
 
         print "start learning"
         f = open("../data/"+str(n)+"gram.tsv","r")
+        
+        line_num = 0
         for line in f:
+            line_num += 1
+            if line_num % 10000 == 0:
+                print "learning line_num :", line_num
+
             items = line.strip().split("\t")
             ngramtuple = tuple(items[:-1])
             counts = items[-1]
@@ -28,7 +34,7 @@ class Perplexity:
                 else:
                     self.sumdic[pre_ngramtuple] = {"counts":counts,"types":1}
             else:
-                if "counts" in self.sumdic:
+                if self.sumdic:
                     self.sumdic["counts"] += counts
                     self.sumdic["types"] += 1
                 else:
@@ -83,7 +89,8 @@ class Perplexity:
         for sentence in dataFetcher(date):
             sentence_num += 1
             if sentence_num % 10000 == 0:
-                print sentence_num
+                print "perplexity sentence_num :", sentence_num
+
             nc = ngramCorpus(sentence)
             for ngram in nc.ngramMaker(self.n):
                 prob = self.laplace_prob(ngram)
