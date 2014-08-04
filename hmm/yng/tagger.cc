@@ -1,4 +1,4 @@
-// viterbi.cc -- naive implementation of viterbi algorithm for first-order HMM
+// tagger.cc -- implementation of viterbi algorithm for first-order HMM
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -29,35 +29,34 @@ void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
   int num_tags  = 0;
   int num_words = 1; // 0 is reserved for unknown words
   FILE* fp = std::fopen (model, "r");
-  std::fprintf (stderr, "reading model..\n");
+  std::fprintf (stderr, "reading model..");
   while (std::fgets (line, 1024, fp) != NULL) {
     size_t len = std::strlen (line) - 1;
+    char* p = line;
     if (len)
       switch (flag) {
-      case 0: tag2id.update  (line, len) = num_tags++;  break; // tag  -> id
-      case 1: word2id.update (line, len) = num_words++; break; // word -> id
+      case 0: tag2id.update  (p, len) = num_tags++;  break; // tag  -> id
+      case 1: word2id.update (p, len) = num_words++; break; // word -> id
       case 2: // init
-        for (char* p = line; *p != '\n'; ++p)
-          hmm.init.push_back (std::strtod (p, &p));
+        while (*p != '\n')
+          hmm.init.push_back (std::strtod (p, &p)), ++p;
         break;
       case 3: // tag -> tag
         hmm.transition.push_back (std::vector <double> ());
         hmm.transition.back ().reserve (num_tags);
-        for (char* p = line; *p != '\n'; ++p)
-          hmm.transition.back ().push_back (std::strtod (p, &p));
+        while (*p != '\n')
+          hmm.transition.back ().push_back (std::strtod (p, &p)), ++p;
         break;
       case 4: // word - word
         hmm.emission.push_back (std::vector <double> ());
         hmm.emission.back ().reserve (num_tags);
-        for (char* p = line; *p != '\n'; ++p)
-          hmm.emission.back ().push_back (std::strtod (p, &p));
+        while (*p != '\n')
+          hmm.emission.back ().push_back (std::strtod (p, &p)), ++p;
         break;
     } else
       ++flag;
   }
   std::fclose (fp);
-  std::fprintf (stderr, "  # tags: %d\n",  num_tags);
-  std::fprintf (stderr, "  # words: %d\n", num_words - 1);
   std::fprintf (stderr, "done.\n");
 }
 
@@ -68,8 +67,6 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
   // avoid memory reallocation for viterbi matrix
   static std::vector <std::vector <double> > prob;
   static std::vector <std::vector <int> > bptr;
-  prob.clear ();
-  bptr.clear ();
   if (prob.size () < n) {
     prob.resize (n, std::vector <double> (m, 0.0));
     bptr.resize (n, std::vector <int> (m, -1));
@@ -106,14 +103,14 @@ int main (int argc, char** argv) {
     std::fprintf (stderr, "Usage: %s model < test\n", argv[0]);
     std::exit (1);
   }
-  //
   // read model
   hmm_t hmm;
   sbag_t tag2id, word2id;
   read_model (argv[1], tag2id, word2id, hmm);
-  //
-  int corr (0), incorr (0);
+  // tagging
+  std::fprintf (stderr, "tagging words..");
   // some temporary variables
+  int corr (0), incorr (0);
   size_t num_sent = 0;
   std::vector <int> words, tags, tags_gold;
   char line[1024];
@@ -133,14 +130,15 @@ int main (int argc, char** argv) {
       words.push_back (id == -1 ? 0 : id);
       char* tag = ++p; while (*p != ' ') ++p;
       id = tag2id.exactMatchSearch <int> (tag, p - tag);
-      if (id == -1) { // unseen tag found
-        *p = '\0'; std::fprintf (stderr, "unseen tag found: %s\n", tag);
+      if (id == -1) { // unknown tag found
+        *p = '\0'; std::fprintf (stderr, "unknown tag found: %s\n", tag);
         hmm.add_tag ();
         id = tag2id.update (tag, p - tag) = hmm.num_tags () - 1;
       }
       tags_gold.push_back (id);
     }
   }
+  std::fprintf (stderr, "done.\n");
   std::fprintf (stderr, "# sent: %ld\n", num_sent);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",
                 corr * 1.0 / (corr + incorr), corr, incorr);
