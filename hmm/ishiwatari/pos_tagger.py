@@ -1,11 +1,12 @@
 import sys
 import pickle
 import collections
+from math import *
 
 def train():
 	"""
 	# read train data from stdin and make A and B
-	# return A['prev_POS']['next_POS'], B['POS']['word']
+	# return A['prev_POS']['next_POS'], B['POS']['word'], word_list
 	"""
 	A = collections.defaultdict(dict)
 	B = collections.defaultdict(dict)
@@ -70,7 +71,6 @@ def train():
 
 	word_list_uniq += ['<UNK>']
 
-
 	# add 1 smoothing
 	for pos in pos_list_uniq:
 		for word in word_list_uniq:
@@ -102,7 +102,6 @@ def train():
 			if prev == 'EOS' or next == 'BOS':
 				A_sm[prev][next] = 0
 
-
 	# normalize
 	for pos in B_sm:
 		s = sum(B_sm[pos].values())
@@ -116,18 +115,77 @@ def train():
 			if A_sm[prev][next] != 0:
 				A_sm[prev][next] /= s
 
-	return A_sm, B_sm
+	return A_sm, B_sm, word_list_uniq
 
+def write_to_stdout(AorB):
+	for x in AorB:
+		for y in AorB[x]:
+			if AorB[x][y] != 0:
+				print(x, y, AorB[x][y])
+
+# Save data using pickle.
+def save(data, filename):
+	f = open(filename, 'wb')
+	pickle.dump(data, f)
+	f.close()
+	print('Output:', filename)
+	return
+
+# Load data from pickle.
+def load(filename):
+	f = open(filename, 'rb')
+	data = pickle.load(f)
+	f.close()
+	print('Loaded:', filename)
+	return data
+
+def likelihood(A, B, word_list):
+	"""
+	Get testdata from stdin and compute likelihood of each sentence using Forward Algorithm.
+	"""
+	str_buf = []
+	loglh = 0.0
+	lh = 1
+
+	# read each line and compute likelihood.
+	for line in sys.stdin:
+		line = line.split()
+		# print(line)
+		if len(line) == 3:
+			str_buf.append((str(line[0]), str(line[1])))
+
+		else:
+			# if come to the end of a sentence
+			if len(str_buf) != 0:
+				str_buf = [('<s>','BOS')] + str_buf + [('</s>', 'EOS')]
+				for i in range(len(str_buf) - 1):
+					# print(str_buf[i][0], str_buf[i+1][0])
+					if str_buf[i+1][0] in word_list:
+						# print('debug: A[',str_buf[i][1],'][', str_buf[i+1][1],']:', A[ str_buf[i][1] ][ str_buf[i+1][1] ])
+						# print('debug: B[',str_buf[i+1][1],'][', [str_buf[i+1][0]], ']:', B[ str_buf[i+1][1] ][str_buf[i+1][0]])
+						loglh += ( log(A[ str_buf[i][1] ][ str_buf[i+1][1] ]) + log(B[ str_buf[i+1][1] ][str_buf[i+1][0]]) )
+					else:
+						# print('debug: else A[',str_buf[i][1],'][', str_buf[i+1][1],']:', A[ str_buf[i][1] ][ str_buf[i+1][1] ])
+						# print('debug: else B[',str_buf[i+1][1],'][', '<UNK>', ']:', B[ str_buf[i+1][1] ][ '<UNK>' ])
+						loglh += ( log(A[ str_buf[i][1] ][ str_buf[i+1][1] ]) + log(B[ str_buf[i+1][1] ]['<UNK>']) )
+
+				lh = e ** loglh
+				# for s in str_buf:
+				# 	print(s[0], end=" ")
+				# print(':', lh)
+				print(lh)
+
+				str_buf = []	
+				loglh = 0
+				lh = 1
 
 
 if __name__ == '__main__':
-	A, B = train()
-	# for prev in A:
-	# 	for next in A[prev]:
-	# 		if A[prev][next] != 0:
-	# 			print(prev, next, A[prev][next])
 
-	for pos in B:
-		for word in B[pos]:
-			if B[pos][word] != 0:
-				print(pos, word, B[pos][word])
+	A = load('data/A.pic')
+	B = load('data/B.pic')
+	word_list = load('data/word_list.pic')
+	# for w in word_list:
+	# 	print(w)
+
+	likelihood(A,B, word_list)
