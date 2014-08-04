@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pypy
 # -*- coding:utf-8 -*-
 import sys,os
 #import math,re,datetime
@@ -6,8 +6,9 @@ import sys,os
 def dataFetcher(filename):
     f = open(filename,"r")
     while True:
-        words_1sentence = [None]
-        postag_1sentence = ["<s>"]
+        words_1sentence = []
+        postag_1sentence = []
+
         for line in f:
             if line.strip() != "":
                 items = line.strip().split(" ")
@@ -17,12 +18,14 @@ def dataFetcher(filename):
                 words_1sentence.append(None)
                 postag_1sentence.append("</s>")
                 yield words_1sentence,postag_1sentence
+                words_1sentence = []
+                postag_1sentence = []
         raise StopIteration
 
 def supervised_train():
     ## pre_learning_the_number_of_postag
     postaglist = list()
-    f_postag = open("mini_train_postag","r")
+    f_postag = open("train_postag","r")
     for line in f_postag:
         postaglist.append(line.strip())
     postaglist.append("</s>")
@@ -31,7 +34,7 @@ def supervised_train():
 
     ## pre_learning_the_number_of_words
     wordslist = list()
-    f_words = open("mini_train_words","r")
+    f_words = open("train_words","r")
     for line in f_words:
         try:
             items = line.strip().split(" ")
@@ -55,12 +58,11 @@ def supervised_train():
     B = [[0 for i in range(V)] for j in range(K)]
 
     ## learning phase
-    f_learn = "ishiwatari_data/mini_train"
+    f_learn = "ishiwatari_data/train.txt"
 
-    pre_postag = "<s>"
     for words_1sentence,postag_1sentence in dataFetcher(f_learn):
+        pre_postag = ""
         for word,postag in zip(words_1sentence,postag_1sentence):
-
             # get index
             if word != None: # NOT the head or end of the file
                 try:
@@ -70,30 +72,18 @@ def supervised_train():
             postag_index = postaglist.index(postag)
 
             # train A (trainsition probability matrix) or PI (initial probability)
-            if pre_postag == "<s>":
+            if pre_postag == "":
                 PI_counts[postag_index] += 1
             else:
                 pre_postag_index = postaglist.index(pre_postag)
                 A_counts[pre_postag_index][postag_index] += 1
 
             # train B (observation likelihoods)
-            if postag != 
-            B_counts[postag_index][word_index] += 1
+            if postag != "</s>":
+                B_counts[postag_index][word_index] += 1
         
             # prepare for the next loop
             pre_postag = postag
-
-        else: # the end of the sentence
-            postag_index = postaglist.index(postag)
-
-            # train A (trainsition probability matrix) or PI (initial probability)
-            if pre_postag == "<s>":
-                PI_counts[postag_index] += 1
-            else:
-                pre_postag_index = postaglist.index(pre_postag)
-                A_counts[pre_postag_index][postag_index] += 1
-
-            pre_postag = "<s>"
 
     ## calcuration probability
     ### PI
@@ -117,20 +107,39 @@ def supervised_train():
             print postaglist[i],wordslist[j],B[i][j], B_counts[i][j],sum(B_counts[i])
                             
     
-    return postaglist,K,wordlist,V,A,PI,B
+    return postaglist,K,wordslist,V,A,PI,B
 
 def calc_likelihood_by_forwarding(testfilename):
-    postaglist,K,wordlist,V,A,PI,B = supervised_train()
+    postaglist,K,wordslist,V,A,PI,B = supervised_train()
     
-    pre_postag = "<s>"
-    alpha = list()
-    
-    for word,postag in dataFetcher(testfilename):
-        if pre_postag == "<s>":
-            alpha.append
+    for words_1sentence,postag_1sentence in dataFetcher(testfilename):
+        likelihood = 1.0
+        pre_postag = ""
+        for i,(word,postag) in enumerate(zip(words_1sentence,postag_1sentence)):
+            postag_index = postaglist.index(postag)
+            
+            if i == 0: #the head of sentence
+                likelihood *= PI[postag_index]
+            elif postag == "</s>": #the tail of sentence
+                likelihood *= A[pre_postag_index][postag_index]
+            else:
+                try:
+                    word_index = wordslist.index(word)
+                except:
+                    word_index = wordslist.index("<UNK>")
+                likelihood *= A[pre_postag_index][postag_index] * B[postag_index][word_index]
+
+            pre_postag = postag
+            pre_postag_index = postaglist.index(pre_postag)
+
+        #yield " ".join(words_1sentence),likelihood
+        print " ".join(words_1sentence[:-1]),likelihood
+
+    #raise StopIteration
 
 if __name__ == "__main__":
-    for word_s,postag_s in dataFetcher("ishiwatari_data/mini_train"):
-        print word_s
-        print postag_s,"\n"
-#    supervised_train()
+    #for word_s,postag_s in dataFetcher("ishiwatari_data/mini_train"):
+    #    print word_s
+    #    print postag_s,"\n"
+    #supervised_train()
+    calc_likelihood_by_forwarding("ishiwatari_data/mini_test")
