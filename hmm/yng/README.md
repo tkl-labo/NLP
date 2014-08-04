@@ -6,11 +6,11 @@ A simple tagger based on first-order HMM
 
             > g++ -I. -Wall -O2 -g train.cc -o train
             > zcat train.txt.gz | time ./train 1 > model
-            # sent: 8936
+            # sentences: 8936
             # tags: 44
             # words: 19122
             # words (above threshold): 9674
-            ./train 1 > model  0.24s user 0.02s system 90% cpu 0.285 total
+            ./train 1 > model  0.14s user 0.01s system 98% cpu 0.155 total
   
 + tagger.cc - implementation of viterbi algorithm for first-order HMM
   - some room for speed-up
@@ -19,8 +19,8 @@ A simple tagger based on first-order HMM
             > zcat test.txt.gz | time ./tagger model
             reading model..done.
             tagging words..done.
-            # sent: 2012
+            # sentences: 2012
             acc. 0.9368 (corr 44385) (incorr 2992)
-            ./tagger model  0.31s user 0.01s system 97% cpu 0.326 total
+            ./tagger model  0.18s user 0.01s system 99% cpu 0.184 total
 
-tagger processes 6171 sentences / sec. on Linux server with Intel Xeon X7460 @ 2.66GHz
+tagger processes 10,934 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz

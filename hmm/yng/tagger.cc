@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <cedar.h>
+#include <cedarpp.h>
 
 typedef cedar::da <int>  sbag_t;
 
@@ -139,7 +139,7 @@ int main (int argc, char** argv) {
     }
   }
   std::fprintf (stderr, "done.\n");
-  std::fprintf (stderr, "# sent: %ld\n", num_sent);
+  std::fprintf (stderr, "# sentences: %ld\n", num_sent);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",
                 corr * 1.0 / (corr + incorr), corr, incorr);
 }
