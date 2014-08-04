@@ -1,4 +1,4 @@
-minimum edit distance and its applications
+A simple tagger based on first-order HMM
 ===
 + train.cc - learning parameters for first-order HMM
   - assume words with low frequency as unknown words
