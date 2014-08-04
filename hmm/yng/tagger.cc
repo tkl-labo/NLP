@@ -121,27 +121,28 @@ int main (int argc, char** argv) {
   char line[1024];
   while (std::fgets (line, 1024, stdin) != NULL) {
     if (line[0] == '\n') {
-      ++num_sent;
       viterbi (words, hmm, tags);
       for (size_t i = 0; i < tags.size (); ++i)
         if (tags[i] == tags_gold[i]) ++corr; else ++incorr;
       words.clear ();
       tags.clear ();
       tags_gold.clear ();
-    } else {
-      char* p = line;
-      char* word = p; while (*p != ' ') ++p;
-      int id = word2id.exactMatchSearch <int> (word, p - word);
-      words.push_back (id == -1 ? 0 : id);
-      char* tag = ++p; while (*p != ' ') ++p;
-      id = tag2id.exactMatchSearch <int> (tag, p - tag);
-      if (id == -1) { // unknown tag found
-        *p = '\0'; std::fprintf (stderr, "unknown tag found: %s\n", tag);
-        hmm.add_tag ();
-        id = tag2id.update (tag, p - tag) = hmm.num_tags () - 1;
-      }
-      tags_gold.push_back (id);
+      if (++num_sent % 1000 == 0)
+        std::fprintf (stderr, ".");
+      continue;
     }
+    char* p = line;
+    char* word = p; while (*p != ' ') ++p;
+    int id = word2id.exactMatchSearch <int> (word, p - word);
+    words.push_back (id == -1 ? 0 : id);
+    char* tag = ++p; while (*p != ' ') ++p;
+    id = tag2id.exactMatchSearch <int> (tag, p - tag);
+    if (id == -1) { // unknown tag found
+      *p = '\0'; std::fprintf (stderr, "unknown tag found: %s\n", tag);
+      hmm.add_tag ();
+      id = tag2id.update (tag, p - tag) = hmm.num_tags () - 1;
+    }
+    tags_gold.push_back (id);
   }
   gettimeofday (&end, 0);
   std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);

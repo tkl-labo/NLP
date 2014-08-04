@@ -5,8 +5,8 @@ A simple tagger based on first-order HMM
   - apply laplace smoothing for transition probabilities
 
             > g++ -I. -Wall -O2 -g train.cc -o train
-            > zcat train.txt.gz | ./train 1 > model
-            collecting statistics: ........0.058s
+            > zcat train.txt.gz | ./train 1 > model 
+            collecting statistics: ........0.059s
             # sentences: 8936
             # tags: 44
             # words: 19122
@@ -17,9 +17,9 @@ A simple tagger based on first-order HMM
 
             > g++ -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
-            reading model: 0.029s
-            tagging words: 0.150s
+            reading model: 0.025s
+            tagging words: ..0.149s
             # sentences: 2012
             acc. 0.9368 (corr 44385) (incorr 2992)
-           
+
 tagger processes 13,413 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
