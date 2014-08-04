@@ -1,4 +1,4 @@
-iRockwell NNP B-NP
+Rockwell NNP B-NP
 International NNP I-NP
 Corp. NNP I-NP
 's POS B-NP
@@ -44,7 +44,7 @@ for IN B-PP
 the DT B-NP
 planes NNS I-NP
 . . O
-i
+
 These DT B-NP
 include VBP B-VP
 , , O
@@ -78,3 +78,4 @@ aft JJ I-NP
 keel NN I-NP
 beam NN I-NP
 . . O
+
