@@ -1,4 +1,5 @@
 // tagger.cc -- implementation of viterbi algorithm for first-order HMM
+#include <sys/time.h>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -29,7 +30,6 @@ void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
   int num_tags  = 0;
   int num_words = 1; // 0 is reserved for unknown words
   FILE* fp = std::fopen (model, "r");
-  std::fprintf (stderr, "reading model..");
   while (std::fgets (line, 1024, fp) != NULL) {
     size_t len = std::strlen (line) - 1;
     char* p = line;
@@ -57,7 +57,6 @@ void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
       ++flag;
   }
   std::fclose (fp);
-  std::fprintf (stderr, "done.\n");
 }
 
 void viterbi (const std::vector <int>& words, const hmm_t& hmm,
@@ -103,12 +102,18 @@ int main (int argc, char** argv) {
     std::fprintf (stderr, "Usage: %s model < test\n", argv[0]);
     std::exit (1);
   }
+  struct timeval start, end;
   // read model
   hmm_t hmm;
   sbag_t tag2id, word2id;
+  std::fprintf (stderr, "reading model: ");
+  gettimeofday (&start, 0);
   read_model (argv[1], tag2id, word2id, hmm);
+  gettimeofday (&end, 0);
+  std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   // tagging
-  std::fprintf (stderr, "tagging words..");
+  std::fprintf (stderr, "tagging words: ");
+  gettimeofday (&start, 0);
   // some temporary variables
   int corr (0), incorr (0);
   size_t num_sent = 0;
@@ -138,7 +143,8 @@ int main (int argc, char** argv) {
       tags_gold.push_back (id);
     }
   }
-  std::fprintf (stderr, "done.\n");
+  gettimeofday (&end, 0);
+  std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   std::fprintf (stderr, "# sentences: %ld\n", num_sent);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",
                 corr * 1.0 / (corr + incorr), corr, incorr);

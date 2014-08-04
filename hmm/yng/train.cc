@@ -1,4 +1,5 @@
 // train.cc -- learning parameters for first-order HMM
+#include <sys/time.h>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -14,6 +15,7 @@ int main (int argc, char** argv) {
   }
   int threshold = static_cast <int> (std::strtol (argv[1], NULL, 10));
   //
+  struct timeval start, end;
   sbag_t tag2id;
   sbag_t word2id;
   std::vector <std::string> id2tag, id2word;
@@ -25,10 +27,13 @@ int main (int argc, char** argv) {
   int word (-1), tag (-1), tag_prev (-1);
   size_t num_sent = 0;
   char line[1024];
+  gettimeofday (&start, 0);
+  std::fprintf (stderr, "collecting statistics: ");
   while (std::fgets (line, 1024, stdin) != NULL) {
     if (line[0] == '\n'){
       tag_prev = -1;
-      ++num_sent;
+      if (++num_sent % 1000 == 0)
+        std::fprintf (stderr, ".");
       continue;
     }
     char* p = line;
@@ -69,6 +74,8 @@ int main (int argc, char** argv) {
       ++transition[tag_prev][tag];
     tag_prev = tag;
   }
+  gettimeofday (&end, 0);
+  std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   // compute tag distribution for unknown words
   std::vector <int> unk (id2tag.size (), 0);
   for (size_t i = 0; i < emission.size (); ++i)
