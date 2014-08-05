@@ -9,7 +9,7 @@
 #include "cedarpp.h"
 
 static const size_t KEY_SIZE = 8;
-typedef cedar::da <int> trie_t;
+typedef cedar::da <int, -1, -2, true> trie_t;
 typedef unsigned char uchar;
 
 // integer <-> byte encoded compact string
@@ -63,7 +63,7 @@ public:
 int main (int argc, char** argv) {
   if (argc < 2)
     { std::fprintf (stdout, "Usage: %s N", argv[0]); std::exit (1); }
-  const int N = std::strtol (argv[1], NULL, 10);
+  const size_t N = std::strtol (argv[1], NULL, 10);
 
   sbag_t sbag;
   trie_t ngrams;
@@ -79,18 +79,20 @@ int main (int argc, char** argv) {
       words.push_back (sbag.to_id (word, p - word));
     }
     words.push_back (2);
-    for (int i = 0; i < words.size (); ++i) {
-      for (size_t n = 1; n <= N; ++n) {
-        if (i + n < N) continue;
+    for (int i = 0; i <= words.size () - N; ++i) {
+    // for (int i = 0; i < words.size (); ++i) {
+    //   for (size_t n = 1; n <= N; ++n) {
+    //     if (i + n < N) continue;
         cedar::npos_t from = 0;
         size_t pos = 0;
         int* v = 0;
-        for (int j (i), k (std::min (i + n, words.size ())); j < k; ++j) {
+        //    for (int j (i), k (std::min (i + N, words.size ())); j < k; ++j) {
+        for (int j (i), k (std::min (i + N, words.size ())); j < k; ++j) {
           byte_encoder encoder (words[j]);
           v = &ngrams.update (encoder.key (), from, pos = 0, encoder.len ());
         }
         if (v) *v += 1;
-      }
+        // }
     }
   }
   // output count
