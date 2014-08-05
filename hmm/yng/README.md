@@ -6,7 +6,7 @@ A simple tagger based on first-order HMM
 
             > g++ -I. -Wall -O2 -g train.cc -o train
             > zcat train.txt.gz | ./train 10 > model
-            collecting statistics: ........0.060s
+            collecting statistics: ........0.058s
             # sentences: 8936
             # tags: 44
             # words: 19122
@@ -17,9 +17,11 @@ A simple tagger based on first-order HMM
 
             > g++ -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
-            reading model: 0.063s
-            tagging words: ..0.130s
+            reading model: 0.062s
+            tagging words: ..0.131s
             # sentences: 2012
-            acc. 0.9510 (corr 45054) (incorr 2323)
+            acc. 0.9555 (corr 45270) (incorr 2107)
+              (seen)   0.9576 (corr 44281) (incorr 1963)
+              (unseen) 0.8729 (corr 989) (incorr 144)
 
-tagger processes 15,476 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+tagger processes 15,358 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz

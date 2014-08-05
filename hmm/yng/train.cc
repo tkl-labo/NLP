@@ -25,7 +25,7 @@ int main (int argc, char** argv) {
   std::vector <int> count_word, count_tag;
   //
   int word (-1), tag (-1), tag_prev (-1);
-  size_t num_sent = 0;
+  size_t num_sent (0), num_tokens (0);
   char line[1024];
   gettimeofday (&start, 0);
   std::fprintf (stderr, "collecting statistics: ");
@@ -47,6 +47,7 @@ int main (int argc, char** argv) {
         id = static_cast <int> (id2word.size ());
       }
       word = id - 1;
+      ++num_tokens;
     }
     ++p;
     { // tag to id
@@ -76,12 +77,17 @@ int main (int argc, char** argv) {
   }
   gettimeofday (&end, 0);
   std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
-  // compute tag distribution for unknown words
-  std::vector <int> unk (id2tag.size (), 0);
+  // compute tag distribution for capitalized/uncapitalized unknown words
+  // -ful -ed -tive -ous -ry
+  std::vector <int> unk_cap   (id2tag.size (), 0);
+  std::vector <int> unk_uncap (id2tag.size (), 0);
   for (size_t i = 0; i < emission.size (); ++i)
-    if (count_word[i] <= threshold)
+    if (count_word[i] <= threshold) {
+      int* unk = id2word[i][0] >= 'A' && id2word[i][0] <= 'Z' ?
+                 &unk_cap[0] : &unk_uncap[0];
       for (size_t j = 0; j < emission[i].size (); ++j)
         unk[j] += emission[i][j];
+    }
   //
   // output tags
   for (size_t i = 0; i < id2tag.size (); ++i)
@@ -103,21 +109,28 @@ int main (int argc, char** argv) {
   // output transition
   for (size_t i = 0; i < transition.size (); ++i) {
     int sum = 0;
+    static const double lambda = 0.2;
     for (size_t j = 0; j < transition[i].size (); ++j) sum += transition[i][j];
     for (size_t j = 0; j < transition[i].size (); ++j)
-      std::fprintf (stdout, "%g ", // naive laplace smoothing
-                    (transition[i][j] + 1) * 1.0 / (sum + transition.size ()));
+      // std::fprintf (stdout, "%g ", // naive laplace smoothing
+      //               (transition[i][j] + 1) * 1.0 / (sum + transition.size ()));
+      std::fprintf (stdout, "%g ", // naive interpolation
+                    lambda * count_tag[j] / num_tokens + (1 - lambda) * transition[i][j] / sum);
     std::fprintf (stdout, "\n");
   }
   std::fprintf (stdout, "\n");
-  // output tag distribution for unknown words
-  for (size_t i = 0; i < unk.size (); ++i)
-    std::fprintf (stdout, "%g ", unk[i] * 1.0 / (count_tag[i] + unk[i]));
+  // output tag distribution for capitalized unknown words
+  for (size_t i = 0; i < unk_cap.size (); ++i)
+    std::fprintf (stdout, "%g ", unk_cap[i] * 1.0 / (count_tag[i] + unk_cap[i]  + unk_uncap[i]));
+  std::fprintf (stdout, "\n");
+  // output tag distribution for uncapitalized unknown words
+  for (size_t i = 0; i < unk_uncap.size (); ++i)
+    std::fprintf (stdout, "%g ", unk_uncap[i] * 1.0 / (count_tag[i] + unk_cap[i]  + unk_uncap[i]));
   std::fprintf (stdout, "\n");
   // output emission
   for (size_t i = 0; i < emission.size (); ++i) {
     for (size_t j = 0; j < emission[i].size (); ++j)
-      std::fprintf (stdout, "%g ", emission[i][j] * 1.0 / (count_tag[j] + unk[j]));
+      std::fprintf (stdout, "%g ", emission[i][j] * 1.0 / (count_tag[j] + unk_cap[j]  + unk_uncap[j]));
       std::fprintf (stdout, "\n");
   }
   //

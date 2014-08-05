@@ -6,6 +6,7 @@
 #include <climits>
 #include <limits>
 #include <vector>
+#include <string>
 #include <algorithm>
 #include <cedarpp.h>
 
@@ -29,7 +30,7 @@ struct hmm_t {
 void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
   int flag = 0;
   int num_tags  = 0;
-  int num_words = 1; // 0 is reserved for unknown words
+  int num_words = 2; // 0-1 is reserved for unknown words
   FILE* fp = std::fopen (model, "r");
   char line[1024];
   while (std::fgets (line, 1024, fp) != NULL) {
@@ -117,7 +118,7 @@ int main (int argc, char** argv) {
   std::fprintf (stderr, "tagging words: ");
   gettimeofday (&start, 0);
   // some temporary variables
-  int corr (0), incorr (0);
+  int seen_corr (0), seen_incorr (0), unseen_corr (0), unseen_incorr (0);
   size_t num_sent = 0;
   std::vector <int> words, tags, tags_gold;
   char line[1024];
@@ -125,7 +126,10 @@ int main (int argc, char** argv) {
     if (line[0] == '\n') {
       viterbi (words, hmm, tags);
       for (size_t i = 0; i < tags.size (); ++i)
-        if (tags[i] == tags_gold[i]) ++corr; else ++incorr;
+        if (tags[i] == tags_gold[i])
+          { if (words[i]) ++seen_corr;    else ++unseen_corr;   }
+        else
+          { if (words[i]) ++seen_incorr;  else ++unseen_incorr; }
       words.clear ();
       tags.clear ();
       tags_gold.clear ();
@@ -136,7 +140,8 @@ int main (int argc, char** argv) {
     char* p = line;
     char* word = p; while (*p != ' ') ++p;
     int id = word2id.exactMatchSearch <int> (word, p - word);
-    words.push_back (id == -1 ? 0 : id);
+    words.push_back (id != -1 ? id :
+                     (! words.empty () && *word >= 'A' && *word <= 'Z' ? 0 : 1));
     char* tag = ++p; while (*p != ' ') ++p;
     id = tag2id.exactMatchSearch <int> (tag, p - tag);
     if (id == -1) { // unknown tag found
@@ -150,5 +155,10 @@ int main (int argc, char** argv) {
   std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   std::fprintf (stderr, "# sentences: %ld\n", num_sent);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",
-                corr * 1.0 / (corr + incorr), corr, incorr);
+                (seen_corr + unseen_corr) * 1.0 / (seen_corr + unseen_corr + seen_incorr + unseen_incorr),
+                seen_corr + unseen_corr, seen_incorr + unseen_incorr);
+  std::fprintf (stderr, "  (seen)   %.4f (corr %d) (incorr %d)\n",
+                seen_corr * 1.0 / (seen_corr + seen_incorr), seen_corr, seen_incorr);
+  std::fprintf (stderr, "  (unseen) %.4f (corr %d) (incorr %d)\n",
+                unseen_corr * 1.0 / (unseen_corr + unseen_incorr), unseen_corr, unseen_incorr);
 }
