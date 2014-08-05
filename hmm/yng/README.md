@@ -15,13 +15,13 @@ A simple tagger based on first-order HMM
 + tagger.cc - viterbi algorithm for first-order HMM
  - yet some room for speed-up
 
-            > g++ -I. -Wall -O2 -g tagger.cc -o tagger
+            > g++ -DNDEBUG -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
-            reading model: 0.062s
-            tagging words: ..0.131s
+            reading model: 0.061s
+            tagging words: ..0.134s
             # sentences: 2012
-            acc. 0.9555 (corr 45270) (incorr 2107)
-              (seen)   0.9576 (corr 44281) (incorr 1963)
-              (unseen) 0.8729 (corr 989) (incorr 144)
+            acc. 0.9696 (corr 45939) (incorr 1438)
+              (seen)   0.9806 (corr 43219) (incorr 856)
+              (unseen) 0.8237 (corr 2720) (incorr 582)
 
-tagger processes 15,358 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+tagger processes 15,014 sentences (353,559 tokens) / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
