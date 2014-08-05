@@ -123,7 +123,7 @@ int main (int argc, char** argv) {
     }
   //
   std::fprintf (stderr, "# sentences: %ld\n", num_sent);
-  std::fprintf (stderr, "# tags: %ld\n", id2tag.size ());
+  std::fprintf (stderr, "# tags: %ld\n",  id2tag.size ());
   std::fprintf (stderr, "# words: %ld\n", id2word.size ());
   std::fprintf (stderr, "# words (above threshold): %ld\n", id2word.size () - num_words_as_unknown);
   return 0;

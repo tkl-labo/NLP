@@ -41,13 +41,13 @@ void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
         while (*p != '\n')
           hmm.init.push_back (std::strtod (p, &p)), ++p;
         break;
-      case 3: // tag -> tag
-        hmm.transition.push_back (std::vector <double> ());
-        hmm.transition.back ().reserve (num_tags);
-        while (*p != '\n')
-          hmm.transition.back ().push_back (std::strtod (p, &p)), ++p;
+      case 3: // tag <- tag (prev); // transpose for cache access
+        if (hmm.transition.empty ())
+          hmm.transition.resize (num_tags, std::vector <double> ());
+        for (size_t i = 0; *p != '\n'; ++i)
+          hmm.transition[i].push_back (std::strtod (p, &p)), ++p;
         break;
-      case 4: // word - word
+      case 4: // word <- tag
         hmm.emission.push_back (std::vector <double> ());
         hmm.emission.back ().reserve (num_tags);
         while (*p != '\n')
@@ -83,7 +83,7 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
       size_t max_k = 0;
       double max_prob = 0.0;
       for (size_t k = 0; k < m; ++k) {
-        double val = prob[i-1][k] * hmm.transition[k][j] * hmm.emission[words[i]][j];
+        double val = prob[i-1][k] * hmm.transition[j][k] * hmm.emission[words[i]][j];
         if (max_prob <= val)
           max_prob = val, max_k = k;
       }
