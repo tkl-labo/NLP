@@ -1,9 +1,11 @@
 // tagger.cc -- implementation of viterbi algorithm for first-order HMM
 #include <sys/time.h>
 #include <cstdio>
+#include <cmath>
 #include <cstdlib>
+#include <climits>
+#include <limits>
 #include <vector>
-#include <string>
 #include <algorithm>
 #include <cedarpp.h>
 
@@ -11,25 +13,25 @@ typedef cedar::da <int>  sbag_t;
 
 struct hmm_t {
   std::vector <double> init;
-  std::vector <std::vector <double> > transition; // tag  -> tag
-  std::vector <std::vector <double> > emission;   // word -> tag
+  std::vector <std::vector <double> > transition; // tag  <- tag (pre)
+  std::vector <std::vector <double> > emission;   // word <- tag
   void add_tag () { // register unseen tags
     init.push_back (0.0);
     for (size_t i = 0; i < transition.size (); ++i)
       transition[i].push_back (0.0);
     transition.push_back (std::vector <double> (transition.size () + 1, 0.0));
     for (size_t i = 0; i < emission.size (); ++i)
-      emission[i].push_back (1.0 / emission.size ());
+      emission[i].push_back (std::log (1.0 / emission.size ()));
   }
   int num_tags () const { return static_cast <int> (transition.size ()); }
 };
 
 void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
-  char line[1024];
   int flag = 0;
   int num_tags  = 0;
   int num_words = 1; // 0 is reserved for unknown words
   FILE* fp = std::fopen (model, "r");
+  char line[1024];
   while (std::fgets (line, 1024, fp) != NULL) {
     size_t len = std::strlen (line) - 1;
     char* p = line;
@@ -38,20 +40,20 @@ void read_model (char* model, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
       case 0: tag2id.update  (p, len) = num_tags++;  break; // tag  -> id
       case 1: word2id.update (p, len) = num_words++; break; // word -> id
       case 2: // init
-        while (*p != '\n')
-          hmm.init.push_back (std::strtod (p, &p)), ++p;
+        for (; *p != '\n'; ++p)
+          hmm.init.push_back (std::log (std::strtod (p, &p)));
         break;
       case 3: // tag <- tag (prev); // transpose for cache access
         if (hmm.transition.empty ())
           hmm.transition.resize (num_tags, std::vector <double> ());
-        for (size_t i = 0; *p != '\n'; ++i)
-          hmm.transition[i].push_back (std::strtod (p, &p)), ++p;
+        for (size_t i = 0; *p != '\n'; ++i, ++p)
+          hmm.transition[i].push_back (std::log (std::strtod (p, &p)));
         break;
       case 4: // word <- tag
         hmm.emission.push_back (std::vector <double> ());
         hmm.emission.back ().reserve (num_tags);
-        while (*p != '\n')
-          hmm.emission.back ().push_back (std::strtod (p, &p)), ++p;
+        for (; *p != '\n'; ++p)
+          hmm.emission.back ().push_back (std::log (std::strtod (p, &p)));
         break;
     } else
       ++flag;
@@ -64,33 +66,33 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
   size_t n = words.size ();
   const size_t m = hmm.num_tags ();
   // avoid memory reallocation for viterbi matrix
-  static std::vector <std::vector <double> > prob;
+  static std::vector <std::vector <double> > log_prob;
   static std::vector <std::vector <int> > bptr;
-  if (prob.size () < n) {
-    prob.resize (n, std::vector <double> (m, 0.0));
+  if (log_prob.size () < n) {
+    log_prob.resize (n, std::vector <double> (m, 0.0));
     bptr.resize (n, std::vector <int> (m, -1));
   }
-  for (size_t i = 0; i < prob.size () && prob[i].size () < m; ++i) {
-    prob[i].resize (m, 0.0);
+  for (size_t i = 0; i < log_prob.size () && log_prob[i].size () < m; ++i) {
+    log_prob[i].resize (m, 0.0);
     bptr[i].resize (m, -1);
   }
   tags.resize (n);
   // initialize
   for (size_t j = 0; j < m; ++j)
-    prob[0][j] = hmm.init[j] * hmm.emission[words[0]][j];
+    log_prob[0][j] = hmm.init[j] + hmm.emission[words[0]][j];
   for (size_t i = 1; i < n; ++i) // for each word
     for (size_t j = 0; j < m; ++j) { // for each tag
       size_t max_k = 0;
-      double max_prob = 0.0;
+      double max_log_prob = - std::numeric_limits <double>::infinity ();
       for (size_t k = 0; k < m; ++k) {
-        double val = prob[i-1][k] * hmm.transition[j][k] * hmm.emission[words[i]][j];
-        if (max_prob <= val)
-          max_prob = val, max_k = k;
+        double val = log_prob[i-1][k] + hmm.transition[j][k] + hmm.emission[words[i]][j];
+        if (max_log_prob <= val)
+          max_log_prob = val, max_k = k;
       }
-      prob[i][j] = max_prob;
+      log_prob[i][j] = max_log_prob;
       bptr[i][j] = max_k;
     }
-  int tag = std::max_element (prob[n-1].begin (), prob[n-1].end ()) - prob[n-1].begin ();
+  int tag = std::max_element (log_prob[n-1].begin (), log_prob[n-1].end ()) - log_prob[n-1].begin ();
   do {
     tags[--n] = tag;
     tag = bptr[n][tag];

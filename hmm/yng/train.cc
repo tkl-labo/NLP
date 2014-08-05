@@ -89,11 +89,11 @@ int main (int argc, char** argv) {
   std::fprintf (stdout, "\n");
   // output words
   size_t num_words_as_unknown = 0;
-  for (size_t i = 0; i < id2word.size (); ++i)
-    if (count_word[i] > threshold)
-      std::fprintf (stdout, "%s\n", id2word[i].c_str ());
-    else
+  for (size_t i = 0; i < id2word.size (); ++i) {
+    std::fprintf (stdout, "%s\n", id2word[i].c_str ());
+    if (count_word[i] <= threshold)
       ++num_words_as_unknown;
+  }
   std::fprintf (stdout, "\n");
   // output init
   for (size_t i = 0; i < init.size (); ++i)
@@ -112,15 +112,14 @@ int main (int argc, char** argv) {
   std::fprintf (stdout, "\n");
   // output tag distribution for unknown words
   for (size_t i = 0; i < unk.size (); ++i)
-    std::fprintf (stdout, "%g ", unk[i] * 1.0 / count_tag[i]);
+    std::fprintf (stdout, "%g ", unk[i] * 1.0 / (count_tag[i] + unk[i]));
   std::fprintf (stdout, "\n");
   // output emission
-  for (size_t i = 0; i < emission.size (); ++i)
-    if (count_word[i] > threshold) {
-      for (size_t j = 0; j < emission[i].size (); ++j)
-        std::fprintf (stdout, "%g ", emission[i][j] * 1.0 / count_tag[j]);
+  for (size_t i = 0; i < emission.size (); ++i) {
+    for (size_t j = 0; j < emission[i].size (); ++j)
+      std::fprintf (stdout, "%g ", emission[i][j] * 1.0 / (count_tag[j] + unk[j]));
       std::fprintf (stdout, "\n");
-    }
+  }
   //
   std::fprintf (stderr, "# sentences: %ld\n", num_sent);
   std::fprintf (stderr, "# tags: %ld\n",  id2tag.size ());
