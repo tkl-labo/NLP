@@ -1,7 +1,7 @@
 A simple tagger based on first-order HMM
 ===
 + train.cc - learning parameters for first-order HMM
- - assume words with low frequency as unknown words
+ - use tag distribtion for rare words to estimate that for unknown words
  - apply laplace smoothing for transition probabilities
 
             > g++ -I. -Wall -O2 -g train.cc -o train
@@ -12,8 +12,8 @@ A simple tagger based on first-order HMM
             # words: 19122
             # words (above threshold): 2251
   
-+ tagger.cc - implementation of viterbi algorithm for first-order HMM
- - some room for speed-up
++ tagger.cc - viterbi algorithm for first-order HMM
+ - yet some room for speed-up
 
             > g++ -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
