@@ -22,4 +22,4 @@ A simple tagger based on first-order HMM
             # sentences: 2012
             acc. 0.9368 (corr 44385) (incorr 2992)
 
-tagger processes 13,503 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+tagger processes 18,290 sentences / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
