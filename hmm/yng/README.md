@@ -19,7 +19,6 @@ A simple POS tagger based on first-order HMM
  - support quiet test (when compiled with -DNDEBUG)
 
             > g++ -DNDEBUG -I. -Wall -O2 -g tagger.cc -o tagger
-            > zcat test.txt.gz | ./tagger model                
             > zcat test.txt.gz | ./tagger model
             reading model: 0.061s
             tagging words: ..0.039s
