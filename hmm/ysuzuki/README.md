@@ -2,13 +2,13 @@
 
 ##hmm.py
 
-###supervised_train()
+####supervised_train()
 	training HMM variables(PI,A,B,and so on) with Laplace smoothing
 
-###calc_likelihood(testfilename)
+####calc_likelihood(testfilename)
 	calculating likelihood of the sentence given word and POStag
 
-###decoding(testflename)
+####decoding(testflename)
 - read the testfile
 - output the most probable postag on each sentence
 
@@ -55,7 +55,7 @@ Sentence:  Rockwell International Corp. 's Tulsa unit said it signed a tentative
 
 At the end of prediction, decoding() outputs
 
-- evaluate postagging accuracy
+- evaluation of postagging accuracy
 - simple error analysis
 
 ```
@@ -79,3 +79,5 @@ All POStag prediction has done!
         9       NN      JJ      87
         10      NNP     NNPS    72
 ```
+
+This tagger processed 240 sentences (5,667 tokens) / sec. on Linux server with ?? @ ?? GHz
