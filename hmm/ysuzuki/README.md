@@ -16,40 +16,18 @@
 $ ./hmm.py
 Pickle load:  hmm.pickle
 
-Sentence:  Rockwell International Corp. 's Tulsa unit said it signed a tentative agreement extending its contract with Boeing Co. to provide structural parts for Boeing 's 747 jetliners .
- Prob_of_max_prob_path:  4.58371890095e-82
- Best_track:  [19, 19, 19, 23, 14, 18, 34, 24, 34, 10, 14, 18, 34, 25, 18, 13, 19, 19, 31, 33, 14, 21, 13, 19, 23, 14, 18, 6]
+Sentence:  I like summer very much .
+ Prob_of_max_prob_path:  4.50288468846e-21
+ Best_track:  [24, 13, 18, 26, 14, 6]
  Viterbi POSTAGGING RESURT
         word         predPOS ansPOS 
         ------------ ------- -------
-        Rockwell     NNP     NNP    
-        International NNP     NNP    
-        Corp.        NNP     NNP    
-        's           POS     POS    
-        Tulsa        JJ      NNP    
-        unit         NN      NN     
-        said         VBD     VBD    
-        it           PRP     PRP    
-        signed       VBD     VBD    
-        a            DT      DT     
-        tentative    JJ      JJ     
-        agreement    NN      NN     
-        extending    VBD     VBG    
-        its          PRP$    PRP$   
-        contract     NN      NN     
-        with         IN      IN     
-        Boeing       NNP     NNP    
-        Co.          NNP     NNP    
-        to           TO      TO     
-        provide      VB      VB     
-        structural   JJ      JJ     
-        parts        NNS     NNS    
-        for          IN      IN     
-        Boeing       NNP     NNP    
-        's           POS     POS    
-        747          JJ      CD     
-        jetliners    NN      NNS    
-        .            .       .     
+        I            PRP     PRP    
+        like         IN      VB     
+        summer       NN      NN     
+        very         RB      RB     
+        much         JJ      RB     
+        .            .       .   
 
 ```
 
