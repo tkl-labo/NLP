@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
-#include <climits>
 #include <limits>
 #include <vector>
 #include <string>
@@ -46,14 +45,6 @@ struct hmm_t {
   std::vector <double> init;
   std::vector <std::vector <double> > transition; // tag  <- tag (pre)
   std::vector <std::vector <double> > emission;   // word <- tag
-  void add_tag () { // register unseen tags
-    init.push_back (0.0);
-    for (size_t i = 0; i < transition.size (); ++i)
-      transition[i].push_back (0.0);
-    transition.push_back (std::vector <double> (transition.size () + 1, 0.0));
-    for (size_t i = 0; i < emission.size (); ++i)
-      emission[i].push_back (std::log (1.0 / emission.size ()));
-  }
   int num_tags () const { return static_cast <int> (transition.size ()); }
 };
 
@@ -102,6 +93,8 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
   // avoid memory reallocation for viterbi matrix
   static std::vector <std::vector <double> > log_prob;
   static std::vector <std::vector <int> > bptr;
+  static std::vector <std::pair <double, size_t> > beam;
+  static std::greater <std::pair <double, size_t> >  cmp;
   if (log_prob.size () < n) {
     log_prob.resize (n, std::vector <double> (m, 0.0));
     bptr.resize (n, std::vector <int> (m, -1));
@@ -110,22 +103,31 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
     log_prob[i].resize (m, 0.0);
     bptr[i].resize (m, -1);
   }
+  beam.resize (m);
   tags.resize (n);
   // initialize
-  for (size_t j = 0; j < m; ++j)
+  for (size_t j = 0; j < m; ++j) {
     log_prob[0][j] = hmm.init[j] + hmm.emission[words[0]][j];
-  for (size_t i = 1; i < n; ++i) // for each word
+    beam[j] = std::pair <double, size_t> (log_prob[0][j], j);
+  }
+   std::sort (beam.begin (), beam.end (), cmp);
+  for (size_t i = 1; i < n; ++i) { // for each word
     for (size_t j = 0; j < m; ++j) { // for each tag
-      size_t max_k = 0;
+      size_t max_k = m;
       double max_log_prob = - std::numeric_limits <double>::infinity ();
-      for (size_t k = 0; k < m; ++k) {
-        double val = log_prob[i-1][k] + hmm.transition[j][k] + hmm.emission[words[i]][j];
+      for (size_t l = 0; l < m && max_log_prob < beam[l].first; ++l) {
+        size_t k = beam[l].second;
+        double val = log_prob[i-1][k] + hmm.transition[j][k];
         if (max_log_prob <= val)
           max_log_prob = val, max_k = k;
       }
-      log_prob[i][j] = max_log_prob;
+      log_prob[i][j] = max_log_prob + hmm.emission[words[i]][j];
       bptr[i][j] = max_k;
     }
+    for (size_t j = 0; j < m; ++j)
+      beam[j] = std::pair <double, size_t> (log_prob[i][j], j);
+    std::sort (beam.begin (), beam.end (), cmp);
+  }
   int tag = std::max_element (log_prob[n-1].begin (), log_prob[n-1].end ()) - log_prob[n-1].begin ();
   do {
     tags[--n] = tag;
@@ -193,7 +195,6 @@ int main (int argc, char** argv) {
     id = tag2id.exactMatchSearch <int> (tag, p - tag);
     if (id == -1) { // unknown tag found
       *p = '\0'; std::fprintf (stderr, "unknown tag found: %s\n", tag);
-      hmm.add_tag ();
       id2tag.push_back (std::string (tag, p - tag));
       id = tag2id.update (tag, p - tag) = hmm.num_tags () - 1;
     }

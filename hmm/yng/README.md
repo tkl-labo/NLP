@@ -20,8 +20,8 @@ A simple POS tagger based on first-order HMM
 
             > g++ -DNDEBUG -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
-            reading model: 0.061s
-            tagging words: ..0.134s
+            reading model: 0.064s
+            tagging words: ..0.059s
             # sentences: 2012
             acc. 0.9696 (corr 45939) (incorr 1438)
               (seen)   0.9806 (corr 43219) (incorr 856)
