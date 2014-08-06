@@ -62,8 +62,8 @@ void read_model (char* model, std::vector <std::string>& id2tag, sbag_t& tag2id,
   int num_tags  = 0;
   int num_words = NUM_UNK_TYPE; // 0-5 is reserved for unknown words
   FILE* fp = std::fopen (model, "r");
-  char line[1024];
-  while (std::fgets (line, 1024, fp) != NULL) {
+  char line[1 << 21];
+  while (std::fgets (line, 1 << 21, fp) != NULL) {
     size_t len = std::strlen (line) - 1;
     char* p = line;
     if (len)
