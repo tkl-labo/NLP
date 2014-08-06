@@ -7,39 +7,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <cedarpp.h>
-
-typedef cedar::da <int>  sbag_t;
-
-enum unk_type { HYPHEN, CAP, CD, CDE, END_S, END_ED, END_EN, END_ING, END_ER, END_EST, END_NOUN, END_VERB, END_ADV, END_ADJ, OTHER, NUM_UNK_TYPE };
-
-unk_type unk_classify (char* beg, char* end) {
-  for (char* p = beg; p <= end; ++p) if (*p == '-') return HYPHEN;
-  if (*beg >= 'A' && *beg <= 'Z') return CAP;
-  if (*beg <= '9' && *beg >= '0' && *end <= '9' && *end >= '0') return CD;
-  if (*beg <= '9' && *beg >= '0') return CDE;
-  if (end - beg >= 3 && std::strncmp (end - 3, "less", 4) == 0) return END_ADJ;
-  if (end - beg >= 3 && std::strncmp (end - 3, "ible", 4) == 0) return END_ADJ;
-  if (end - beg >= 3 && std::strncmp (end - 3, "able", 4) == 0) return END_ADJ;
-  if (end - beg >= 2 && std::strncmp (end - 2, "eer",  3) == 0) return END_NOUN;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ess",  3) == 0) return END_NOUN;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ion",  3) == 0) return END_NOUN;
-  if (end - beg >= 2 && std::strncmp (end - 2, "age",  3) == 0) return END_NOUN;
-  if (end - beg >= 2 && std::strncmp (end - 2, "est",  3) == 0) return END_EST;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ful",  3) == 0) return END_ADJ;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ous",  3) == 0) return END_ADJ;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ing",  3) == 0) return END_ING;
-  if (end - beg >= 2 && std::strncmp (end - 2, "ate",  3) == 0) return END_VERB;
-  if (end - beg >= 1 && std::strncmp (end - 1, "en",   2) == 0) return END_EN;
-  if (end - beg >= 1 && std::strncmp (end - 1, "ed",   2) == 0) return END_ED;
-  if (end - beg >= 1 && std::strncmp (end - 1, "al",   2) == 0) return END_ADJ;
-  if (end - beg >= 1 && std::strncmp (end - 1, "ly",   2) == 0) return END_ADV;
-  if (end - beg >= 1 && std::strncmp (end - 1, "er",   2) == 0) return END_ER;
-  if (end - beg >= 1 && std::strncmp (end - 1, "an",   2) == 0) return END_ADJ;
-  if (end - beg >= 1 && std::strncmp (end - 1, "ty",   2) == 0) return END_NOUN;
-  if (*end == 's') return END_S;
-  return OTHER;
-}
+#include <bnt.h>
 
 struct hmm_t {
   std::vector <double> init;
@@ -86,53 +54,51 @@ void read_model (char* model, std::vector <std::string>& id2tag, sbag_t& tag2id,
   std::fclose (fp);
 }
 
+template <typename T>
+struct cmp_t
+{ bool operator () (const T& a, const T& b) const { return a.first > b.first; } };
+
 void viterbi (const std::vector <int>& words, const hmm_t& hmm,
               std::vector <int>& tags) {
   size_t n = words.size ();
   const size_t m = hmm.num_tags ();
   // avoid memory reallocation for viterbi matrix
-  static std::vector <std::vector <double> > log_prob;
-  static std::vector <std::vector <int> > bptr;
-  static std::vector <std::pair <double, size_t> > beam;
-  static std::greater <std::pair <double, size_t> >  cmp;
+  static std::vector <std::vector <std::pair <double, size_t> > > log_prob;
+  static std::vector <std::vector <size_t> > bptr;
+  static cmp_t <std::pair <double, size_t> > cmp;
   if (log_prob.size () < n) {
-    log_prob.resize (n, std::vector <double> (m, 0.0));
-    bptr.resize (n, std::vector <int> (m, -1));
+    for (size_t i = 0; i < log_prob.size (); ++i) {
+      log_prob[i].resize (m);
+      bptr[i].resize (m, 0);
+    }
+    log_prob.resize (n, std::vector <std::pair <double, size_t> > (m));
+    bptr.resize (n, std::vector <size_t> (m, 0));
   }
-  for (size_t i = 0; i < log_prob.size () && log_prob[i].size () < m; ++i) {
-    log_prob[i].resize (m, 0.0);
-    bptr[i].resize (m, -1);
-  }
-  beam.resize (m);
   tags.resize (n);
   // initialize
-  for (size_t j = 0; j < m; ++j) {
-    log_prob[0][j] = hmm.init[j] + hmm.emission[words[0]][j];
-    beam[j] = std::pair <double, size_t> (log_prob[0][j], j);
-  }
-   std::sort (beam.begin (), beam.end (), cmp);
+  for (size_t j = 0; j < m; ++j)
+    log_prob[0][j] = std::pair <double, size_t> (hmm.init[j] + hmm.emission[words[0]][j], j);
   for (size_t i = 1; i < n; ++i) { // for each word
+    std::sort (log_prob[i-1].begin (), log_prob[i-1].end (), cmp);
     for (size_t j = 0; j < m; ++j) { // for each tag
-      size_t max_k = m;
+      size_t max_k = 0;
       double max_log_prob = - std::numeric_limits <double>::infinity ();
-      for (size_t l = 0; l < m && max_log_prob < beam[l].first; ++l) {
-        size_t k = beam[l].second;
-        double val = log_prob[i-1][k] + hmm.transition[j][k];
+      for (size_t k = 0; k < m && max_log_prob < log_prob[i-1][k].first; ++k) {
+        const int tag = log_prob[i-1][k].second;
+        double val = log_prob[i-1][k].first + hmm.transition[j][tag];
         if (max_log_prob <= val)
           max_log_prob = val, max_k = k;
       }
-      log_prob[i][j] = max_log_prob + hmm.emission[words[i]][j];
+      log_prob[i][j] = std::pair <double, size_t> (max_log_prob + hmm.emission[words[i]][j], j);
       bptr[i][j] = max_k;
     }
-    for (size_t j = 0; j < m; ++j)
-      beam[j] = std::pair <double, size_t> (log_prob[i][j], j);
-    std::sort (beam.begin (), beam.end (), cmp);
   }
-  int tag = std::max_element (log_prob[n-1].begin (), log_prob[n-1].end ()) - log_prob[n-1].begin ();
-  do {
-    tags[--n] = tag;
-    tag = bptr[n][tag];
-  } while (n);
+  for (size_t k = std::max_element (log_prob[n-1].begin (), log_prob[n-1].end ())
+                  - log_prob[n-1].begin (); n--; ) {
+    const int tag = log_prob[n][k].second;;
+    tags[n] = tag;
+    k = bptr[n][tag];
+  }
 }
 
 int main (int argc, char** argv) {
