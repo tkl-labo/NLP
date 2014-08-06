@@ -17,14 +17,15 @@ A simple POS tagger based on first-order HMM
  - output POS-tagged words while hilighting errors
  - report accurcy for seen and unseen words
  - support quiet test (when compiled with -DNDEBUG)
+ - execute beam search (when compiled with -DUSE_BEAM_SIZE=N (N=1,..))
 
             > g++ -DNDEBUG -I. -Wall -O2 -g tagger.cc -o tagger
             > zcat test.txt.gz | ./tagger model
-            reading model: 0.060s
-            tagging words: ..0.036s
+            reading model: 0.059s
+            tagging words: ..0.026s
             # sentences: 2012
             acc. 0.9696 (corr 45939) (incorr 1438)
-              (seen)   0.9806 (corr 43219) (incorr 856)
-              (unseen) 0.8237 (corr 2720) (incorr 582)
+             (seen)   0.9806 (corr 43219) (incorr 856)
+             (unseen) 0.8237 (corr 2720) (incorr 582)
  
-This tagger processes 55,888 sentences (1,316,027 tokens) / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+This tagger processes 77,384  sentences (18,22,192 tokens) / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz

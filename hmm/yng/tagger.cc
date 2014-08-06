@@ -1,4 +1,4 @@
-// tagger.cc -- implementation of viterbi algorithm for first-order HMM
+// tagger.cc -- find the best tag sequences using Viterbi algorithm
 #include <sys/time.h>
 #include <cstdio>
 #include <cmath>
@@ -83,19 +83,19 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
     for (size_t j = 0; j < m; ++j) { // for each tag
       size_t max_k = 0;
       double max_log_prob = - std::numeric_limits <double>::infinity ();
-      // for (size_t k = 0; k < m && max_log_prob < log_prob[i-1][k].first; ++k) {
+      if (std::fpclassify (hmm.emission[words[i]][j]) != FP_INFINITE)
 #ifdef USE_BEAM_SIZE
-      for (size_t k = 0; k < USE_BEAM_SIZE; ++k)
+        for (size_t k = 0; k < USE_BEAM_SIZE; ++k)
 #else
-      for (size_t k = 0; k < m; ++k)
+        for (size_t k = 0; k < m; ++k)
 #endif
-        {
-          if (max_log_prob >= log_prob[i-1][k].first) break;
-          const int tag = log_prob[i-1][k].second;
-          double val = log_prob[i-1][k].first + hmm.transition[j][tag];
-          if (max_log_prob <= val)
-            max_log_prob = val, max_k = k;
-        }
+          {
+            if (max_log_prob >= log_prob[i-1][k].first) break;
+            const int tag = log_prob[i-1][k].second;
+            double val = log_prob[i-1][k].first + hmm.transition[j][tag];
+            if (max_log_prob <= val)
+              max_log_prob = val, max_k = k;
+          }
       log_prob[i][j] = std::pair <double, size_t> (max_log_prob + hmm.emission[words[i]][j], j);
       bptr[i][j] = max_k;
     }
@@ -138,13 +138,13 @@ int main (int argc, char** argv) {
       // collect statistics and output
       for (size_t i = 0; i < tags_gold.size (); ++i) {
         if (tags[i] == tags_gold[i])
-          { if (words[i] >= NUM_UNK_TYPE) ++seen_corr; else ++unseen_corr; }
+          { if (words[i] >= NUM_UNK_TYPE) ++seen_corr;   else ++unseen_corr; }
         else
           { if (words[i] >= NUM_UNK_TYPE) ++seen_incorr; else ++unseen_incorr; }
 #ifndef NDEBUG
         if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[31m");
         std::fprintf (stdout, "%s/%s/%s ", words_str[i].c_str (), id2tag[tags_gold[i]].c_str (), id2tag[tags[i]].c_str ());
-        if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[31m");
+        if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[39m");
 #endif
       }
 #ifndef NDEBUG
@@ -153,8 +153,7 @@ int main (int argc, char** argv) {
 #endif
       words.clear ();
       tags_gold.clear ();
-      if (++num_sent % 1000 == 0)
-        std::fprintf (stderr, ".");
+      if (++num_sent % 1000 == 0) std::fprintf (stderr, ".");
       continue;
     }
     char* p = line;
