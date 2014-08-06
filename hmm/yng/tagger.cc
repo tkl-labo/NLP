@@ -19,7 +19,7 @@ struct hmm_t {
 void read_model (char* model, std::vector <std::string>& id2tag, sbag_t& tag2id, sbag_t& word2id, hmm_t& hmm) {
   int flag = 0;
   int num_tags  = 0;
-  int num_words = NUM_UNK_TYPE; // 0-5 is reserved for unknown words
+  int num_words = NUM_UNK_TYPE; // reserved for unknown words
   FILE* fp = std::fopen (model, "r");
   char line[1 << 21];
   while (std::fgets (line, 1 << 21, fp) != NULL) {
@@ -29,14 +29,14 @@ void read_model (char* model, std::vector <std::string>& id2tag, sbag_t& tag2id,
       switch (flag) {
       case 0: // tag  -> id
         id2tag.push_back (std::string (p, len));
-        tag2id.update  (p, len) = num_tags++;
+        tag2id.update (p, len) = num_tags++;
         break;
       case 1: word2id.update (p, len) = num_words++; break; // word -> id
       case 2: // init
         for (; *p != '\n'; ++p)
           hmm.init.push_back (std::log (std::strtod (p, &p)));
         break;
-      case 3: // tag <- tag (prev); // transpose for cache access
+      case 3: // tag <- tag (prev); // transpose for better caching
         if (hmm.transition.empty ())
           hmm.transition.resize (num_tags, std::vector <double> ());
         for (size_t i = 0; *p != '\n'; ++i, ++p)
@@ -56,7 +56,7 @@ void read_model (char* model, std::vector <std::string>& id2tag, sbag_t& tag2id,
 
 template <typename T>
 struct cmp_t
-{ bool operator () (const T& a, const T& b) const { return a.first > b.first; } };
+{ bool operator() (const T& a, const T& b) const { return a.first > b.first; } };
 
 void viterbi (const std::vector <int>& words, const hmm_t& hmm,
               std::vector <int>& tags) {
@@ -65,7 +65,6 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
   // avoid memory reallocation for viterbi matrix
   static std::vector <std::vector <std::pair <double, size_t> > > log_prob;
   static std::vector <std::vector <size_t> > bptr;
-  static cmp_t <std::pair <double, size_t> > cmp;
   if (log_prob.size () < n) {
     for (size_t i = 0; i < log_prob.size (); ++i) {
       log_prob[i].resize (m);
@@ -73,22 +72,30 @@ void viterbi (const std::vector <int>& words, const hmm_t& hmm,
     }
     log_prob.resize (n, std::vector <std::pair <double, size_t> > (m));
     bptr.resize (n, std::vector <size_t> (m, 0));
+    tags.resize (n);
   }
-  tags.resize (n);
   // initialize
   for (size_t j = 0; j < m; ++j)
     log_prob[0][j] = std::pair <double, size_t> (hmm.init[j] + hmm.emission[words[0]][j], j);
   for (size_t i = 1; i < n; ++i) { // for each word
-    std::sort (log_prob[i-1].begin (), log_prob[i-1].end (), cmp);
+    std::sort (log_prob[i-1].begin (), log_prob[i-1].end (),
+               cmp_t <std::pair <double, size_t> > ());
     for (size_t j = 0; j < m; ++j) { // for each tag
       size_t max_k = 0;
       double max_log_prob = - std::numeric_limits <double>::infinity ();
-      for (size_t k = 0; k < m && max_log_prob < log_prob[i-1][k].first; ++k) {
-        const int tag = log_prob[i-1][k].second;
-        double val = log_prob[i-1][k].first + hmm.transition[j][tag];
-        if (max_log_prob <= val)
-          max_log_prob = val, max_k = k;
-      }
+      // for (size_t k = 0; k < m && max_log_prob < log_prob[i-1][k].first; ++k) {
+#ifdef USE_BEAM_SIZE
+      for (size_t k = 0; k < USE_BEAM_SIZE; ++k)
+#else
+      for (size_t k = 0; k < m; ++k)
+#endif
+        {
+          if (max_log_prob >= log_prob[i-1][k].first) break;
+          const int tag = log_prob[i-1][k].second;
+          double val = log_prob[i-1][k].first + hmm.transition[j][tag];
+          if (max_log_prob <= val)
+            max_log_prob = val, max_k = k;
+        }
       log_prob[i][j] = std::pair <double, size_t> (max_log_prob + hmm.emission[words[i]][j], j);
       bptr[i][j] = max_k;
     }
@@ -124,29 +131,27 @@ int main (int argc, char** argv) {
   size_t num_sent = 0;
   std::vector <int> words, tags, tags_gold;
   std::vector <std::string> words_str;
-  char line[1024];
-  while (std::fgets (line, 1024, stdin) != NULL) {
+  char line[1 << 21];
+  while (std::fgets (line, 1 << 21, stdin) != NULL) {
     if (line[0] == '\n') {
       viterbi (words, hmm, tags);
-      for (size_t i = 0; i < tags.size (); ++i) {
-        if (tags[i] == tags_gold[i]) {
-          if (words[i] >= NUM_UNK_TYPE) ++seen_corr;    else ++unseen_corr;
+      // collect statistics and output
+      for (size_t i = 0; i < tags_gold.size (); ++i) {
+        if (tags[i] == tags_gold[i])
+          { if (words[i] >= NUM_UNK_TYPE) ++seen_corr; else ++unseen_corr; }
+        else
+          { if (words[i] >= NUM_UNK_TYPE) ++seen_incorr; else ++unseen_incorr; }
 #ifndef NDEBUG
-          std::fprintf (stdout, "%s/%s/%s ", words_str[i].c_str (), id2tag[tags_gold[i]].c_str (), id2tag[tags[i]].c_str ());
+        if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[31m");
+        std::fprintf (stdout, "%s/%s/%s ", words_str[i].c_str (), id2tag[tags_gold[i]].c_str (), id2tag[tags[i]].c_str ());
+        if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[31m");
 #endif
-        } else {
-          if (words[i] >= NUM_UNK_TYPE) ++seen_incorr;  else ++unseen_incorr;
-#ifndef NDEBUG
-          std::fprintf (stdout, "\x1b[31m%s/%s/%s\x1b[39m ", words_str[i].c_str (), id2tag[tags_gold[i]].c_str (), id2tag[tags[i]].c_str ());
-#endif
-        }
       }
 #ifndef NDEBUG
       std::fprintf (stdout, "\n");
-#endif
       words_str.clear ();
+#endif
       words.clear ();
-      tags.clear ();
       tags_gold.clear ();
       if (++num_sent % 1000 == 0)
         std::fprintf (stderr, ".");
@@ -155,18 +160,21 @@ int main (int argc, char** argv) {
     char* p = line;
     char* word = p; while (*p != ' ') ++p;
     int id = word2id.exactMatchSearch <int> (word, p - word);
+#ifndef NDEBUG
     words_str.push_back (std::string (word, p - word));
+#endif
     words.push_back (id != -1 ? id : unk_classify (word, p - 1));
     char* tag = ++p; while (*p != ' ') ++p;
-    id = tag2id.exactMatchSearch <int> (tag, p - tag);
-    if (id == -1) { // unknown tag found
+    if ((id = tag2id.exactMatchSearch <int> (tag, p - tag)) == -1) {
+      // unknown tag found
       *p = '\0'; std::fprintf (stderr, "unknown tag found: %s\n", tag);
       id2tag.push_back (std::string (tag, p - tag));
-      id = tag2id.update (tag, p - tag) = hmm.num_tags () - 1;
+      id = tag2id.update (tag, p - tag) = id2tag.size () - 1;
     }
     tags_gold.push_back (id);
   }
   gettimeofday (&end, 0);
+  //
   std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   std::fprintf (stderr, "# sentences: %ld\n", num_sent);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",

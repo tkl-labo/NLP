@@ -150,7 +150,7 @@ int main (int argc, char** argv) {
   //
   std::fprintf (stderr, "# sentences: %ld\n", stat.num_sents);
   std::fprintf (stderr, "# tokens: %ld\n", stat.num_tokens);
-  std::fprintf (stderr, "# tags: %ld\n",  stat.num_tags  ());
   std::fprintf (stderr, "# words: %ld\n", stat.num_words ());
+  std::fprintf (stderr, "# tags: %ld\n",  stat.num_tags  ());
   return 0;
 }
