@@ -9,8 +9,8 @@
 	calculating likelihood of the sentence given word and POStag
 
 ####decoding(testflename)
-- read the testfile
-- output the most probable postag on each sentence
+- read a testfile
+- find the most probable postag sequences on each sentence
 
 ```
 $ ./hmm.py
