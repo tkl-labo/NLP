@@ -28,4 +28,4 @@ A simple POS tagger based on first-order HMM
              (seen)   0.9806 (corr 43219) (incorr 856)
              (unseen) 0.8237 (corr 2720) (incorr 582)
  
-This tagger processes 77,384  sentences (18,22,192 tokens) / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+This tagger processes 77,384  sentences (1,822,192 tokens) / sec. on Linux server with Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz

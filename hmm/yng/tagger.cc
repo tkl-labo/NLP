@@ -127,8 +127,9 @@ int main (int argc, char** argv) {
   std::fprintf (stderr, "tagging words: ");
   gettimeofday (&start, 0);
   // some temporary variables
-  int seen_corr (0), seen_incorr (0), unseen_corr (0), unseen_incorr (0);
-  size_t num_sent = 0;
+  int stat[4];
+  for (size_t i = 0; i < 4; ++i) stat[i] = 0;
+  size_t num_sents (0), num_tokens (0);
   std::vector <int> words, tags, tags_gold;
   std::vector <std::string> words_str;
   char line[1 << 21];
@@ -137,10 +138,9 @@ int main (int argc, char** argv) {
       viterbi (words, hmm, tags);
       // collect statistics and output
       for (size_t i = 0; i < tags_gold.size (); ++i) {
-        if (tags[i] == tags_gold[i])
-          { if (words[i] >= NUM_UNK_TYPE) ++seen_corr;   else ++unseen_corr; }
-        else
-          { if (words[i] >= NUM_UNK_TYPE) ++seen_incorr; else ++unseen_incorr; }
+        int bit = tags[i] == tags_gold[i] ? 2 : 0;
+        bit |= words[i] >= NUM_UNK_TYPE ? 1 : 0;
+        ++stat[bit];
 #ifndef NDEBUG
         if (tags[i] != tags_gold[i]) std::fprintf (stdout, "\x1b[31m");
         std::fprintf (stdout, "%s/%s/%s ", words_str[i].c_str (), id2tag[tags_gold[i]].c_str (), id2tag[tags[i]].c_str ());
@@ -151,9 +151,10 @@ int main (int argc, char** argv) {
       std::fprintf (stdout, "\n");
       words_str.clear ();
 #endif
+      num_tokens += words.size ();
       words.clear ();
       tags_gold.clear ();
-      if (++num_sent % 1000 == 0) std::fprintf (stderr, ".");
+      if (++num_sents % 1000 == 0) std::fprintf (stderr, ".");
       continue;
     }
     char* p = line;
@@ -175,12 +176,12 @@ int main (int argc, char** argv) {
   gettimeofday (&end, 0);
   //
   std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
-  std::fprintf (stderr, "# sentences: %ld\n", num_sent);
+  std::fprintf (stderr, "# sentences: %ld\n", num_sents);
   std::fprintf (stderr, "acc. %.4f (corr %d) (incorr %d)\n",
-                (seen_corr + unseen_corr) * 1.0 / (seen_corr + unseen_corr + seen_incorr + unseen_incorr),
-                seen_corr + unseen_corr, seen_incorr + unseen_incorr);
+                (stat[2] + stat[3]) * 1.0 / num_tokens,
+                stat[2] + stat[3], stat[0] + stat[1]);
   std::fprintf (stderr, "  (seen)   %.4f (corr %d) (incorr %d)\n",
-                seen_corr * 1.0 / (seen_corr + seen_incorr), seen_corr, seen_incorr);
+                stat[3] * 1.0 / (stat[1] + stat[3]), stat[3], stat[1]);
   std::fprintf (stderr, "  (unseen) %.4f (corr %d) (incorr %d)\n",
-                unseen_corr * 1.0 / (unseen_corr + unseen_incorr), unseen_corr, unseen_incorr);
+                stat[2] * 1.0 / (stat[0] + stat[2]), stat[2], stat[0]);
 }
