@@ -55,29 +55,38 @@ if __name__ == "__main__":
 		trans_prob[k] = v / type_Counter[k[0]]
 	for k,v in sorted(type_Counter.items()):
 		type_list.append(k)
-	print (type_list)
+#	print (type_list)
 
 	test_file = argv[2]
 	alpha = 1
 	alphalist = defaultdict(int)
-	for k, v in alphalist:
-		alphalist[k] += 1
+	alphalist[b"<s>"] += 1
 	prev_type = b"<s>"
 	for rawline	in open(test_file,'rb'):
 		line = rawline.rstrip()
+#		print (rawline)
 		if line == b"":
+			word = b"</s>"
 			word_type = b"</s>"
 		else:
 			word = line.split(b" ")[0]
 			word_type = line.split(b" ")[1]
 		#処理はここで
-		prev_alphadlist = alphalist.copy()
-		for word_type in type_list:
-#				alphalist[word_type]=[prev_alphadlist[i] * trans_prob[tuple([i,word_type])] * word_prob[tuple([word_type,word])] for i in type_list ]
-			for i in type_list:
-				alphalist[word_type]=prev_alphadlist[i] * trans_prob[tuple([i,word_type])] * word_prob[tuple([word_type,word])]
-				print (alphalist[word_type])
+		prev_alphalist = alphalist.copy()
+		alphalist.clear()
+#		print (prev_alphalist)
+		print ([i for i in type_list])
+		for i in type_list:
+#				alphalist[word_type]=[prev_alphalist[i] * trans_prob[tuple([i,word_type])] * word_prob[tuple([word_type,word])] for i in type_list ]
+			for j in type_list:
+				alphalist[i]+=prev_alphalist[j] * trans_prob[tuple([j,i])] * word_prob[tuple([i,word])]
+		print(word_type,[alphalist[j] for j in type_list ])
+#		break
+
 		if word_type == b"</s>":
+			print (alphalist)
+			alphalist.clear()
+			alphalist[b"<s>"] += 1
 			prev_type = b"<s>"
 		else:
 			prev_type = word_type
