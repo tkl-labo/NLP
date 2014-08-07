@@ -12,8 +12,16 @@
 - read a testfile
 - find the most probable postag sequences on each sentence
 
+Usage
 ```
-$ ./hmm.py
+$ ./hmm.py decoding testfile
+or
+$ ./hmm.py decoding_with_training testfile trainfile
+
+
+
+```
+$ ./hmm.py decoding ../data/my_test
 Pickle load:  hmm.pickle
 
 Sentence:  I like summer very much .
@@ -37,6 +45,10 @@ At the end of prediction, decoding() outputs
 - simple error analysis
 
 ```
+$ ./hmm.py decoding_with_training ../data/test.txt ../data/train.txt
+…
+
+…
 All POStag prediction has done!
         The NUM of sentence:  2012
         The NUM of tokens:  47377
