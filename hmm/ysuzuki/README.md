@@ -3,10 +3,12 @@
 ##hmm.py
 
 ####supervised_train()
-	training HMM variables(PI,A,B,and so on) with Laplace smoothing
+
+- training HMM variables(PI,A,B,and so on) with Laplace smoothing
 
 ####calc_likelihood(testfilename)
-	calculating likelihood of the sentence given word and POStag
+
+- calculating likelihood of the sentence given word and POStag
 
 ####decoding(testflename)
 
