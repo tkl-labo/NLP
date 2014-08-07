@@ -5,7 +5,7 @@ import math,re,datetime,time
 import pickle
 from collections import defaultdict as dd
 
-def dataFetcher(filename):
+def dataFetcher(filename): # return the sequence list of words and postag (with the final state <\s>)
     f = open(filename,"r")
     while True:
         words_1sentence = []
@@ -24,7 +24,7 @@ def dataFetcher(filename):
                 postag_1sentence = []
         raise StopIteration
 
-def supervised_train():
+def supervised_train(trainfilename):
     ## pre_learning_the_number_of_postag
     postaglist = list()
     f_postag = open("train_postag","r")
@@ -60,9 +60,7 @@ def supervised_train():
     B = [[0 for i in range(V)] for j in range(K)]
 
     ## learning phase
-    f_learn = "../data/ishiwatari_data/train.txt"
-
-    for words_1sentence,postag_1sentence in dataFetcher(f_learn):
+    for words_1sentence,postag_1sentence in dataFetcher(trainfilename):
         pre_postag = ""
         for word,postag in zip(words_1sentence,postag_1sentence):
             # get index
@@ -108,7 +106,8 @@ def supervised_train():
             B[i][j] = float(B_counts[i][j] + 1) / (sum(B_counts[i]) + V ) # Laplace smoothing and V include UNK
             print postaglist[i],wordslist[j],B[i][j], B_counts[i][j],sum(B_counts[i])
                
-    save( (postaglist,K,wordslist,V,A,PI,B),"hmm.pickle")
+    save_file_name = "hmm_" + os.path.basename(trainfilename) + ".pickle"
+    save( (postaglist,K,wordslist,V,A,PI,B),save_file_name)
     
     return postaglist,K,wordslist,V,A,PI,B
 
@@ -165,8 +164,11 @@ def calc_likelihood(testfilename):
 
         print likelihood
 
-def decoding(testfilename):
-    postaglist,K,wordslist,V,A,PI,B = load("hmm.pickle")
+def decoding(testfilename,with_training=False,trainfilename=None):
+    if with_training:
+        postaglist,K,wordslist,V,A,PI,B = supervised_train(trainfilename)
+    else:
+        postaglist,K,wordslist,V,A,PI,B = load("hmm.pickle")
 
     start_time = time.clock()
     sentence_num = 0
@@ -277,4 +279,22 @@ if __name__ == "__main__":
     #calc_likelihood("ishiwatari_data/test.txt")
     #calc_likelihood("../data/my_test")
     #decoding("../data/my_test")
-    decoding("../data/ishiwatari_data/test.txt")
+    #decoding("../data/ishiwatari_data/test.txt")
+
+    try:
+        cmd = sys.argv[1]
+    except:
+        print "Usage: ./hmm.py cmd filename (trainfilename)"
+        print "cmd: calc_likelihood, decoding, decoding_with_training"
+
+    if cmd == "calc_likelihood":
+        filename = sys.argv[2]
+        calc_likelihood(filename)
+    elif cmd == "decoding":
+        filename = sys.argv[2]
+        decoding(filename)
+    elif cmd == "decoding_with_training":
+        testf = sys.argv[2]
+        trainf = sys.argv[3]
+        decoding(testfilename=testf,with_training=True,trainfilename=trainf) 
+    
