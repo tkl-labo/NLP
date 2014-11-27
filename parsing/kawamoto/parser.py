@@ -12,9 +12,12 @@ class CKYparser:
                 else:
                     taglist = []
                     for k in xrange(j):
-                        for tagA in self.table[i-(k+1)][i-j+1]:
-                            for tagB in self.table[i][i-j+k+2]:
+                        print i,j,k
+                        for tagA in self.table[i-j][i-k]:
+                            for tagB in self.table[i-k][i+1]:
+                                print tagA,tagB,self.grammer.search_gram(tagA,tagB)
                                 taglist.extend(self.grammer.search_gram(tagA,tagB))
+                    print i,i-j+1
                     self.table[i-j][i+1] = tuple(taglist)
 
 if __name__ == '__main__':
