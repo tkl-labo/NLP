@@ -9,6 +9,7 @@ dict1 = Counter()
 dict2 = Counter()
 dict3 = Counter()
 VOCB_SIZE = 632237
+DICT_ARRAY = [Counter()] * 3
 
 def mkngram( dictn, sentence, n):
     for i in range(len(sentence) - n + 1 ):
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     prob = 0
     sentence = [b"<s>"]*2
     linenum = 0
-    target_file =  "/home/ynaga/ngrams/data/2013-01-02.cdr." + str(argv[2]) + ".gz"
+    target_file =  "/home/ynaga/ngrams/data/2013-01-01.cdr." + str(argv[2]) + ".gz"
     for line in gzip.open(target_file,'rb'):
         linenum += 1
         word = line.split()[0]

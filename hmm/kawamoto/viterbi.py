@@ -211,7 +211,7 @@ if __name__ == "__main__":
 	# forward algolithm
 	test_file = argv[2]
 #	forward( hmm, test_file)
-	print("ACCURACY_RATE :",viterbi( hmm, test_file),file=sys.stderr)
+	print("ACCURACY_RATE :",viterbi( hmm, test_file),file=stderr)
 
 
 #	for k,v in sorted(trans_prob.items()):
