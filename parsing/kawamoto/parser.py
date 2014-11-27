@@ -12,13 +12,10 @@ class CKYparser:
                 else:
                     taglist = []
                     for k in xrange(j):
-                        print i,j,k
                         for tagA in self.table[i-j][i-k]:
                             for tagB in self.table[i-k][i+1]:
-                                print tagA,tagB,self.grammer.search_gram(tagA,tagB)
                                 taglist.extend(self.grammer.search_gram(tagA,tagB))
-                    print i,i-j+1
-                    self.table[i-j][i+1] = tuple(taglist)
+                    self.table[i-j][i+1] = tuple(set(taglist))
 
 if __name__ == '__main__':
     L = lang('/home/kawamoto/NLP/parsing/kawamoto/data/lexicon.csv','/home/kawamoto/NLP/parsing/kawamoto/data/grammer.csv')
@@ -28,4 +25,3 @@ if __name__ == '__main__':
     for i in Parser.table:
         for j in i:
             print j,'\t|',
-        print
