@@ -18,6 +18,7 @@ class lang:
                     self.non_terminal.add(sig)
         self.non_terminal=list(self.non_terminal)
     def make_cnfs(self):
+        self.cnfs_lexicon = self.lexicon
         self.cnfs = []
         for cfg in self.cfgs:
             self.cnfs.extend(self.cfg2cnf(cfg))
@@ -35,9 +36,28 @@ class lang:
                 cnfs.append((len(self.non_terminal-1),(cfg[1][index],len(self.non_terminal)-1)))
                 index += 1
             cnfs.append((len(self.non_terminal)-1,(cfg[1][index],cfg[1][index+1])))
-        else:
+        elif(len(cfg[1]) == 2):
             cnfs.append(cfg)
+        else:
+            if self.is_terminal(cfg[1][0]):
+                self.cnfs_lexicon[cfg[0]]=self.cnfs_lexicon[cfg[1][0]]
+            for i in self.cfgs:
+                if cfg[1][0]==i[0]:
+                    cnfs.extend( self.cfg2cnf((cfg[0],i[1]) ))
         return cnfs
+    def taglist(self,word):
+        taglist = []
+        for x,y in self.lexicon.items():
+            if y.count(word) > 0:
+                taglist.append(x)
+        return tuple(taglist)
+    def search_gram(self,tagA,tagB):
+        taglist = []
+        for x,y in self.cnfs:
+            if y==(tagA,tagB):
+                taglist.append(x)
+        return taglist
+
 if __name__ == '__main__':
     L = lang('/home/kawamoto/NLP/parsing/kawamoto/data/lexicon.csv','/home/kawamoto/NLP/parsing/kawamoto/data/grammer.csv')
     L.make_cnfs()
