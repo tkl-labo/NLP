@@ -45,6 +45,15 @@ def recover_trees (cky_table, label = 'S', beg = 0, end = 0):
                                            recover_trees (cky_table, y, k, i)):
                 yield [label, l, r]
 
+def treefy (tree, l = 0):
+    ret = "%s(%s" % ("  " * l, tree[0])
+    rhs = tree[1:]
+    if len (rhs) == 1: # terminal
+        ret += " %s)" % rhs[0]
+    else:
+        ret += "\n%s\n%s)" % (treefy (rhs[0], l + 1), treefy (rhs[1], l + 1))
+    return ret
+
 # read rules
 for line in open (sys.argv[1]):
     rule = line[:-1].split (" ")
@@ -70,9 +79,11 @@ for line in iter (sys.stdin.readline, ""): # no buffering
             print "# trees:  %d" % num_trees (cky_table, 'S', 0, len (sentence))
     elif command == 'print':
         if sentence:
+            i = 1
             for tree in recover_trees (cky_table, 'S', 0, len (sentence)):
                 # print_tree (revert_rule (tree))
-                print tree
+                print "tree #%s\n%s\n" % (i, treefy (tree))
+                i += 1
     else:
         sys.stderr.write ("unknown command: %s\n" % command)
     sys.stdout.write ("> ")
