@@ -1,4 +1,4 @@
-An implementation CKY algorithm
+An implementation of CKY algorithm
 ===
 + to_cnf.py - convert CFG into Chomsky Normal Form
   - assume terminals are prefixed by '_'
