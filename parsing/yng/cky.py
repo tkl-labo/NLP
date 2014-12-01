@@ -43,7 +43,7 @@ def recover_trees (cky_table, label = 'S', beg = 0, end = 0):
         for (j, k, i), (x, y) in cky_table[beg][end][label]:
             for l, r in itertools.product (recover_trees (cky_table, x, j, k),
                                            recover_trees (cky_table, y, k, i)):
-                yield [l, r]
+                yield [label, l, r]
 
 # read rules
 for line in open (sys.argv[1]):
