@@ -46,6 +46,8 @@ def recover_trees (cky_table, label = 'S', beg = 0, end = 0):
                 yield [label, l, r]
 
 def treefy (tree, l = 0):
+    if tree[0][0] == 'X': # flattern dummy node introduced in converting into CNF
+        return "\n".join (treefy (child, l) for child in tree[1:])
     ret = "%s(%s" % ("  " * l, tree[0])
     rhs = tree[1:]
     if len (rhs) == 1: # terminal
@@ -73,15 +75,14 @@ for line in iter (sys.stdin.readline, ""): # no buffering
         print "success" if 'S' in cky_table[0][len (sentence)] else 'fail'
     elif command == 'stat':
         if sentence:
-            print "sentence: %s"     % ' '.join (sentence)
-            print "length:   %d"     % len (sentence)
-            print "# edges:  %d"     % num_edges (cky_table)
+            print "sentence: %s" % ' '.join (sentence)
+            print "length:   %d" % len (sentence)
+            print "# edges:  %d" % num_edges (cky_table)
             print "# trees:  %d" % num_trees (cky_table, 'S', 0, len (sentence))
     elif command == 'print':
         if sentence:
             i = 1
             for tree in recover_trees (cky_table, 'S', 0, len (sentence)):
-                # print_tree (revert_rule (tree))
                 print "tree #%s\n%s\n" % (i, treefy (tree))
                 i += 1
     else:
