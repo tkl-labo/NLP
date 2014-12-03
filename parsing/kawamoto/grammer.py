@@ -68,7 +68,7 @@ class lang:
 
 
 if __name__ == '__main__':
-    L = lang('/home/kawamoto/NLP/parsing/kawamoto/data/lexicon.csv','/home/kawamoto/NLP/parsing/kawamoto/data/grammer.csv')
+    L = lang('./data/lexicon.csv','./data/grammer.csv')
     L.make_cnfs()
     for x in L.cnfs:
         print x[0],x[1]
