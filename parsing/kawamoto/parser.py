@@ -28,6 +28,7 @@ class CKYparser:
                     else:
                         pass
 
+
 def go_branch(node,mark):
     edge = 0
     S = 0
