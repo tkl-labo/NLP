@@ -13,7 +13,7 @@ def parse (words):
              for i in range (n + 1)]
     # parse
     for j in range (1, n + 1):
-        for lhs in grammar[tuple (["_" + words[j - 1]])]:
+        for lhs in grammar[("_" + words[j - 1], )]:
             table[j - 1][j][lhs].append (words[j - 1]) # lookup lexicon
         for i in reversed (range (j)):
             for k in range (i + 1, j):

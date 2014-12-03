@@ -35,7 +35,7 @@ for line in sys.stdin:
 while unit_rules:
     rule     = unit_rules.pop ()
     lhs, rhs = rule
-    l2rs[lhs].remove (tuple ([rhs]))
+    l2rs[lhs].remove ((rhs, ))
     for rs in l2rs[rhs]:
         if len (rs) == 1 and rs[0][0] != '_': # yet unit production
             unit_rules.append ([lhs] + rs)
