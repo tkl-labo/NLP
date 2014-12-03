@@ -1,7 +1,6 @@
 S,NP,VP
 S,Aux,NP,VP
 S,VP
-NP,Nominal
 NP,Pronoun
 NP,Proper-Noun
 NP,Det,Nominal

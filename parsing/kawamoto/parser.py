@@ -46,6 +46,7 @@ def go_branch(node,mark):
             S = 1
         if mark == 'S':
             print
+	    print
     return edge, S
 
 def Analyze_Tree(parser):
