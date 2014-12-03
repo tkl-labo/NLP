@@ -39,7 +39,10 @@ class lang:
             cnfs.append(cfg)
         elif(len(cfg[1]) == 1):
             if self.is_terminal(cfg[1][0]):
-                self.cnfs_lexicon[cfg[0]]=self.cnfs_lexicon[cfg[1][0]]
+                if self.cnfs_lexicon.has_key(cfg[0]):
+                    self.cnfs_lexicon[cfg[0]].extend(self.cnfs_lexicon[cfg[1][0]])
+                else:
+                    self.cnfs_lexicon[cfg[0]]=self.cnfs_lexicon[cfg[1][0]]
             for i in self.cfgs:
                 if cfg[1][0]==i[0]:
                     cnfs.extend( self.cfg2cnf((cfg[0],i[1]) ))
@@ -63,10 +66,11 @@ class lang:
                 taglist.append(x)
         return taglist
 
+
 if __name__ == '__main__':
     L = lang('/home/kawamoto/NLP/parsing/kawamoto/data/lexicon.csv','/home/kawamoto/NLP/parsing/kawamoto/data/grammer.csv')
     L.make_cnfs()
     for x in L.cnfs:
         print x[0],x[1]
-
-
+    for x in L.cnfs_lexicon.items():
+	print x
