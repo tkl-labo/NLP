@@ -5,7 +5,7 @@ import sys, collections, itertools
 if len (sys.argv) != 2:
     sys.exit ("Usage: %s grammar" % sys.argv[0])
 
-grammar = collections.defaultdict (list) # mapping from lhs to rhs
+grammar = collections.defaultdict (list) # mapping from rhs to lhs
 
 def parse (words):
     n = len (words)
