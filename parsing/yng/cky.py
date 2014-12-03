@@ -3,87 +3,84 @@
 import sys, collections, itertools
 
 if len (sys.argv) != 2:
-    sys.exit ("Usage: %s rules" % sys.argv[0])
+    sys.exit ("Usage: %s grammar" % sys.argv[0])
 
-rs2l = collections.defaultdict (list)
+grammar = collections.defaultdict (list) # mapping from lhs to rhs
 
-def cky_parse (sentence):
-    n = len (sentence)
-    cky_table = [[collections.defaultdict (list) for j in range (n + 1)]
-                 for i in range (n + 1)]
-    # lookup lexicon
-    for i in range (n):
-        for lhs in rs2l[tuple (["_" + sentence[i]])]:
-            cky_table[i][i + 1][lhs].append (sentence[i])
+def parse (words):
+    n = len (words)
+    table = [[collections.defaultdict (list) for j in range (n + 1)]
+             for i in range (n + 1)]
     # parse
-    for i in range (2, n + 1):
-        for j in reversed (range (i + 1)):
-            for k in range (j, i):
-                for rhs in itertools.product (cky_table[j][k], cky_table[k][i]):
-                    for lhs in rs2l[rhs]:
-                        cky_table[j][i][lhs].append ([[j,k,i], rhs])
-    return cky_table
+    for j in range (1, n + 1):
+        for lhs in grammar[tuple (["_" + words[j - 1]])]:
+            table[j - 1][j][lhs].append (words[j - 1]) # lookup lexicon
+        for i in reversed (range (j)):
+            for k in range (i + 1, j):
+                for rhs in itertools.product (table[i][k], table[k][j]):
+                    for lhs in grammar[rhs]:
+                        table[i][j][lhs].append ([[i, k, j], rhs])
+    return table
 
-def num_edges (cky_table):
-    return sum (len (cky_table[j][i])
-                for i in range (len (cky_table))
+def num_edges (table):
+    return sum (len (table[j][i])
+                for i in range (len (table))
                 for j in range (i + 1))
 
-def num_trees (cky_table, label = 'S', beg = 0, end = 0):
+def num_trees (table, label = 'S', beg = 0, end = 0):
     if end - beg == 1: # terminal
-        return 1 if label in cky_table[beg][end] else 0
-    return sum (num_trees (cky_table, x, j, k) *
-                num_trees (cky_table, y, k, i)
-                for (j, k, i), (x, y) in cky_table[beg][end][label])
+        return 1 if label in table[beg][end] else 0
+    return sum (num_trees (table, x, i, k) *
+                num_trees (table, y, k, j)
+                for (i, k, j), (x, y) in table[beg][end][label])
 
-def recover_trees (cky_table, label = 'S', beg = 0, end = 0):
+def recover_trees (table, label = 'S', beg = 0, end = 0):
     if end - beg == 1: # terminal
-        yield [label, cky_table[beg][end][label][0]]
+        yield [label, table[beg][end][label][0]]
     else:
-        for (j, k, i), (x, y) in cky_table[beg][end][label]:
-            for l, r in itertools.product (recover_trees (cky_table, x, j, k),
-                                           recover_trees (cky_table, y, k, i)):
+        for (i, k, j), (x, y) in table[beg][end][label]:
+            for l, r in itertools.product (recover_trees (table, x, i, k),
+                                           recover_trees (table, y, k, j)):
                 yield [label, l, r]
 
 def treefy (tree, l = 0):
-    if tree[0][0] == 'X': # flattern dummy node introduced in converting into CNF
+    if tree[0][0] == 'X': # reduce rules introduced in converting into CNF
         return "\n".join (treefy (child, l) for child in tree[1:])
-    ret = "%s(%s" % ("  " * l, tree[0])
-    rhs = tree[1:]
+    lhs, rhs = tree[0], tree[1:]
+    ret = "%s(%s" % ("  " * l, lhs)
     if len (rhs) == 1: # terminal
         ret += " %s)" % rhs[0]
     else:
         ret += "\n%s\n%s)" % (treefy (rhs[0], l + 1), treefy (rhs[1], l + 1))
     return ret
 
-# read rules
+# read grammar
 for line in open (sys.argv[1]):
     rule = line[:-1].split (" ")
-    lhs  = rule[0]
-    rhs  = rule[1:]
-    rs2l[tuple (rhs)].append (lhs)
+    lhs, rhs = rule[0], rule[1:]
+    grammar[tuple (rhs)].append (lhs)
 
 # loop
-sentence  = ""
-cky_table = []
+words = []
+table = []
 sys.stdout.write ("> ")
 for line in iter (sys.stdin.readline, ""): # no buffering
     command = line[:-1].split (" ", 1)[0]
     if command == 'parse':
-        sentence  = line[:-1].split (" ", 1)[1][1:-1].split (" ")
-        cky_table = cky_parse (sentence)
-        print "success" if 'S' in cky_table[0][len (sentence)] else 'fail'
+        words = line[:-1].split (" ", 1)[1][1:-1].split (" ")
+        table = parse (words)
+        print "success" if 'S' in table[0][len (words)] else 'fail'
     elif command == 'stat':
-        if sentence:
-            print "sentence: %s" % ' '.join (sentence)
-            print "length:   %d" % len (sentence)
-            print "# edges:  %d" % num_edges (cky_table)
-            print "# trees:  %d" % num_trees (cky_table, 'S', 0, len (sentence))
+        if words:
+            print "sentence: %s" % ' '.join (words)
+            print "length:   %d" % len (words)
+            print "# edges:  %d" % num_edges (table)
+            print "# trees:  %d" % num_trees (table, 'S', 0, len (words))
     elif command == 'print':
-        if sentence:
+        if words:
             i = 1
-            for tree in recover_trees (cky_table, 'S', 0, len (sentence)):
-                print "tree #%s\n%s\n" % (i, treefy (tree))
+            for tree in recover_trees (table, 'S', 0, len (words)):
+                print "parse tree #%s\n%s\n" % (i, treefy (tree))
                 i += 1
     else:
         sys.stderr.write ("unknown command: %s\n" % command)
