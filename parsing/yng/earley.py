@@ -32,11 +32,9 @@ def parse (words):
     chart = [[] for i in range (n + 1)]
     rel   = [[] for i in range (n + 1)] # record how states are generated
     # initialize
-    sys.stderr.write ("Chart[0]\n")
-    init_state = ('gamma', ('S',), 0, (0, 0))
-    add_chart (init_state, chart[0], rel[0])
+    add_chart (('gamma', ('S',), 0, (0, 0)), chart[0], rel[0])
     #
-    flag     = False
+    flag     = True # is first item in the chart?
     state_id = 0
     for l in range (n + 1):
         m = 0
