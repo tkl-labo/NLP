@@ -27,14 +27,14 @@ def num_edges (table):
                 for i in range (len (table))
                 for j in range (i + 1))
 
-def num_trees (table, label = 'S', beg = 0, end = 0):
+def num_trees (table, label, beg, end):
     if end - beg == 1: # terminal
         return 1 if label in table[beg][end] else 0
     return sum (num_trees (table, x, i, k) *
                 num_trees (table, y, k, j)
                 for (i, k, j), (x, y) in table[beg][end][label])
 
-def recover_trees (table, label = 'S', beg = 0, end = 0):
+def recover_trees (table, label, beg, end):
     if end - beg == 1: # terminal
         yield [label, table[beg][end][label][0]]
     else:

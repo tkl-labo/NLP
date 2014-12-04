@@ -1,4 +1,4 @@
-An implementation of CKY algorithm
+An implementation of CKY/Earley algorithms
 ===
 + to_cnf.py - convert CFG into Chomsky Normal Form
   - assume terminals are prefixed by '_'
@@ -6,9 +6,9 @@ An implementation of CKY algorithm
 
             > python to_cnf.py < rules.txt > rules_cnf.txt
 
-+ cky.py - parse a sentence using CKY algorithm
++ cky.py, earley.py - parse a sentence using CKY algorithm
   - interactive shell supports following three commands
-    - parse:  parse a sentence
+    - parse:  parse a sentence (earley.py outputs state transtion as well)
     - stat:   show #edges etc. after parsing
     - print:  print parse trees
 
@@ -37,6 +37,5 @@ An implementation of CKY algorithm
                 (Nominal dinner))
               (NP flight))
             
-            > 
-
-
+            >
+            
