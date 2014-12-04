@@ -23,9 +23,7 @@ def parse (words):
     return table
 
 def num_edges (table):
-    return sum (len (table[j][i])
-                for i in range (len (table))
-                for j in range (i + 1))
+    return sum (len (edges) for t in table for edges in t)
 
 def num_trees (table, label, beg, end):
     if end - beg == 1: # terminal

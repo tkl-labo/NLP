@@ -15,12 +15,12 @@ def add_chart (state, states, rel, r = []):
     if r:
         rel[states.index (state)][1].append (r)
 
-def print_state (state_id, state, rs):
-    lhs, rhs, dot, span = (list (x) if isinstance (x, tuple) else x for x in state)
+def print_state (state_id, state, rs, j):
+    lhs, rhs, dot, i = (list (x) if isinstance (x, tuple) else x for x in state)
     rhs[dot:dot] = '.'
-    sys.stderr.write ("%sS%-3d " % (" " * 4, state_id))
-    sys.stderr.write ("%-26s  "  % (' '.join ([lhs, '->'] + rhs)))
-    sys.stderr.write ("[%s]  "   % (','.join ("%2d" % i for i in span)))
+    sys.stderr.write ("%sS%-3d "    % (" " * 4, state_id))
+    sys.stderr.write ("%-26s  "     % (' '.join ([lhs, '->'] + rhs)))
+    sys.stderr.write ("[%2d,%2d]  " % (i, j))
     if   rs[1]: sys.stderr.write ("Completer")
     elif dot:   sys.stderr.write ("Scanner")
     elif rs[0]: sys.stderr.write ("Predictor")
@@ -32,46 +32,39 @@ def parse (words):
     chart = [[] for i in range (n + 1)]
     rel   = [[] for i in range (n + 1)] # record how states are generated
     # initialize
-    add_chart (('gamma', ('S',), 0, (0, 0)), chart[0], rel[0])
-    #
-    flag     = True # is first item in the chart?
+    add_chart (('gamma', ('S',), 0, 0), chart[0], rel[0])
+    # parse
     state_id = 0
-    for l in range (n + 1):
+    for j in range (n + 1):
+        sys.stderr.write ("Chart[%d]:\n" % j)
         m = 0
-        if flag:
-            sys.stderr.write ("Chart[%d]:\n" % l)
-            flag = False
-        while m < len (chart[l]):
-            lhs, rhs, dot, span = chart[l][m]
-            rel[l][m][0] = state_id
-            print_state (state_id, chart[l][m], rel[l][m])
-            if dot < len (rhs): # incomplete state?
-                next_cat, (i, j) = rhs[dot], span
-                if next_cat not in pos: # predict
-                    for rhs in grammar[next_cat]:
-                        new_state  = (next_cat, rhs, 0, (j, j))
-                        add_chart (new_state, chart[j], rel[j])
-                else: # scan
-                    if j < len (words) and ("_" + words[j],) in grammar[next_cat]:
-                        new_state  = (next_cat, (words[j],), 1, (j, j + 1))
-                        add_chart (new_state, chart[j + 1], rel[j + 1])
+        while m < len (chart[j]):
+            lhs, rhs, dot, k = chart[j][m]
+            rel[j][m][0] = state_id
+            print_state (state_id, chart[j][m], rel[j][m], j)
+            if   dot < len (rhs) and rhs[dot] not in pos: # predict
+                for rhs_ in grammar[rhs[dot]]:
+                    new_state  = (rhs[dot], rhs_, 0, j)
+                    add_chart (new_state, chart[j], rel[j])
+            elif dot < len (rhs) and rhs[dot] in pos:     # scan
+                if j < n and ("_" + words[j],) in grammar[rhs[dot]]:
+                    new_state  = (rhs[dot], (words[j],), 1, j)
+                    add_chart (new_state, chart[j + 1], rel[j + 1])
             else: # complete
-                j, k = span
-                for m_ in range (len (chart[j])):
-                    lhs_, rhs_, dot_, (i, j) = chart[j][m_]
-                    state_id_ = rel[j][m_][0]
+                for m_ in range (len (chart[k])): # line search to list; slow
+                    lhs_, rhs_, dot_, i = chart[k][m_]
+                    state_id_ = rel[k][m_][0]
                     if state_id_ and dot_ < len (rhs_) and rhs_[dot_] == lhs:
-                        new_state  = (lhs_, rhs_, dot_ + 1, (i, k))
-                        add_chart (new_state, chart[k], rel[k], [[state_id_, [j, m_]], [state_id, [l, m]]])
+                        new_state  = (lhs_, rhs_, dot_ + 1, i)
+                        add_chart (new_state, chart[j], rel[j], [[state_id_, [k, m_]], [state_id, [j, m]]])
             state_id += 1
             m += 1
-        flag = True
     return chart, rel
 
 def end_state (chart, rel, n):
-     return [[[0, [0, 0]], [rel[n][m][0], [n, m]]]
-             for m, (lhs, rhs, dot, span) in enumerate (chart[n])
-             if lhs == 'S' and dot == len (rhs) and span == (0, n)]
+     return [[[0, [0, 0]], [rel[n][m][0], [n, m]]] # gamma -> . S + S -> beta .
+             for m, (lhs, rhs, dot, i) in enumerate (chart[n])
+             if lhs == 'S' and dot == len (rhs) and i == 0]
 
 def num_states (chart):
     return sum (len (c) for c in chart)
@@ -79,9 +72,9 @@ def num_states (chart):
 def num_trees (rel, rs):
     if not rs[1]:
         return 1 if rs[0] != -1 else 0
-    return sum (num_trees (rel, rel[i][j]) *
-                num_trees (rel, rel[i_][j_])
-                for ((_, (i, j)), (_, (i_, j_))) in rs[1])
+    return sum (num_trees (rel, rel[k][m]) *
+                num_trees (rel, rel[j][m_])
+                for ((_, (k, m)), (_, (j, m_))) in rs[1])
 
 def recover_trees (chart, rel, rs, beg, end):
     if not rs[1]:
