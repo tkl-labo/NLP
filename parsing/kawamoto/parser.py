@@ -1,5 +1,6 @@
 from grammer import *
 import sys
+import itertools
 class CKYparser:
     def __init__(self,words,grammer):
         self.words = words
@@ -23,39 +24,55 @@ class CKYparser:
                                     else:
                                         taglist.update( { x:[((tagA,i-j,i-k),(tagB,i-k,i+1))]}) 
                     if(len(taglist)):
-#                        print taglist
                         self.table[i-j][i+1] = taglist
                     else:
                         pass
 
 
-def go_branch(node,mark):
-    edge = 0
-    S = 0
-    print mark,
+def mktree(node,mark):
     for x in node[mark]:
         if len(x) ==2:
-            print '(',
-            le, lS = go_branch(Parser.table[x[0][1]][x[0][2]],x[0][0])
-            re, rS = go_branch(Parser.table[x[1][1]][x[1][2]],x[1][0])
-            print ')',
-            edge = edge + le + re + 2
+            for l, r in itertools.product(mktree(Parser.table[x[0][1]][x[0][2]],x[0][0]), mktree(Parser.table[x[1][1]][x[1][2]],x[1][0])):
+                yield [mark,l,r]
+        else:
+            yield [mark,x[0]]
+        if mark == 'S':
+            pass
+
+def c_edge(table):
+    count = 0
+    for row in table:
+        for cell in row:
+            for i,j in cell.items():
+                for k in j:
+                    if len(k)==2:
+                        count += 1
+    return count 
+
+def c_S(node,mark='S'):
+    S = 0
+    for x in node[mark]:
+        if len(x) ==2:
+            lS = c_S(Parser.table[x[0][1]][x[0][2]],x[0][0])
+            rS = c_S(Parser.table[x[1][1]][x[1][2]],x[1][0])
             S = S + lS * rS
         else:
-            print x[0],
             S = 1
-        if mark == 'S':
-            print
-	    print
-    return edge, S
+    return S
 
 def Analyze_Tree(parser):
+    print "#S:",c_S(parser.table[0][len(parser.words)])
+    print "#edge:",c_edge(parser.table)
     start = parser.table[0][len(parser.words)]
-    edge, sent = go_branch(start,'S')
-    print "edge : ",edge,"sent : ",sent
+    i = 0
+    for x in mktree(start,'S'):
+        i += 1
+        print "#",i,"Tree"
+        print x
+
 
 if __name__ == '__main__':
-    L = lang('./data/lexicon.csv','./data/grammer.csv')
+    L = lang('./data/rules.txt')
     L.make_cnfs()
     if len(sys.argv) == 1:
         print "please use ./parser.py hoge hoge fuga fuga"

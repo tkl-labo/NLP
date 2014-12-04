@@ -1,10 +1,8 @@
 import csv
 from sets import Set
-from collections import defaultdict
 class lang:
-    def __init__(self,rule_file):
+    def __init__(self,lexicon_file,grammer_file):
         #input grammer and lexicon
-	"""
         f = open(lexicon_file,'rb')
         reader = csv.reader(f)
         self.lexicon={ x[0]:x[1:] for x in reader}
@@ -18,23 +16,6 @@ class lang:
             for sig in i:
                 if self.is_terminal(sig) != True:
                     self.non_terminal.add(sig)
-        self.non_terminal=list(self.non_terminal)
-        """
-        f = open(rule_file,'rb')
-        reader = csv.reader(f,delimiter=' ')
-        self.lexicon=defaultdict(list)
-        self.cfgs = []
-        for row in reader:
-            if row[1][0] == '_':
-                self.lexicon[row[0]].append(row[1][1:])
-            else:
-                self.cfgs.append((row[0],tuple(row[1:])))
-        self.terminal = self.lexicon.keys()
-        self.non_terminal=Set()
-        for i in self.cfgs:
-             self.non_terminal.add(i[0])
-             for j in i[1]:
-                 self.non_terminal.add(j)
         self.non_terminal=list(self.non_terminal)
     def make_cnfs(self):
         self.cnfs_lexicon = self.lexicon
@@ -87,7 +68,7 @@ class lang:
 
 
 if __name__ == '__main__':
-    L = lang('./data/rules.txt')
+    L = lang('./data/lexicon.csv','./data/grammer.csv')
     L.make_cnfs()
     for x in L.cnfs:
         print x[0],x[1]
