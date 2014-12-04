@@ -6,7 +6,7 @@ An implementation of CKY/Earley algorithms
 
             > python to_cnf.py < rules.txt > rules_cnf.txt
 
-+ cky.py, earley.py - parse a sentence using CKY algorithm
++ cky.py, earley.py - parse a sentence using CKY/Earley algorithm
   - interactive shell supports following three commands
     - parse:  parse a sentence (earley.py outputs state transtion as well)
     - stat:   show #edges etc. after parsing
