@@ -1,0 +1,42 @@
+S NP VP
+S Aux NP VP
+S VP
+NP Pronoun
+NP Proper-Noun
+NP Det Nominal
+NP Nominal
+Nominal Noun
+Nominal Nominal Noun
+Nominal Nominal PP
+VP Verb
+VP Verb NP
+VP Verb NP PP
+VP Verb PP
+VP Verb NP NP
+VP VP PP
+PP Preposition NP
+Det _that
+Det _a
+Det _the
+Noun _book
+Noun _flight
+Noun _meal
+Noun _money
+Noun _flights
+Noun _dinner
+Verb _book
+Verb _include
+Verb _prefer
+Pronoun _I
+Pronoun _she
+Pronoun _me
+Pronoun _you
+Proper-Noun _Houston
+Proper-Noun _TWA
+Aux _does
+Aux _can
+Preposition _from
+Preposition _to
+Preposition _on
+Preposition _near
+Preposition _through
