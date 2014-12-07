@@ -4,6 +4,7 @@ CKY Parser
 - 文法/語彙ファイル: `./data/rules.cnf`
 - 注意: 上記の文法ファイルは文脈自由文法からチョムスキー標準形に変換してあります。
 - 使い方:
+```
     python cky.py book me a flight to Houston
      S
     - Verb ( book )
@@ -25,3 +26,4 @@ CKY Parser
     - PP
     -- Preposition ( to )
     -- NP ( Houston )
+```
