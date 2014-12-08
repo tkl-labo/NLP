@@ -8,8 +8,8 @@ i = 1
 unit_rules = []
 l2rs = collections.defaultdict (set)
 for line in sys.stdin:
-    rule     = line[:-1].split (" ")
-    lhs, rhs = rule[0], rule[1:]
+    rule           = line[:-1].split (" ")
+    lhs, rhs, prob = rule[0], rule[1:-1], float (rule[-1])
     if len (rhs) == 1:
         if rhs[0][0] == '_': # A -> _a
             print ' '.join (rule)
@@ -26,19 +26,19 @@ for line in sys.stdin:
         while len (rhs) > 2:
             lhs_ = 'X' + str (i)
             i += 1
-            print lhs_, ' '.join (rhs[:2])
+            print lhs_, ' '.join (rhs[:2]), 1.0
             rhs[:2] = [lhs_]
-        print lhs, ' '.join (rhs)
-    l2rs[lhs].add (tuple (rhs))
+        print lhs, ' '.join (rhs), prob
+    l2rs[lhs].add ((tuple (rhs), prob))
 
 # handle unit productions
 while unit_rules:
-    rule     = unit_rules.pop ()
-    lhs, rhs = rule
-    l2rs[lhs].remove ((rhs, ))
-    for rs in l2rs[rhs]:
+    rule           = unit_rules.pop ()
+    lhs, rhs, prob = rule[0], rule[1:-1], float (rule[-1])
+    l2rs[lhs].remove ((tuple (rhs), prob))
+    for rs, prob_ in l2rs[rhs[0]]:
         if len (rs) == 1 and rs[0][0] != '_': # yet unit production
-            unit_rules.append ([lhs] + rs)
+            unit_rules.append ([lhs, rs, prob * prob_])
         else:
-            print lhs, ' '.join (rs)
-        l2rs[lhs].add (rs)
+            print lhs, ' '.join (rs), prob * prob_
+        l2rs[lhs].add ((rs, prob * prob_))
