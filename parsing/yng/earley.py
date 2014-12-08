@@ -127,7 +127,6 @@ for line in iter (sys.stdin.readline, ""): # no buffering
             print "# trees:  %d" % num_trees  (rel, -1, -1)
     elif command == 'print':
         if words:
-            i = 1
             for i, tree in enumerate (recover_trees (chart, rel, -1, -1)):
                 print "parse tree #%s\n%s\n" % (i + 1, treefy (tree[1]))
     else:
