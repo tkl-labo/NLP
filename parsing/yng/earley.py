@@ -12,8 +12,7 @@ def add_chart (state, states, rel, r = []):
     if state not in states: # linear search to list; slow
         states.append (state)
         rel.append ([-1, []])
-    if r:
-        rel[states.index (state)][1].append (r)
+    rel[states.index (state)][1].extend (r)
 
 # for debugging
 def print_state (state_id, state, rs, j):
@@ -58,7 +57,7 @@ def parse (words):
                     if state_id_ and dot_ < len (rhs_) and rhs_[dot_] == lhs:
                         new_state  = (lhs_, rhs_, dot_ + 1, i)
                         add_chart (new_state, chart[j], rel[j],
-                                   [[state_id_, [k, m_]], [state_id, [j, m]]])
+                                   [[[state_id_, [k, m_]], [state_id, [j, m]]]])
             state_id += 1
             m += 1
     # finalize; try to complete dummy initial states
@@ -67,32 +66,31 @@ def parse (words):
         state_id = rel[n][m][0]
         if lhs == 'S' and dot == len (rhs) and i == 0:
             add_chart (('gamma', ('S', ), 1, 0), chart[n], rel[n],
-                       [[0, [0, 0]], [state_id, [n, m]]])
+                       [[[0, [0, 0]], [state_id, [n, m]]]])
     return chart, rel
 
-def num_states (chart):
-    return sum (len (c) for c in chart)
+def num_states (rel): # exclude dummy final state
+    return sum (len (c) for c in rel) - (1 if rel[-1][-1][0] == -1 else 0)
 
 def num_trees (rel, i, m):
-    if not rel[i][m][1]:
+    if i == m == -1 and rel[i][m][0] != -1: # if not parsed
+        return 0
+    elif not rel[i][m][1]:
         return 1 if rel[i][m][0] != -1 else 0
     return sum (num_trees (rel, k, m_) * num_trees (rel, j, m)
                 for ((_, (k, m_)), (_, (j, m))) in rel[i][m][1])
 
 def recover_trees (chart, rel, j, n):
     lhs, rhs, dot, _ = chart[j][n]
-    if not rel[j][n][1]: # scanner or predictor (init)
-        if dot:
-            yield [lhs, rhs[0]]
+    if j == n == -1 and rel[j][n][0] != -1: # if not parsed
+        pass
+    elif not rel[j][n][1]: # scanner or predictor (init)
+        yield [lhs, rhs[0]] if dot else [lhs]
     else:
         for ((_, (k, m_)), (_, (i, m))) in rel[j][n][1]:
-            if chart[k][m_][2]:
-                for l, r in itertools.product (recover_trees (chart, rel, k, m_),
-                                               recover_trees (chart, rel, i, m)):
-                    yield [lhs, l, r] if len (rhs) == dot else [l, r]
-            else:
-                for r in recover_trees (chart, rel, i, m):
-                    yield [lhs, r] if len (rhs) == dot else r
+            for l, r in itertools.product (recover_trees (chart, rel, k, m_),
+                                           recover_trees (chart, rel, i, m)):
+                yield l + [r]
 
 def treefy (tree, l = 0):
     lhs, rhs = tree[0], tree[1:]
@@ -125,14 +123,13 @@ for line in iter (sys.stdin.readline, ""): # no buffering
         if words:
             print "sentence: %s" % ' '.join (words)
             print "length:   %d" % len (words)
-            print "# states: %d" % num_states (chart)
-            print "# trees:  %d" % num_trees  (rel, len (words), len (rel[-1]) - 1)
+            print "# states: %d" % num_states (rel)
+            print "# trees:  %d" % num_trees  (rel, -1, -1)
     elif command == 'print':
         if words:
             i = 1
-            for tree in recover_trees (chart, rel, len (words), len (rel[-1]) - 1):
-                print "parse tree #%s\n%s\n" % (i, treefy (tree[1]))
-                i += 1
+            for i, tree in enumerate (recover_trees (chart, rel, -1, -1)):
+                print "parse tree #%s\n%s\n" % (i + 1, treefy (tree[1]))
     else:
         sys.stderr.write ("unknown command: %s\n" % command)
     sys.stdout.write ("> ")

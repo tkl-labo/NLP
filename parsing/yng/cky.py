@@ -75,10 +75,8 @@ for line in iter (sys.stdin.readline, ""): # no buffering
             print "# trees:  %d" % num_trees (table, 'S', 0, len (words))
     elif command == 'print':
         if words:
-            i = 1
-            for tree in recover_trees (table, 'S', 0, len (words)):
-                print "parse tree #%s\n%s\n" % (i, treefy (tree))
-                i += 1
+            for i, tree in enumerate (recover_trees (table, 'S', 0, len (words))):
+                print "parse tree #%s\n%s\n" % (i + 1, treefy (tree))
     else:
         sys.stderr.write ("unknown command: %s\n" % command)
     sys.stdout.write ("> ")
