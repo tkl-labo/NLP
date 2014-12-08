@@ -103,7 +103,7 @@ def treefy (tree, l = 0):
 
 # read grammar
 for line in open (sys.argv[1]):
-    rule = line[:-1].split (" ")
+    rule = line[:-1].split (" ")[:-1] # delete prob
     lhs, rhs = rule[0], rule[1:]
     if len (rhs) == 1 and rhs[0][0] == '_':
         pos.add (lhs)

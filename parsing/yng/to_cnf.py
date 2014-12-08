@@ -12,7 +12,7 @@ for line in sys.stdin:
     lhs, rhs, prob = rule[0], rule[1:-1], float (rule[-1])
     if len (rhs) == 1:
         if rhs[0][0] == '_': # A -> _a
-            print ' '.join (rule)
+            print "%s %s" % (lhs, rhs[0]), float (prob)
         else:                # handle unit production later
             unit_rules.append (rule)
     else:
@@ -20,15 +20,15 @@ for line in sys.stdin:
         for j in range (0, len (rhs)):
             if rhs[j][0] == '_':
                 lhs_ = 'Z' + rhs[j]
-                print "%s %s" % (lhs_, rhs[j])
+                print "%s %s %f" % (lhs_, rhs[j], 1.0)
                 rhs[i] = lhs_
         # generate a rule to replace first two non-terminals to one
         while len (rhs) > 2:
             lhs_ = 'X' + str (i)
             i += 1
-            print lhs_, ' '.join (rhs[:2]), 1.0
+            print lhs_, ' '.join (rhs[:2]), float (1.0)
             rhs[:2] = [lhs_]
-        print lhs, ' '.join (rhs), prob
+        print lhs, ' '.join (rhs), float (prob)
     l2rs[lhs].add ((tuple (rhs), prob))
 
 # handle unit productions
