@@ -5,6 +5,7 @@ import sys, collections
 
 # read rules and convert them to CNF
 i = 1
+solo_rules      = {}
 unit_rules      = []
 unit_rules_prob = {}
 l2rs = collections.defaultdict (lambda: collections.defaultdict (float))
@@ -20,12 +21,14 @@ for line in sys.stdin:
         for j in range (0, len (rhs)):
             if rhs[j][0] == '_':
                 lhs_ = 'Z' + rhs[j]
-                l2rs[lhs][tuple (rhs[j:j+1])] = 1.0
+                l2rs[lhs_][tuple (rhs[j:j+1])] = 1.0
                 rhs[i] = lhs_
         # generate a rule to replace first two non-terminals to one
         while len (rhs) > 2:
-            lhs_ = 'X' + str (i)
-            i += 1
+            if tuple (rhs[:2]) not in solo_rules:
+                solo_rules[tuple (rhs[:2])] = 'X' + str (i)
+                i += 1
+            lhs_ = solo_rules[tuple (rhs[:2])]
             l2rs[lhs_][tuple (rhs[:2])] = 1.0
             rhs[:2] = [lhs_]
     l2rs[lhs][tuple (rhs)] = prob
@@ -39,8 +42,8 @@ while unit_rules:
     for rs, prob_ in l2rs[rhs[0]].items ():
         if len (rs) == 1 and rs[0][0] != '_': # yet unit production
             if rs[0] in loop:
-                # sys.stderr.write ("found self loop: %s -> %s\n" % (' -> '.join (loop), rs[0]))
-                continue
+                sys.stderr.write ("loop found: %s\n" % (' -> '.join (loop + rs)))
+                sys.exit ()
             else:
                 if tuple ([lhs, rs]) not in unit_rules_prob:
                     unit_rules.append (tuple ([lhs, rs]))

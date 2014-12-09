@@ -19,7 +19,7 @@ def parse (words):
             for k in range (i + 1, j):
                 for rhs in itertools.product (table[i][k], table[k][j]):
                     for lhs in grammar[rhs]:
-                        table[i][j][lhs].append ([[i, k, j], rhs])
+                        table[i][j][lhs].append ([k, rhs])
     return table
 
 def num_edges (table):
@@ -29,13 +29,13 @@ def num_trees (table, label, i, j):
     if j - i == 1: # terminal
         return 1 if label in table[i][j] else 0
     return sum (num_trees (table, x, i, k) * num_trees (table, y, k, j)
-                for (i, k, j), (x, y) in table[i][j][label])
+                for k, (x, y) in table[i][j][label])
 
 def recover_trees (table, label, i, j):
     if j - i == 1: # terminal
         yield [label, table[i][j][label][0]]
     else:
-        for (i, k, j), (x, y) in table[i][j][label]:
+        for k, (x, y) in table[i][j][label]:
             for l, r in itertools.product (recover_trees (table, x, i, k),
                                            recover_trees (table, y, k, j)):
                 yield [label, l, r]
