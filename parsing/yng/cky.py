@@ -25,31 +25,28 @@ def parse (words):
 def num_edges (table):
     return sum (sum (len (edges) for edges in t) for t in table)
 
-def num_trees (table, label, beg, end):
-    if end - beg == 1: # terminal
-        return 1 if label in table[beg][end] else 0
+def num_trees (table, label, i, j):
+    if j - i == 1: # terminal
+        return 1 if label in table[i][j] else 0
     return sum (num_trees (table, x, i, k) * num_trees (table, y, k, j)
-                for (i, k, j), (x, y) in table[beg][end][label])
+                for (i, k, j), (x, y) in table[i][j][label])
 
-def recover_trees (table, label, beg, end):
-    if end - beg == 1: # terminal
-        yield [label, table[beg][end][label][0]]
+def recover_trees (table, label, i, j):
+    if j - i == 1: # terminal
+        yield [label, table[i][j][label][0]]
     else:
-        for (i, k, j), (x, y) in table[beg][end][label]:
+        for (i, k, j), (x, y) in table[i][j][label]:
             for l, r in itertools.product (recover_trees (table, x, i, k),
                                            recover_trees (table, y, k, j)):
                 yield [label, l, r]
 
 def treefy (tree, l = 0):
     if tree[0][0] == 'X': # reduce rules introduced in converting into CNF
-        return "\n".join (treefy (child, l) for child in tree[1:])
+        return "\n".join (treefy (c, l) for c in tree[1:])
     lhs, rhs = tree[0], tree[1:]
-    ret = "%s(%s" % ("  " * l, lhs)
-    if len (rhs) == 1: # terminal
-        ret += " %s)" % rhs[0]
-    else:
-        ret += "\n%s\n%s)" % (treefy (rhs[0], l + 1), treefy (rhs[1], l + 1))
-    return ret
+    return "%s(%s %s)" % ("  " * l, lhs,
+                          rhs[0] if len (rhs) == 1 else
+                          '\n'.join ([""] + [treefy (r, l + 1) for r in rhs]))
 
 # read grammar
 for line in open (sys.argv[1]):
