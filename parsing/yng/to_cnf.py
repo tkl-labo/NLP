@@ -5,40 +5,50 @@ import sys, collections
 
 # read rules and convert them to CNF
 i = 1
-unit_rules = []
-l2rs = collections.defaultdict (set)
+unit_rules      = []
+unit_rules_prob = {}
+l2rs = collections.defaultdict (lambda: collections.defaultdict (float))
 for line in sys.stdin:
     rule           = line[:-1].split (" ")
     lhs, rhs, prob = rule[0], rule[1:-1], float (rule[-1])
     if len (rhs) == 1:
-        if rhs[0][0] == '_': # A -> _a
-            print "%s %s" % (lhs, rhs[0]), float (prob)
-        else:                # handle unit production later
-            unit_rules.append (rule)
+        if rhs[0][0] != '_': # handle unit production later
+            unit_rules.append (tuple ([lhs, tuple (rhs)]))
+            unit_rules_prob[tuple ([lhs, tuple (rhs)])] = [prob, [lhs, rhs[0]]]
     else:
         # replace all terminals with non-terminals
         for j in range (0, len (rhs)):
             if rhs[j][0] == '_':
                 lhs_ = 'Z' + rhs[j]
-                print "%s %s %f" % (lhs_, rhs[j], 1.0)
+                l2rs[lhs][tuple (rhs[j:j+1])] = 1.0
                 rhs[i] = lhs_
         # generate a rule to replace first two non-terminals to one
         while len (rhs) > 2:
             lhs_ = 'X' + str (i)
             i += 1
-            print lhs_, ' '.join (rhs[:2]), float (1.0)
+            l2rs[lhs_][tuple (rhs[:2])] = 1.0
             rhs[:2] = [lhs_]
-        print lhs, ' '.join (rhs), float (prob)
-    l2rs[lhs].add ((tuple (rhs), prob))
+    l2rs[lhs][tuple (rhs)] = prob
 
 # handle unit productions
 while unit_rules:
-    rule           = unit_rules.pop ()
-    lhs, rhs, prob = rule[0], rule[1:-1], float (rule[-1])
-    l2rs[lhs].remove ((tuple (rhs), prob))
-    for rs, prob_ in l2rs[rhs[0]]:
+    rule = unit_rules.pop ()
+    (lhs, rhs), (prob, loop) = rule, unit_rules_prob[rule]
+    unit_rules_prob.pop (rule)
+    l2rs[lhs].pop (rhs)
+    for rs, prob_ in l2rs[rhs[0]].items ():
         if len (rs) == 1 and rs[0][0] != '_': # yet unit production
-            unit_rules.append ([lhs, rs, prob * prob_])
-        else:
-            print lhs, ' '.join (rs), prob * prob_
-        l2rs[lhs].add ((rs, prob * prob_))
+            if rs[0] in loop:
+                # sys.stderr.write ("found self loop: %s -> %s\n" % (' -> '.join (loop), rs[0]))
+                continue
+            else:
+                if tuple ([lhs, rs]) not in unit_rules_prob:
+                    unit_rules.append (tuple ([lhs, rs]))
+                    unit_rules_prob[tuple ([lhs, rs])] = [0, loop]
+                unit_rules_prob[tuple ([lhs, rs])][0] += prob * prob_
+                unit_rules_prob[tuple ([lhs, rs])][1].append (rs[0])
+        l2rs[lhs][rs] += prob * prob_
+
+for lhs in l2rs.keys ():
+    for rhs, prob in l2rs[lhs].items ():
+        print lhs, ' '.join (rhs), prob
