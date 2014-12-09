@@ -43,11 +43,11 @@ def parse (words):
             lhs, rhs, dot, k = chart[j][m]
             rel[j][m][0] = state_id
             print_state (state_id, chart[j][m], rel[j][m], j)
-            if   dot < len (rhs) and rhs[dot] in npos: # predict
+            if dot < len (rhs) and rhs[dot] in npos: # predict
                 for rhs_ in grammar[rhs[dot]]:
                     new_state  = (rhs[dot], rhs_, 0, j)
                     add_chart (new_state, chart[j], rel[j])
-            if dot < len (rhs) and rhs[dot] in pos:     # scan
+            if dot < len (rhs) and rhs[dot] in pos:  # scan
                 if j < n and ("_" + words[j],) in grammar[rhs[dot]]:
                     new_state  = (rhs[dot], (words[j],), 1, j)
                     add_chart (new_state, chart[j + 1], rel[j + 1])

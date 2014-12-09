@@ -57,7 +57,6 @@ for line in open (sys.argv[1]):
 # loop
 words = sys.stdin.read ()[:-1].split (' ')
 table, back = parse (words)
-print back
 if words and back[0][len (words)]['S']:
     print "prob: %g" % table[0][len (words)]['S']
     print treefy (build_tree (back, 'S', 0, len (words)))
