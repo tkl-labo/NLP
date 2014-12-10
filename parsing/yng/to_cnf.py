@@ -4,7 +4,7 @@
 import sys, collections
 
 if len (sys.argv) >= 3:
-    sys.exit ("Usage: %s noconv_unit" % sys.argv[0])
+    sys.exit ("Usage: %s [noconv_unit]" % sys.argv[0])
 
 grammar     = []
 new_grammar = collections.defaultdict (float)
@@ -33,15 +33,15 @@ if len (sys.argv) == 1:
     while j < len (grammar):
         lhs, rhs, prob = grammar[j]
         if len (rhs) == 1 and rhs[0][0] != '_':
-            replaced.add (j)
             for k in l2rs[rhs[0]]:
                 if k not in replaced:
                     _, rhs_, prob_ = grammar[k]
                     l2rs[lhs].append (len (grammar))
                     grammar.append ([lhs, rhs_, prob * prob_])
+            replaced.add (j)
         j += 1
 
-# binarize all rules and add to new grammar.
+# binarize all rules and add to new grammar
 solo_rules = {}
 i = 1
 for j in range (len (grammar)):
