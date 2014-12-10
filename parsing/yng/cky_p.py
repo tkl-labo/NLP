@@ -15,23 +15,38 @@ def parse (words):
              for i in range (n + 1)]
     # parse
     for j in range (1, n + 1):
-        for lhs, prob in grammar[("_" + words[j - 1], )]:
-            table[j - 1][j][lhs] = prob
-            bkptr[j - 1][j][lhs]  = (j - 1, words[j - 1])
         for i in reversed (range (j)):
-            for k in range (i + 1, j):
-                for rhs in itertools.product (table[i][k], table[k][j]):
-                    for lhs, prob in grammar[rhs]:
-                        prob_ = table[i][k][rhs[0]] * table[k][j][rhs[1]] * prob
+            if j - i == 1:
+                for lhs, prob in grammar[("_" + words[j - 1], )]:
+                    table[j - 1][j][lhs] = prob
+                    bkptr[j - 1][j][lhs]  = (j - 1, (words[j - 1], ''))
+            else:
+                for k in range (i + 1, j):
+                    for rhs in itertools.product (table[i][k], table[k][j]):
+                        for lhs, prob in grammar[rhs]:
+                            prob_ = table[i][k][rhs[0]] * table[k][j][rhs[1]] * prob
+                            if table[i][j][lhs] < prob_:
+                                table[i][j][lhs] = prob_
+                                bkptr[i][j][lhs] = (k, rhs)
+            # apply unit productions as long as edges are updated
+            flag = True
+            while flag:
+                flag = False
+                for rhs in table[i][j].keys ():
+                    for lhs, prob in grammar[(rhs, )]:
+                        prob_ = table[i][j][rhs] * prob
                         if table[i][j][lhs] < prob_:
                             table[i][j][lhs] = prob_
-                            bkptr[i][j][lhs] = (k, rhs)
+                            bkptr[i][j][lhs] = (j, (rhs, ''))
+                            flag = True
     return table, bkptr
 
 def build_tree (bkptr, label, i, j):
-    if j - i == 1: # terminal
-        return [label, bkptr[i][j][label][1]]
     k, (l, r) = bkptr[i][j][label]
+    if k == j:     # unit productions
+        return [label, build_tree (bkptr, l, i, k)]
+    if j - i == 1: # terminal
+        return [label, bkptr[i][j][label][1][0]]
     return [label, build_tree (bkptr, l, i, k), build_tree (bkptr, r, k, j)]
 
 def treefy (tree, l = 0):
@@ -39,7 +54,7 @@ def treefy (tree, l = 0):
         return "\n".join (treefy (c, l) for c in tree[1:])
     lhs, rhs = tree[0], tree[1:]
     return "%s(%s %s)" % ("  " * l, lhs,
-                          rhs[0] if len (rhs) == 1 else
+                          rhs[0] if isinstance (rhs[0], str) else
                           '\n'.join ([""] + [treefy (r, l + 1) for r in rhs]))
 
 # read grammar
