@@ -50,7 +50,7 @@ public void loadGrammar(String file) throws IOException
                 }
         }
         br.close();
-        System.out.println("Finish loading the rules...");
+        //System.out.println("Finish loading the rules...");
 }
 
 public  String[] mergeGrammer(String r,String rule,String s,String score){
@@ -97,7 +97,7 @@ public void CKY(String sentence)
         vTable = new String[inputs.length][inputs.length+1];
         sTable = new String[inputs.length][inputs.length+1];
         fTable = new String[inputs.length][inputs.length+1][grammar.size()];
-        System.out.println("input: "+sentence);
+        System.out.println("sentence: "+sentence);
         System.out.println("length: " + inputs.length);
         for (int i = 0; i < inputs.length; i++){
                 for (int j = 1; j <= inputs.length; j++){
@@ -150,13 +150,26 @@ public void CKY(String sentence)
                 //printTree(0,inputs.length,"X3");
         }
 }
-
+/*
+private String chooseMax(String rule){
+        String result="";
+        String[] r = vTable[0][inputs.length].split("\\|");
+        String[] s = sTable[0][inputs.length].split("\\|");
+        for(int i = 0; i<r.length ; i++){
+                if(r[i].equals(rule)){
+                        result = s[i];
+                }
+        }
+        return result;
+}
+*/
 private void printTree(int row, int col, String rule, String sign)
 {
         if(col == row+1){
-                System.out.println(sign+"["+row+" "+col+"] "+rule+"->"+inputs[row]+","+lexicon.get(inputs[row]).getScore(rule));
-                if(col == inputs.length)
-                        System.out.println();
+                System.out.println(sign+rule+"->"+inputs[row]+" ["+lexicon.get(inputs[row]).getScore(rule)+"]");
+                if(col == inputs.length){
+                        System.out.println("=============================================================\n");
+                }
         }
         else{
                 for(int k = 0; k<grammar.size();k++){
@@ -164,24 +177,42 @@ private void printTree(int row, int col, String rule, String sign)
                         if(!key.equals(",0")){
                                 int i = Integer.parseInt(key.substring(0, key.indexOf(":")));
                                 String s = key.substring(key.indexOf(":")+1,key.indexOf("-"));
-                                String rs = key.substring(key.indexOf(">")+1,key.indexOf(" "));
-                                String cs = key.substring(key.indexOf(" ")+1,key.indexOf(","));
+                                String ls = key.substring(key.indexOf(">")+1,key.indexOf(" "));
+                                String rs = key.substring(key.indexOf(" ")+1,key.indexOf(","));
+                                String score = key.substring(key.indexOf(",")+1);
+
                                 if(s.equals(rule)){
-                                        if(row == 0 && col == inputs.length)
-                                                sign = "";
-                                        System.out.println(sign+"["+row+" "+col+"]~"+key);
-                                        //System.out.println(key.indexOf(":"));
-                                        sign = sign + "\t";
-                                        printTree(row,i,rs,sign);
-                                        printTree(i,col,cs,sign);
-                                }
+                                        if(row == 0 && col == inputs.length){
+                                                String result = "";
+                                                String[] vs = vTable[row][col].split("\\|");
+                                                String[] ss = sTable[row][col].split("\\|");
+                                                for(int num = 0; num <vs.length ; i++){
+                                                        if(vs[num].equals(rule)){
+                                                                result = ss[num];
+                                                                break;
+                                                        }
+                                                }
+                                                if(score.equals(result)){
+                                                        System.out.println(sign+s+" ["+score+"]");
+                                                        sign = sign + "\t";
+                                                        printTree(row,i,ls,sign);
+                                                        printTree(i,col,rs,sign);
+                                                }
+                                        }
+                                        else{
+                                                System.out.println(sign+s+" ["+score+"]");
+                                                sign = sign + "\t";
+                                                printTree(row,i,ls,sign);
+                                                printTree(i,col,rs,sign);
+                                        }
+                                }//System.out.println(k);
                         }
                 }
         }
 }
 private static void printMatrix(int size)
 {
-        System.out.println("=======================  V Matrix  =========================");
+        System.out.println("========================  V Matrix  =========================");
 
         for (int i = 0; i <size; i++){
                 for (int k = 1; k <= size; k++){
@@ -197,27 +228,28 @@ private static void printMatrix(int size)
                 }
                 System.out.println();
         }
-        System.out.println("==============================================================");
+        System.out.println("=============================================================");
 }
 
 public static void main (String[] args) throws IOException{
         CKYParser c = new CKYParser();
         c.loadGrammar("rules_cnf.txt");
-        System.out.println("Input the sentence");
+        System.out.println("Input the sentence(q to exit)");
         Scanner sc = new Scanner(System.in);
         String input = null;
-        while((input =  sc.nextLine())!=null && !input.equals("n")){
+        while((input =  sc.nextLine())!=null && !input.equals("q")){
                 c.CKY(input);
                 c.printMatrix(inputs.length);
                 System.out.println();
                 //System.out.println("print the grammar tree");
-                String[] rull = vTable[0][inputs.length].split("\\|");
+                //String[] rull = vTable[0][inputs.length].split("\\|");
                 //System.out.println(vTable[0][inputs.length]);
-                for(int i = 0; i<rull.length ; i++){
-                        System.out.println("-------------------print the grammar tree of "+rull[i]+"--------------------");
-                        c.printTree(0,inputs.length,rull[i],"");
-                        System.out.println();
-                }
+                //for(int i = 0; i<rull.length ; i++){
+                System.out.println("=====================  GRAMMAR TREE  ========================");
+                c.printTree(0,inputs.length,"S","");
+                System.out.println("Input the sentence(q to exit)");
+                //System.out.println();
+                //}
         }
 }
 }
