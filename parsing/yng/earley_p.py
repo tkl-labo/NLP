@@ -9,7 +9,7 @@ grammar = collections.defaultdict (lambda: {}) # mapping from lhs to rhs
 pos     = set ()                               # pre-terminals
 npos    = set ()                               # not pre-terminals
 
-def add_chart (state, states, check, nextl, bkptr, prob = 0.0, r = []):
+def add_chart (state, states, check, nextl, bkptr, prob = 1.0, r = []):
     if state not in check:
         check[state] = len (states)
         if state[2] < len (state[1]):
@@ -32,7 +32,8 @@ def parse (words):
     state_id = 0
     for j in range (n + 1):
         m = 0
-        while m < len (chart[j]):
+        completed = []
+        while m < len (chart[j]): # unit production? S -> V, S -> VP -> V
             lhs, rhs, dot, k = chart[j][m]
             bkptr[j][m][0] = state_id
             if dot < len (rhs) and rhs[dot] in npos: # predict
@@ -44,6 +45,7 @@ def parse (words):
                     new_state  = (rhs[dot], (words[j],), 1, j)
                     add_chart (new_state, chart[j + 1], check[j + 1], nextl[j + 1], bkptr[j + 1], grammar[rhs[dot]][("_" + words[j],)])
             if dot == len (rhs): # complete
+                completed.append (m)
                 for m_ in nextl[k][lhs]:
                     lhs_, rhs_, dot_, i = chart[k][m_]
                     state_id_ = bkptr[k][m_][0]
@@ -54,13 +56,27 @@ def parse (words):
                                    [[state_id_, [k, m_]], [state_id, [j, m]]])
             state_id += 1
             m += 1
+        while completed:
+            m = completed.pop ()
+            lhs, rhs, dot, k = chart[j][m]
+            for m_ in nextl[k][lhs]:
+                lhs_, rhs_, dot_, i = chart[k][m_]
+                state_id_ = bkptr[k][m_][0]
+                if state_id_:
+                    new_state  = (lhs_, rhs_, dot_ + 1, i)
+                    prob = bkptr[k][m_][2] * bkptr[j][m][2]
+                    bk   = bkptr[j][check[j][new_state]]
+                    if bk[2] < prob:
+                        bk[1] = [[state_id_, [k, m_]], [state_id, [j, m]]]
+                        bk[2] = prob
+                        completed.append (m)
     # finalize; try to complete dummy initial states
     for m in range (len (chart[n])):
         lhs, rhs, dot, i = chart[n][m]
         state_id = bkptr[n][m][0]
         if lhs == 'S' and dot == len (rhs) and i == 0:
             add_chart (('gamma', ('S', ), 1, 0), chart[n], check[n], nextl[n], bkptr[n],
-                       1.0 * bkptr[n][m][2],
+                       bkptr[0][0][2] * bkptr[n][m][2],
                        [[0, [0, 0]], [state_id, [n, m]]])
     return chart, bkptr
 
