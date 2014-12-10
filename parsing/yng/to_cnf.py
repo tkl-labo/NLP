@@ -57,7 +57,11 @@ for j in range (len (grammar)):
         else:
             lhs_ = solo_rules[tuple (rhs[:2])]
         rhs[:2] = [lhs_]
-    new_grammar[(lhs, tuple (rhs))] += prob
+    # statistically sound, but could change results
+    # new_grammar[(lhs, tuple (rhs))] += prob
+    # statistically not sound, but do not change results
+    if new_grammar[(lhs, tuple (rhs))] < prob:
+        new_grammar[(lhs, tuple (rhs))] = prob
 
 # output new_grammar
 for (lhs, rhs), prob in new_grammar.items ():
