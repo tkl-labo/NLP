@@ -9,20 +9,25 @@ grammar = collections.defaultdict (lambda: {}) # mapping from lhs to rhs
 pos     = set ()                               # pre-terminals
 npos    = set ()                               # not pre-terminals
 
-def add_chart (state, states, bkptr, prob = 0.0, r = []):
-    if state not in states: # linear search to list; slow
+def add_chart (state, states, check, nextl, bkptr, prob = 0.0, r = []):
+    if state not in check:
+        check[state] = len (states)
+        if state[2] < len (state[1]):
+            nextl[state[1][state[2]]].append (len (states))
         states.append (state)
         bkptr.append ([-1, [], 0.0])
-    if bkptr[states.index (state)][2] < prob:
-        bkptr[states.index (state)][1] = r
-        bkptr[states.index (state)][2] = prob
+    if bkptr[check[state]][2] < prob:
+        bkptr[check[state]][1] = r
+        bkptr[check[state]][2] = prob
 
 def parse (words):
     n     = len (words)
     chart = [[] for i in range (n + 1)]
+    nextl = [collections.defaultdict (list) for i in range (n + 1)]
+    check = [{} for i in range (n + 1)]
     bkptr = [[] for i in range (n + 1)] # record how states are generated
     # initialize
-    add_chart (('gamma', ('S',), 0, 0), chart[0], bkptr[0])
+    add_chart (('gamma', ('S',), 0, 0), chart[0], check[0], nextl[0], bkptr[0])
     # parse
     state_id = 0
     for j in range (n + 1):
@@ -33,18 +38,18 @@ def parse (words):
             if dot < len (rhs) and rhs[dot] in npos: # predict
                 for rhs_, prob in grammar[rhs[dot]].items ():
                     new_state  = (rhs[dot], rhs_, 0, j)
-                    add_chart (new_state, chart[j], bkptr[j], prob)
+                    add_chart (new_state, chart[j], check[j], nextl[j], bkptr[j], prob)
             if dot < len (rhs) and rhs[dot] in pos:  # scan
                 if j < n and ("_" + words[j],) in grammar[rhs[dot]]:
                     new_state  = (rhs[dot], (words[j],), 1, j)
-                    add_chart (new_state, chart[j + 1], bkptr[j + 1], grammar[rhs[dot]][("_" + words[j],)])
+                    add_chart (new_state, chart[j + 1], check[j + 1], nextl[j + 1], bkptr[j + 1], grammar[rhs[dot]][("_" + words[j],)])
             if dot == len (rhs): # complete
-                for m_ in range (len (chart[k])): # line search to list; slow
+                for m_ in nextl[k][lhs]:
                     lhs_, rhs_, dot_, i = chart[k][m_]
                     state_id_ = bkptr[k][m_][0]
-                    if state_id_ and dot_ < len (rhs_) and rhs_[dot_] == lhs:
+                    if state_id_:
                         new_state  = (lhs_, rhs_, dot_ + 1, i)
-                        add_chart (new_state, chart[j], bkptr[j],
+                        add_chart (new_state, chart[j], check[j], nextl[j], bkptr[j],
                                    bkptr[k][m_][2] * bkptr[j][m][2],
                                    [[state_id_, [k, m_]], [state_id, [j, m]]])
             state_id += 1
@@ -54,7 +59,7 @@ def parse (words):
         lhs, rhs, dot, i = chart[n][m]
         state_id = bkptr[n][m][0]
         if lhs == 'S' and dot == len (rhs) and i == 0:
-            add_chart (('gamma', ('S', ), 1, 0), chart[n], bkptr[n],
+            add_chart (('gamma', ('S', ), 1, 0), chart[n], check[n], nextl[n], bkptr[n],
                        1.0 * bkptr[n][m][2],
                        [[0, [0, 0]], [state_id, [n, m]]])
     return chart, bkptr
