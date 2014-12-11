@@ -27,3 +27,31 @@ CKY Parser
     -- Preposition ( to )
     -- NP ( Houston )
 ```
+
++ pcky.py - 上記の確率版
+- 文法/語彙ファイル: `./data/rules_p.cnf`
+- 注意: 上記の文法ファイルは文脈自由文法からチョムスキー標準形に変換してあります。
+- 使い方:
+```
+    python pcky.py book me a flight to Houston
+     S [ 1.43521875e-09 ]
+    - Verb ( book )
+    - NP ( me )
+    - NP
+    -- Det ( a )
+    -- Nominal
+    --- Nominal ( flight )
+    --- PP
+    ---- Preposition ( to )
+    ---- NP ( Houston )
+     S [ 4.30565625e-09 ]
+    - VP
+    -- Verb ( book )
+    -- NP ( me )
+    -- NP
+    --- Det ( a )
+    --- Nominal ( flight )
+    - PP
+    -- Preposition ( to )
+    -- NP ( Houston )
+```
