@@ -2,7 +2,7 @@
 # ptb_train.py -- train PCFG from Penn Treebank
 #   usage: python ptb_train.py < train.mrg > rule_ptb.txt 2> train.sent
 #     stdout: grammar
-#     stderr: sentence
+#     stderr: (raw) sentence
 import sys, re, collections
 
 def count_rule_and_replace (m, grammar, words, flag):
@@ -15,13 +15,13 @@ def count_rule_and_replace (m, grammar, words, flag):
     grammar[lhs][rhs] += 1
     return lhs
 
-tree       = ""
-words      = []
-copen      = 0
-cclose     = 0
-l2rs       = collections.defaultdict (lambda: collections.defaultdict (int))
+tree   = ""
+words  = []
+copen  = 0
+cclose = 0
+l2rs   = collections.defaultdict (lambda: collections.defaultdict (int))
 for line in sys.stdin:
-    tree += line[:-1]
+    tree   += line[:-1]
     copen  += line.count ("(")
     cclose += line.count (")")
     if tree and copen == cclose:

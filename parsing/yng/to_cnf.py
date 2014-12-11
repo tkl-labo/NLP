@@ -46,6 +46,7 @@ if len (sys.argv) == 1:
                             grammar.append ([lhs, rhs_, prob * prob_])
             replaced.add (j)
         j += 1
+
 # binarize all rules and add to new grammar
 solo_rules = {}
 i = 1
