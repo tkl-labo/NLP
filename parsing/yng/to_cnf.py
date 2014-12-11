@@ -26,21 +26,26 @@ for lhs, rhs, prob in grammar:
                 new_grammar[(lhs_, tuple (rhs[j:j + 1]))] = 1.0
                 rhs[j] = lhs_
 
-# convert unit productions; assuming no loop
+# convert unit productions
 replaced = set ()
 if len (sys.argv) == 1:
+    loopy = collections.defaultdict (lambda: collections.defaultdict (float))
     j = 0
     while j < len (grammar):
         lhs, rhs, prob = grammar[j]
         if len (rhs) == 1 and rhs[0][0] != '_':
-            for k in l2rs[rhs[0]]:
-                if k not in replaced:
-                    _, rhs_, prob_ = grammar[k]
-                    l2rs[lhs].append (len (grammar))
-                    grammar.append ([lhs, rhs_, prob * prob_])
+            if lhs != rhs[0]: # skip self-loopy: A -> A
+                for k in l2rs[rhs[0]]:
+                    if k not in replaced:
+                        _, rhs_, prob_ = grammar[k]
+                        if len (rhs_) == 1:
+                            if loopy[lhs][rhs_[0]] >= prob * prob_:
+                                continue # skip partial-loopy: A -> B -> B
+                            loopy[lhs][rhs_[0]] = prob * prob_
+                            l2rs[lhs].append (len (grammar))
+                            grammar.append ([lhs, rhs_, prob * prob_])
             replaced.add (j)
         j += 1
-
 # binarize all rules and add to new grammar
 solo_rules = {}
 i = 1
@@ -57,7 +62,7 @@ for j in range (len (grammar)):
         else:
             lhs_ = solo_rules[tuple (rhs[:2])]
         rhs[:2] = [lhs_]
-    # statistically sound, but could change results
+    # statistically sound, but may change results
     # new_grammar[(lhs, tuple (rhs))] += prob
     # statistically not sound, but do not change results
     if new_grammar[(lhs, tuple (rhs))] < prob:
