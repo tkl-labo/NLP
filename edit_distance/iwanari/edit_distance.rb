@@ -6,6 +6,19 @@ INSERT_COST = 1
 DELETE_COST = 1
 SUBSTITUTE_COST = 2
 
+
+def get_insert_cost(a)
+    return INSERT_COST
+end
+
+def get_delete_cost(a)
+    return DELETE_COST
+end
+
+def get_substitute_cost(a, b)
+    return SUBSTITUTE_COST * ((a != b) ? 1 : 0)
+end
+
 if $target.nil? or $source.nil? then
     puts "Usage: " + __FILE__ + " target_string source_string"
     exit
@@ -39,9 +52,9 @@ end
 for i in 1..N do
     for j in 1..M do
         # try 3 ways
-        three_ways =  [$distance[i-1][j] + INSERT_COST,
-                        $distance[i-1][j-1] + SUBSTITUTE_COST * (($source[j-1] != $target[i-1]) ? 1 : 0),
-                        $distance[i][j-1] +  DELETE_COST]
+        three_ways =  [$distance[i-1][j] + get_insert_cost($target[i-1]),
+                        $distance[i-1][j-1] + get_substitute_cost($source[j-1], $target[i-1]),
+                        $distance[i][j-1] +  get_delete_cost($source[j-1])]
         # search minimum cost
         $distance[i][j] = three_ways.min
         
