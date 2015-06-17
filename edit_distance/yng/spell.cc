@@ -5,13 +5,15 @@
 #include <vector>
 #include <algorithm>
 
-inline size_t ins_cost (char c) { return 1; }
-inline size_t sub_cost (char c1, char c2) { return c1 == c2 ? 0 : 2; }
-inline size_t del_cost (char c) { return 1; }
+inline size_t ins_cost (int c) { return 1; }
+inline size_t sub_cost (int c1, int c2) { return c1 == c2 ? 0 : 2; }
+inline size_t del_cost (int c) { return 1; }
 
-size_t min_edit_dist (const char* target, const char* source) {
-  const size_t n = std::strlen (target);
-  const size_t m = std::strlen (source);
+
+size_t min_edit_dist (const std::vector <int>& target,
+                      const std::vector <int>& source) {
+  const size_t n = target.size ();
+  const size_t m = source.size ();
   //
   // avoid memory reallocation for distance matrix
   static std::vector <std::vector <size_t> > dist;
@@ -36,39 +38,76 @@ size_t min_edit_dist (const char* target, const char* source) {
   return dist[n][m];
 }
 
+// UTF8 <-> Unicode
+class encoder {
+private:
+  std::vector <int>  unicode;
+  std::vector <char> utf8;
+public:
+  encoder () {}
+  const std::vector <int>& encode (const char* str) { // UTF8 -> Unicode
+    unicode.clear ();
+    for (const char* p = str; *p; ++p) { // https://ja.wikipedia.org/wiki/UTF-8
+      int u (0), i (0);
+      if (*p & 0x80) // 2 - 6 bytes
+        do {
+          u <<= 6;
+          u += p[++i] & 0x3f;
+        } while (*p & (0x40 >> i));
+      u += (*p & (0x7f >> i)) << (i * 6);
+      p += i;
+      unicode.push_back (u);
+    }
+    return unicode;
+  };
+  const char* decode (const std::vector <int>& str) {
+    utf8.clear ();
+    for (std::vector <int>::const_reverse_iterator it = str.rbegin ();
+         it != str.rend (); ++it)
+      if (*it >> 7) { // 2 - 6 bytes
+        int i = 0;
+        do
+          utf8.push_back (((*it >> (i++ * 6)) & 0x3f) | 0x80);
+        while (*it >> (i * 6 + 6 - i));
+        utf8.push_back ((*it >> (i * 6)) | (0x7f << (7 - i)));
+      } else // 1 byte; ascii
+        utf8.push_back (*it);
+    std::reverse (utf8.begin (), utf8.end ());
+    utf8.push_back ('\0');
+    return &utf8[0];
+  };
+};
+
 int main (int argc, char** argv) {
   if (argc >= 3)
     { std::fprintf (stderr, "Usage: %s [dict]\n", argv[0]); std::exit (1); }
-  
+
   // read dict
   FILE* fp = std::fopen (argc >= 2 ? argv[1] : "/usr/share/dict/words", "r");
   if (! fp)
     { std::fprintf (stderr, "no such file: %s\n", argv[1]); std::exit (1); }
-  if (std::fseek (fp, 0, SEEK_END) != 0) return -1;
-  const size_t size = static_cast <size_t> (std::ftell (fp));
-  if (std::fseek (fp, 0, SEEK_SET) != 0) return -1;
-  char* data = new char[size];
-  if (size != std::fread (data, sizeof (char), size, fp)) return -1;
   //
-  std::vector <const char*> words;
-  for (char* start (data), *end (data), *tail (data + size);
-       end != tail; start = ++end) {
-    while (*end != '\n') ++end; *end = '\0';
-    words.push_back (start);
+  encoder encoder;
+  std::vector <std::vector <int> > words;
+  char line[1 << 21];
+  while (std::fgets (line, 1 << 21, fp) != 0) {
+    line[std::strlen (line) - 1] = '\0';
+    words.push_back (encoder.encode (line));
   }
   //
   typedef std::vector <std::pair <size_t, size_t> >  result_t;
   result_t results (words.size ());
   // loop
-  char line[1024];
   std::fprintf (stderr, "> ");
   while (std::fgets (line, 1024, stdin) != NULL) {
     line[std::strlen (line) - 1] = '\0';
     for (size_t i = 0; i < words.size (); ++i)
-      results[i] = result_t::value_type (min_edit_dist (line, words[i]), i);
+      results[i] = result_t::value_type (min_edit_dist (encoder.encode (line),
+                                                        words[i]), i);
     std::sort (results.begin (), results.end ());
     for (result_t::iterator it = results.begin (); it != results.end (); ++it) {
-      std::fprintf (stdout, "\t%s: %ld\n", words[it->second], it->first);
+      std::fprintf (stdout, "\t%s: %ld\n",
+                    encoder.decode (words[it->second]), it->first);
       std::fprintf (stdout, "-- stop enumeration? [y]: ");
       std::fgets (line, 1024, stdin);
       if (std::feof (stdin) || line[0] == 'y') break;
