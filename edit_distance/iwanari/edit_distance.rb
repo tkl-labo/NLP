@@ -1,11 +1,9 @@
 #!/usr/bin/env ruby
-$target = ARGV[0]
-$source = ARGV[1]
 
+# ===== Cost Functions =====
 INSERT_COST = 1
 DELETE_COST = 1
 SUBSTITUTE_COST = 2
-
 
 def get_insert_cost(a)
     return INSERT_COST
@@ -18,6 +16,12 @@ end
 def get_substitute_cost(a, b)
     return SUBSTITUTE_COST * ((a != b) ? 1 : 0)
 end
+# ===== /Cost Functions =====
+
+# ===== Initialize =====
+# input arguments
+$target = ARGV[0]
+$source = ARGV[1]
 
 if $target.nil? or $source.nil? then
     puts "Usage: " + __FILE__ + " target_string source_string"
@@ -35,7 +39,10 @@ $distance = Array.new(N+1){ Array.new(M+1) }
 
 # a table keeping back pointers to follow minimum edit distance processes
 $back_pointers = Array.new(N+1){ Array.new(M+1) }
+# ===== /Initialize =====
 
+
+# ===== Dynamic Programming =====
 # Initialize the zeroth row and column to be the distance from the empty string
 $distance[0][0] = 0
 
@@ -65,11 +72,13 @@ for i in 1..N do
         $back_pointers[i][j] = vmin.zip(three_ways).map{|m, t| m == t}
     end
 end
+# ===== /Dynamic Programming =====
 
 puts "Distance: " + $distance[N][M].to_s
 
 puts "\n"
 
+# ===== Showing Solutions =====
 # traverse tree from distance[N][M]
 # preorder may work properly
 $num_of_solution = 0
@@ -80,6 +89,7 @@ def traverse(i, j, process, tar, src)
         puts "action: " + process
         puts "target: " + tar
         puts "source: " + src
+        puts "\n"
         return
     end
     if $back_pointers[i][j][0] then
@@ -99,3 +109,5 @@ def traverse(i, j, process, tar, src)
 end
 
 traverse(N, M, "", $target.dup, $source.dup)
+# ===== /Showing Solutions =====
+
