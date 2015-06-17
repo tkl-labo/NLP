@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+require 'jcode' if RUBY_VERSION < '1.9' # hankaku -> zenkaku
 
 # ===== Cost Functions =====
 INSERT_COST = 1
@@ -72,9 +74,8 @@ for i in 1..N do
         $back_pointers[i][j] = vmin.zip(three_ways).map{|m, t| m == t}
     end
 end
-# ===== /Dynamic Programming =====
-
 puts "Distance: " + $distance[N][M].to_s
+# ===== /Dynamic Programming =====
 
 puts "\n"
 
@@ -93,21 +94,35 @@ def traverse(i, j, process, tar, src)
         return
     end
     if $back_pointers[i][j][0] then
-        traverse(i-1, j, "+" + process, tar, src.dup.insert(j, "\s"))
+        traverse(i-1, j, $plus + process, tar, src.dup.insert(j, $space))
     end
     if $back_pointers[i][j][1] then
         # if others are not minimum, this character is equivalent to target's
         unless $back_pointers[i][j][0] then # using $back_pointers[i][j][2] is also ok
-            traverse(i-1, j-1, "=" + process, tar, src)
+            traverse(i-1, j-1, $equal + process, tar, src)
         else
-            traverse(i-1, j-1, "*" + process, tar, src)
+            traverse(i-1, j-1, $asta + process, tar, src)
         end
     end
     if $back_pointers[i][j][2] then
-        traverse(i, j-1, "-" + process, tar.dup.insert(i, "\s"), src)
+        traverse(i, j-1, $minus + process, tar.dup.insert(i, $space), src)
     end
 end
 
-traverse(N, M, "", $target.dup, $source.dup)
+# if the input strings contain Zenkaku characters, 
+# convert both of them into Zenkaku
+isZenkaku = ($target =~ /[^ -~｡-ﾟ]/) || ($source =~ /[^ -~｡-ﾟ]/)
+$space = isZenkaku ? "　" : " "
+$plus = isZenkaku ? "＋" : "+"
+$minus = isZenkaku ? "ー" : "-"
+$equal = isZenkaku ? "＝" : "="
+$asta = isZenkaku ? "＊" : "*"
+
+if isZenkaku then
+    traverse(N, M, "", $target.tr("!-~s", "！-～　"), $source.tr("!-~s", "！-～　"))
+else
+    traverse(N, M, "", $target.dup, $source.dup)
+    
+end
 # ===== /Showing Solutions =====
 
