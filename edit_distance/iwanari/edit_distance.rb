@@ -79,7 +79,7 @@ puts "Distance: " + $distance[N][M].to_s
 
 puts "\n"
 
-# ===== Showing Solutions =====
+# ===== Showing Solutions Function =====
 # traverse tree from distance[N][M]
 # preorder may work properly
 $num_of_solution = 0
@@ -108,7 +108,9 @@ def traverse(i, j, process, tar, src)
         traverse(i, j-1, $minus + process, tar.dup.insert(i, $space), src)
     end
 end
+# ===== /Showing Solutions Function =====
 
+# ===== Dealing with Zenkaku =====
 # if the input strings contain Zenkaku characters, 
 # convert both of them into Zenkaku
 isZenkaku = ($target =~ /[^ -~｡-ﾟ]/) || ($source =~ /[^ -~｡-ﾟ]/)
@@ -122,7 +124,6 @@ if isZenkaku then
     traverse(N, M, "", $target.tr("!-~s", "！-～　"), $source.tr("!-~s", "！-～　"))
 else
     traverse(N, M, "", $target.dup, $source.dup)
-    
 end
-# ===== /Showing Solutions =====
+# ===== /Dealing with Zenkaku =====
 
