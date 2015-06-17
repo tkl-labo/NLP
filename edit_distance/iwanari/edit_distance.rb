@@ -7,6 +7,8 @@ INSERT_COST = 1
 DELETE_COST = 1
 SUBSTITUTE_COST = 2
 
+# we can implement weighted-edit distance by writing 
+# some modification inside these three cost functions
 def get_insert_cost(a)
     return INSERT_COST
 end
@@ -83,29 +85,29 @@ puts "\n"
 # traverse tree from distance[N][M]
 # preorder may work properly
 $num_of_solution = 0
-def traverse(i, j, process, tar, src)
+def traverse(i, j, action, tar, src)
     if i <= 0 && j <= 0 then
         $num_of_solution = $num_of_solution + 1
         puts "--- solution " + $num_of_solution.to_s + " ---"
-        puts "action: " + process
+        puts "action: " + action
         puts "target: " + tar
         puts "source: " + src
         puts "\n"
         return
     end
     if $back_pointers[i][j][0] then
-        traverse(i-1, j, $plus + process, tar, src.dup.insert(j, $space))
+        traverse(i-1, j, $plus + action, tar, src.dup.insert(j, $space))
     end
     if $back_pointers[i][j][1] then
         # if others are not minimum, this character is equivalent to target's
         unless $back_pointers[i][j][0] then # using $back_pointers[i][j][2] is also ok
-            traverse(i-1, j-1, $equal + process, tar, src)
+            traverse(i-1, j-1, $equal + action, tar, src)
         else
-            traverse(i-1, j-1, $asta + process, tar, src)
+            traverse(i-1, j-1, $asta + action, tar, src)
         end
     end
     if $back_pointers[i][j][2] then
-        traverse(i, j-1, $minus + process, tar.dup.insert(i, $space), src)
+        traverse(i, j-1, $minus + action, tar.dup.insert(i, $space), src)
     end
 end
 # ===== /Showing Solutions Function =====
