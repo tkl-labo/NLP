@@ -32,17 +32,14 @@ def ed_op_table(string1,string2, add_rem_value, rep_value):
                 distance[i][j] = i * add_rem_value
                 op_table[i][j] = '-'
             else:
-                if string1[i-1] == string2[j-1]:
-                    distance[i][j] = distance[i-1][j-1]
-                    op_table[i][j] = '|'
+                rep = distance[i-1][j-1] if string1[i-1] == string2[j-1] else distance[i-1][j-1]+rep_value
+                distance[i][j] = min (rep, distance[i-1][j]+add_rem_value, distance[i][j-1]+add_rem_value)
+                if distance[i][j] == rep:
+                    op_table[i][j] = '|' if string1[i-1] == string2[j-1] else '*'
+                elif distance[i][j] == distance[i-1][j]+add_rem_value:
+                    op_table[i][j] = '-'
                 else:
-                    distance[i][j] = min (distance[i-1][j-1]+rep_value, distance[i-1][j]+add_rem_value, distance[i][j-1]+add_rem_value)
-                    if distance[i][j] == distance[i-1][j-1]+rep_value:
-                        op_table[i][j] = '*'
-                    elif distance[i][j] == distance[i-1][j]+add_rem_value:
-                        op_table[i][j] = '-'
-                    else:
-                        op_table[i][j] = '+'
+                    op_table[i][j] = '+'
     return distance, op_table
 
 def back_trace(op_table):
