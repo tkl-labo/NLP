@@ -19,7 +19,7 @@ class Edist
     @btrace[0].map!.with_index{|c, index| c=[:ins] unless index==0}
     @matrix.each_with_index do |row, index_s|
       row.each_with_index do |cell, index_t|
-        @matrix[index_s][index_t] = update_cell(index_s, index_t) unless index_s == 0 || index_t == 0 
+        @matrix[index_s][index_t] = calc_cell(index_s, index_t) unless index_s == 0 || index_t == 0 
       end
     end
     @align = Array.new #trace of action
@@ -30,24 +30,36 @@ class Edist
 
   private
 
-  def update_cell(s, t)
+  def calc_cell(s, t)
     sub_cost, del_cost, ins_cost = 100, 100, 100
     if @source[s-1] == @target[t-1]
       minimum = @matrix[s-1][t-1]
       @btrace[s][t].push(:eq)
     else
-      sub_cost = 0.1 if (@source[s-1] =="ン" && @target[t-1] == "ソ") || (@source[s-1] =="ソ" && @target[t-1] == "ン")
-      del_cost = 0.1 if @source[s-1] == "'"
-      #重み付けがあれば追加
-      sub_cost = [sub_cost, SUB_COST].min
-      del_cost = [del_cost, DEL_COST].min
-      ins_cost = [ins_cost, INS_COST].min
+      sub_cost = get_sub_cost(s,t)
+      del_cost = get_del_cost(s,t)
+      ins_cost = get_ins_cost(s,t)
       minimum = [@matrix[s-1][t-1]+sub_cost, @matrix[s-1][t]+del_cost, @matrix[s][t-1]+ins_cost].min
     end
     @btrace[s][t].push(:sub) if minimum == @matrix[s-1][t-1]+sub_cost
     @btrace[s][t].push(:del) if minimum == @matrix[s-1][t]+del_cost
     @btrace[s][t].push(:ins) if minimum == @matrix[s][t-1]+ins_cost
     return minimum
+  end
+
+  #重み付けがあれば以下の関数に追加
+  def get_sub_cost(s,t)
+      sub_cost = 0.1 if (@source[s-1] =="ン" && @target[t-1] == "ソ") || (@source[s-1] =="ソ" && @target[t-1] == "ン")
+      sub_cost = [sub_cost ||= 100000, SUB_COST].min
+  end
+
+  def get_del_cost(s,t)
+      del_cost = 0.1 if @source[s-1] == "'"
+      del_cost = [del_cost ||= 100000, DEL_COST].min
+  end
+
+  def get_ins_cost(s,t)
+      ins_cost = [ins_cost ||= 100000, INS_COST].min
   end
 
   def back_trace(s, t)
