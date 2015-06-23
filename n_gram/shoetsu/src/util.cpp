@@ -25,20 +25,20 @@ double cur_time(){
 
 wstring widen(const std::string &src) 
 {
-	wchar_t *wcs = new wchar_t[src.length() + 1];
-	mbstowcs(wcs, src.c_str(), src.length() + 1);
-	wstring dest = wcs;
-	delete [] wcs;
-	return dest;
+  wchar_t *wcs = new wchar_t[src.length() + 1];
+  mbstowcs(wcs, src.c_str(), src.length() + 1);
+  wstring dest = wcs;
+  delete [] wcs;
+  return dest;
 }
 
 string narrow(const std::wstring &src) 
 {
-	char *mbs = new char[src.length() * MB_CUR_MAX + 1];
-	wcstombs(mbs, src.c_str(), src.length() * MB_CUR_MAX + 1);
-	string dest = mbs;
-	delete [] mbs;
-	return dest;
+  char *mbs = new char[src.length() * MB_CUR_MAX + 1];
+  wcstombs(mbs, src.c_str(), src.length() * MB_CUR_MAX + 1);
+  string dest = mbs;
+  delete [] mbs;
+  return dest;
 }
 
 
