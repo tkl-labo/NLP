@@ -11,16 +11,16 @@ int main(int argc, char** argv)
             << " training_data [N = 2]" << std::endl;
         return 0;
     }
-    const int N = (argc >= 3) ? std::atoi(argv[2]) : 2;
     
     setlocale(LC_ALL, "ja_JP.UTF-8");
     
     util::Stopwatch<std::chrono::milliseconds> sw;
-    nlp::NGram ngram(argv[1]);
-    ngram.train(N);
+    nlp::NGram ngram((argc >= 3) ? std::atoi(argv[2]) : 2);
+    ngram.train(argv[1]);
     sw.stop();
     
-    ngram.showAllProbabilities();
+    // debug
+    // ngram.showAllProbabilities();
     
     std::cout << "Elapsed: " << sw.showElapsedTime().c_str() << std::endl;
 

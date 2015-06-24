@@ -13,10 +13,11 @@ protected:
 };
 
 
-TEST_F(NGramTest, hasCorrctFileName)
+TEST_F(NGramTest, hasCorrctN)
 {
     const std::string FILENAME = "hoge.txt";
-    NGram ngram(FILENAME);
-    ASSERT_STREQ(ngram.trainingFileName().c_str(),
-            FILENAME.c_str());
+    const int N = 2;
+    NGram ngram(N);
+    
+    ASSERT_EQ(ngram.N(), N);
 }

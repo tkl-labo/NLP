@@ -71,29 +71,26 @@ bool NGram::Node::insertKey(const std::string& key)
 
 /* ======== NGram ======== */
 
-void NGram::train(const int N)
+void NGram::train(const std::string &training)
 {
-    m_N = N;
     m_num_of_ngrams = 0;
     m_root.clear();
     
     std::cout << "training..." << std::endl;
-    readFile();
-    std::cout << "trained!" << std::endl;
-}
-
-void NGram::readFile()
-{
-    std::ifstream input_file(m_training);
+    
+    std::ifstream input_file(training);
     if (!input_file) {
-        std::cerr << "ERROR: No such file (" << m_training << ")" << std::endl;
+        std::cerr << "ERROR: No such file (" 
+                    << training << ")" << std::endl;
         std::exit(EXIT_FAILURE);
     }
     constructTree(input_file);
     input_file.close();
+    
+    std::cout << "trained!" << std::endl;
 }
 
-NGramKey createNGramKey(const int& n)
+NGramKey createNGramKey(const int n)
 {
     return NGramKey(n - 1, START_SYMBOL);
 }
@@ -142,6 +139,18 @@ void NGram::constructTree(std::istream &stream)
             key.push_back(word);
         }
     }
+}
+
+double NGram::calcPerplexity(const std::string &testing)
+{
+    std::ifstream input_file(testing);
+    if (!input_file) {
+        std::cerr << "ERROR: No such file (" 
+                    << testing << ")" << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    input_file.close();
+    return 0.0;
 }
 
 // debug function

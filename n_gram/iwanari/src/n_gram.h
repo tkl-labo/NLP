@@ -22,22 +22,23 @@ private:
 
     int m_num_of_ngrams;
     int m_N;
-    std::string m_training;
     std::map<NGramKey, NGram::Node> m_root;
 
 public:
-    NGram(const std::string training) 
-        : m_training(training) { }
+    NGram(const int N) 
+        : m_N(N) { }
     virtual ~NGram() {}
     
-    std::string trainingFileName() { return m_training; }
-    void train(const int N);
+    void setN(const int N) { m_N = N; }
+    int N() { return m_N; }
+    
+    void train(const std::string &training);
+    double calcPerplexity(const std::string &testing);
     void showAllProbabilities();
     void showAllNgrams();
 
 private:
     void insertKey(const NGramKey &key, const std::string &word);
-    void readFile();
     void constructTree(std::istream &stream);
 };
 }
