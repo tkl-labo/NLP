@@ -36,6 +36,7 @@ public:
     void showAllNgrams();
 
 private:
+    void insertKey(const NGramKey &key, const std::string &word);
     void readFile();
     void constructTree(std::istream &stream);
 };

@@ -9,6 +9,7 @@ using namespace nlp;
 const std::string START_SYMBOL = "<s>";
 const std::string END_SYMBOL = "</s>";
 const std::string END_SYMBOL_IN_CORPUS = "EOS";
+const std::string DELIME_IN_CORPUS = "\t";
 
 /* ======== util ========= */
 std::string joinString(const std::vector<std::string> &strings, 
@@ -32,7 +33,7 @@ std::string getFirstString(const std::string &str, const std::string &delim)
     if ((fp =  str.find(delim)) != std::string::npos)
         return str.substr(0, fp);
     
-    return "";
+    return str; // EOS has no following delim
 }
 
 std::vector<std::string> splitString(const std::string &str, const std::string &delim)
@@ -86,7 +87,7 @@ void NGram::readFile()
     std::ifstream input_file(m_training);
     if (!input_file) {
         std::cerr << "ERROR: No such file (" << m_training << ")" << std::endl;
-        std::exit(EXIT_SUCCESS);
+        std::exit(EXIT_FAILURE);
     }
     constructTree(input_file);
     input_file.close();
@@ -97,6 +98,23 @@ NGramKey createNGramKey(const int& n)
     return NGramKey(n - 1, START_SYMBOL);
 }
 
+void NGram::insertKey(const NGramKey &key, const std::string &word)
+{
+    auto it = m_root.find(key);
+    if (it != m_root.end()){
+        // if it is a new key, increment the num of ngrams
+        if (it->second.insertKey(word))
+            m_num_of_ngrams++;
+    } 
+    else {
+        NGram::Node node;
+        // if it is a new key, increment the num of ngrams
+        if (node.insertKey(word))
+            m_num_of_ngrams++;
+        m_root.emplace(key, node);
+    }
+}
+
 void NGram::constructTree(std::istream &stream)
 {
     std::string str;
@@ -104,27 +122,16 @@ void NGram::constructTree(std::istream &stream)
     NGramKey key = createNGramKey(m_N);
     while(std::getline(stream, str)) {
         // this program assumes processed corpus
-        std::string word = getFirstString(str, " ");
+        std::string word = getFirstString(str, DELIME_IN_CORPUS);
         
         // if the word is the line end symbol (EOS)
         if (word == END_SYMBOL_IN_CORPUS)
             word = END_SYMBOL;
         
-        auto it = m_root.find(key);
-        if (it != m_root.end()){
-            // if it is a new key, increment the num of ngrams
-            if (it->second.insertKey(word))
-                m_num_of_ngrams++;
-        } 
-        else {
-            NGram::Node node;
-            // if it is a new key, increment the num of ngrams
-            if (node.insertKey(word))
-                m_num_of_ngrams++;
-            m_root.emplace(key, node);
-        }
+        // insert new key and following word
+        insertKey(key, word);
         
-        // if the current word is the end of line, initialize it
+        // if the current word is the end of line, initialize the key
         if (word == END_SYMBOL) {
             key = createNGramKey(m_N);
         }
@@ -137,6 +144,7 @@ void NGram::constructTree(std::istream &stream)
     }
 }
 
+// debug function
 void NGram::showAllProbabilities()
 {
     for (auto pair : m_root) {

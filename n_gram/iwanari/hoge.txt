@@ -1,6 +1,6 @@
-this is a pen
-is a pen
-a pen
-pen 
-. 
+this	
+is	
+a	
+pen	
+.	
 EOS 
