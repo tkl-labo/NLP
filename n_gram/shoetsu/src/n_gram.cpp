@@ -117,7 +117,7 @@ void NGram::Learn(){
       strv.clear();
     }
   }
-  cout << "Learned from: " << c << " words" <<endl;
+  wcout << L"Learned from: " << c << L" words" <<endl;
 };
 
 
