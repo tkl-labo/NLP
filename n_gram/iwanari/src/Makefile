@@ -7,7 +7,7 @@ opts += -O3
 opts += -std=c++11
 debug := -g
 
-GTESTDIR = ../tools/googletest
+GTESTDIR = ./../../../tools/googletest
 TEST_LIBRARY_DIR = ../lib/gen
 TEST_INCLUDE_DIR = $(GTESTDIR)/include
 
