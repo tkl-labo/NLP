@@ -1,18 +1,24 @@
+#pragma once
 #include <iostream>
+#include <vector>
 
 namespace nlp
 {
 class NGram
 {
 private:
-    std::string m_input;
-
+    std::string m_training;
+    int m_num_of_pairs;
+    
+    
 public:
-    NGram(std::string filename) {
-        m_input = filename;
+    NGram(const std::string training) 
+    : m_num_of_pairs(0) {
+        m_training = training;
     }
     virtual ~NGram() {}
     
-    std::string inputFile() { return m_input; }
+    std::string trainingFileName() { return m_training; }
+    void calcNgram(const int n);
 };
 }

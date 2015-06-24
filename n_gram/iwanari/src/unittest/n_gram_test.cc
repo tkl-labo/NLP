@@ -17,6 +17,6 @@ TEST_F(NGramTest, hasCorrctFileName)
 {
     const std::string FILENAME = "hoge.txt";
     NGram ngram(FILENAME);
-    ASSERT_STREQ(ngram.inputFile().c_str(),
+    ASSERT_STREQ(ngram.trainingFileName().c_str(),
             FILENAME.c_str());
 }

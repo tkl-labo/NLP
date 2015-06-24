@@ -3,4 +3,7 @@
 
 using namespace nlp;
 
-
+void NGram::calcNgram(const int n)
+{
+    
+}
