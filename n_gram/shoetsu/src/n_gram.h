@@ -37,8 +37,6 @@ namespace std {
   };
 }
 
-
-
 typedef std::unordered_map<std::wstring, int> NGramFreq_t;
 typedef std::shared_ptr<NGramFreq_t> NGramFreqPtr_t;
 
@@ -52,7 +50,7 @@ class NGramNode{
   NGramFreqPtr_t m_freq;
   int m_total;
  public:
-  NGramNode( NGramKey_t);
+  NGramNode(const NGramKey_t &);
   virtual ~NGramNode() = default;
   inline NGramKey_t GetKey(){ return *m_key;};
   inline NGramFreq_t GetFreq(){ return *m_freq;};
@@ -70,16 +68,20 @@ class NGramNode{
   }
   void AddFreq(const std::wstring &);
   float OutputProb(const std::wstring &);
+  float OutputProb();
  
 };
 
 
 
 class NGram{
-
  private:
   NGramMapPtr_t m_map;
-  
+  std::wstring Transit(NGramNodePtr_t node);
+  NGramNodePtr_t GetOrCreateNode(NGramKey_t key);
+  NGramNodePtr_t GetNode(NGramKey_t key);
+  NGramNodePtr_t GetStartNode();
+
  public:
   NGram(const int n = 2);
   virtual ~NGram() = default;
@@ -90,8 +92,6 @@ class NGram{
 
   inline NGramMap_t GetMap(){return *m_map;}
 
-  NGramNodePtr_t GetOrCreateNode( NGramKey_t strv);
-  NGramNodePtr_t GetStartNode();
 
   std::wstring CreateRandomSentence();
 };

@@ -1,5 +1,5 @@
 
-corpus="data/2012-01-01.cdr.gz"
+corpus="data/2012-02-01.cdr.gz"
 N=2
 if [ $# -gt 0 ]; then
   corpus=$1
