@@ -92,7 +92,7 @@ int main (int argc, char** argv) {
         case NONE:    P = m * 1.0 / n; break;
         case LAPLACE: P = (m + 1.0) / (n + V + 1.0); break;
       }
-      std::fprintf (stdout, "%s\t%f\n", words[i], - std::log (P));
+      std::fprintf (stdout, "%s\t%f\n", words[i], std::exp (- std::log (P)));
       logP += std::log (P);
     }
     std::fprintf (stdout, "\n");
