@@ -20,8 +20,7 @@ class NGramNode;
 typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
 
 typedef std::vector<std::string> NGramKey_t;
-//typedef std::deque<std::string> NGramKey_t;
-typedef std::shared_ptr<NGramKey_t> NGramKeyPtr_t;
+typedef std::unique_ptr<NGramKey_t> NGramKeyPtr_t;
 
 
 //unordered_mapで使うvector<string>のハッシュ関数
@@ -40,7 +39,7 @@ namespace std {
 }
 
 typedef std::unordered_map<std::string, int> NGramFreq_t;
-typedef std::shared_ptr<NGramFreq_t> NGramFreqPtr_t;
+typedef std::unique_ptr<NGramFreq_t> NGramFreqPtr_t;
 
 
 class NGramNode{
@@ -64,11 +63,6 @@ class NGramNode{
     }
   }
   inline int GetTotal() const {return m_total;}
-  inline float GetProb(const std::string &str){
-    return (float)(*m_freq)[str] / (float)m_total;
-  }
-  float OutputProb(const std::string &);
-  float OutputProb();
   void AddFreq(const std::string &);
   void SetFreq(const std::string &, const int);
 };
@@ -77,22 +71,28 @@ typedef std::set<std::string> NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
-typedef std::shared_ptr<NGramMap_t> NGramMapPtr_t;
+typedef std::unique_ptr<NGramMap_t> NGramMapPtr_t;
 
 class NGram{
- private:
+ protected:
+  
   NGramMapPtr_t m_map;
   NGramVocablaryPtr_t m_vocablary;
   int N;
 
-  std::string Transit(NGramNodePtr_t node);
   NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
   NGramNodePtr_t GetNode(const NGramKey_t &key);
-
-  inline NGramMap_t GetMap(){
-    return *m_map;
-  }
+  inline NGramMap_t GetMap() const {return *m_map;}
+  inline NGramVocablary_t GetVocablary() const {return *m_vocablary;}
   void AddToVocablary(std::string);
+
+  virtual std::string Transit(NGramNodePtr_t node);
+  virtual inline float GetProb(NGramNodePtr_t node,const std::string &str){
+    return (float)(node->GetFreq(str)) / (float)(node->GetTotal());
+  }
+  double OutputProb(NGramNodePtr_t ,const std::string &);
+  double OutputProb(NGramNodePtr_t);
+ 
  public:
   NGram(const int n = 3);
   virtual ~NGram() = default;
@@ -103,8 +103,22 @@ class NGram{
   void Load(const std::string & filename);
   double Perplexity(const NGramKey_t &);
   std::string CreateRandomSentence();
+
+
 };
 
+
+class LaplaceSmoothedNGram : public NGram{
+ protected:
+  inline float GetProb(NGramNodePtr_t node,const std::string &str) const{
+    return (float)(node->GetFreq(str) + 1) / (float)(node->GetTotal() + GetVocablary().size());
+  }
+  std::string Transit(NGramNodePtr_t node);
+
+ public:
+  LaplaceSmoothedNGram(const int n = 3);
+  ~LaplaceSmoothedNGram() = default;
+};
 
 #endif
 
