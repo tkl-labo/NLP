@@ -2,6 +2,7 @@ METHOD="learn"
 NLINE=500000
 N=3
 CORPUS="data/2012-01-01.cdr.gz"
+#CORPUS="/net/157.82.157.42/vol/volExpr2/kaji/tweet/analyzed/2012/01/01.cdr.gz"
 
 if [ $# -lt 1 ]; then
   echo "./learn.sh (2|3) [CORPUS_FILE.gz]"
