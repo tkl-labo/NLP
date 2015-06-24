@@ -60,3 +60,17 @@ vector<string> split(const string &s, const char delim) {
   }
   return elems;
 }
+
+/*
+deque<string> split(const string &s, const char delim) {
+  deque<string> elems;
+  stringstream ss(s);
+  string item;
+  while (getline(ss, item, delim)) {
+    if (!item.empty()) {
+      elems.push_back(item);
+    }
+  }
+  return elems;
+}
+*/

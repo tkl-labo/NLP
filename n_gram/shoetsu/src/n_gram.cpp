@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <omp.h>
 
 using namespace std;
 
@@ -111,11 +112,6 @@ NGramNodePtr_t NGram::GetOrCreateNode(const NGramKey_t &key){
 }
 
 
-NGramNodePtr_t NGram::GetStartNode(){
-  NGramKey_t strv = StartNodeKey(N);
-  return GetOrCreateNode(strv);
-}
-
 
 void NGram::AddToVocablary(string str){
   m_vocablary->insert(str);
@@ -164,7 +160,7 @@ void NGram::Add(const NGramKey_t &source){
 
 string NGram::CreateRandomSentence(){
   NGramKey_t strv = StartNodeKey(N);
-  auto start_node = GetStartNode();
+  auto start_node = GetOrCreateNode(strv);
   string str = Transit(start_node);
 
   //start_node->OutputProb();
@@ -221,7 +217,6 @@ void NGram::Save(const string & filename){
 }
 
 
-
 //-------------
 // key1 key2 ..
 // word1 freq1
@@ -233,7 +228,7 @@ void NGram::Load(const string & filename){
   ifstream ifs("data/" + filename);
   if(ifs.fail()){
     cout << "Failed to load n_gram data" << endl;
-    return;
+    exit(1);
   }
   string line;
   NGramNodePtr_t node; 
@@ -246,7 +241,7 @@ void NGram::Load(const string & filename){
       key = split(line);
       node = GetOrCreateNode(key);
     }else{
-      auto wf = split(line);
+      NGramKey_t wf = split(line);
       word = wf[0];
       freq = stoi(wf[1]);
       node->SetFreq(word, freq);
@@ -255,4 +250,8 @@ void NGram::Load(const string & filename){
   }
 }
 
+double NGram::Perplexity(const NGramKey_t & str){
+  double perplexity;
 
+  return perplexity;
+}

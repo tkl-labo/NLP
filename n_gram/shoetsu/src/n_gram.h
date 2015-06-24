@@ -4,6 +4,7 @@
 #define NGRAM_H_INCLUDED
 
 
+#include <deque>
 
 #include <memory>
 #include <vector>
@@ -19,6 +20,7 @@ class NGramNode;
 typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
 
 typedef std::vector<std::string> NGramKey_t;
+//typedef std::deque<std::string> NGramKey_t;
 typedef std::shared_ptr<NGramKey_t> NGramKeyPtr_t;
 
 
@@ -86,7 +88,6 @@ class NGram{
   std::string Transit(NGramNodePtr_t node);
   NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
   NGramNodePtr_t GetNode(const NGramKey_t &key);
-  NGramNodePtr_t GetStartNode();
 
   inline NGramMap_t GetMap(){
     return *m_map;
@@ -100,7 +101,7 @@ class NGram{
   void Learn();
   void Save(const std::string & filename);
   void Load(const std::string & filename);
-
+  double Perplexity(const NGramKey_t &);
   std::string CreateRandomSentence();
 };
 
