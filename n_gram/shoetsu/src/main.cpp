@@ -13,6 +13,7 @@ using namespace std;
 
 void NgramTest_Learn(int argc, char ** argv)
 {
+  cout << "<Learn>" <<endl;
   const int N = stoi(argv[2]);
   string filename = (N == 2) ? "data/bi_gram.dat" : "data/tri_gram.dat";
   assert(N < 4);
@@ -31,6 +32,7 @@ void NgramTest_Learn(int argc, char ** argv)
 
 void NgramTest_Create(int argc, char ** argv)
 {
+  cout << "<Create>" <<endl;
   const int N = stoi(argv[2]);
   assert(N < 4);
   string filename = argv[3];
@@ -48,6 +50,7 @@ void NgramTest_Create(int argc, char ** argv)
 
 void NgramTest_Perplexity(int argc, char ** argv)
 {
+  cout << "<Perplexity>" <<endl;
   const int N = stoi(argv[2]);
   assert(N < 4);
   string filename = argv[3];
@@ -58,8 +61,10 @@ void NgramTest_Perplexity(int argc, char ** argv)
   t0 = cur_time();
   n_gram->Load(filename);
   cout << "Loaded N-Gram Data: " << filename  << endl;
+ 
   //n_gram->Perplexity(split("あけた な ー う ！ ！"));
-  n_gram->Perplexity(split("あけた な ー う ！ ！"));
+  //n_gram->Perplexity(split("ようやく 年 が あけた な ー う ！ ！ 今年 も よろしく ！ 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年"));
+  n_gram->PerplexityTest();
   t1 = cur_time();
   printf( "Elapsed Time: %.5f sec\n",t1-t0);
 }

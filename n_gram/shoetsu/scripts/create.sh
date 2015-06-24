@@ -2,7 +2,7 @@ METHOD="create"
 N=3
 
 if [ $# -lt 1 ]; then
-  echo "./create.sh (2|3) [filename]"
+  echo "./create.sh (2|3) [loadfile]"
   exit 1 
 fi
 

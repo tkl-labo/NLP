@@ -101,14 +101,14 @@ class NGram{
   int N;
 
   NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
-  NGramNodePtr_t GetNode(const NGramKey_t &key);
+  NGramNodePtr_t GetNode(const NGramKey_t &key) const;
   inline NGramMap_t GetMap() const {return *m_map;}
   inline NGramVocablary_t GetVocablary() const {return *m_vocablary;}
   void AddToVocablary(std::string);
 
   virtual std::string Transit(NGramNodePtr_t node);
-  double OutputProb(NGramNodePtr_t ,const std::string &);
-  double OutputProb(NGramNodePtr_t);
+  double OutputProb(NGramNodePtr_t ,const std::string &) const;
+  double OutputProb(NGramNodePtr_t) const;
  
  public:
   NGram(const int);
@@ -118,7 +118,8 @@ class NGram{
   void Learn();
   void Save(const std::string & filename);
   void Load(const std::string & filename);
-  double Perplexity(const NGramKey_t &);
+  double Perplexity(const NGramKey_t &) const;
+  double PerplexityTest();
   std::string CreateRandomSentence();
 }
 ;

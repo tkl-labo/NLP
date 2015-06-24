@@ -72,7 +72,7 @@ NGram::NGram(const int n){
 
 
 
-NGramNodePtr_t NGram::GetNode(const NGramKey_t &key){
+NGramNodePtr_t NGram::GetNode(const NGramKey_t &key) const{
   auto it = m_map->find(key);
   if(it == m_map->end()){
     //ノードが存在しない場合は空のノードを返す
@@ -237,7 +237,7 @@ void NGram::Load(const string & filename){
   }
 }
 
-double NGram::OutputProb(NGramNodePtr_t node, const string& str){
+double NGram::OutputProb(NGramNodePtr_t node, const string& str) const{
   float prob = GetProb(node, str);
   cout << "Prob[" 
        << str 
@@ -252,29 +252,49 @@ double NGram::OutputProb(NGramNodePtr_t node, const string& str){
   return prob;
 }
 
-double NGram::OutputProb(NGramNodePtr_t node){
+double NGram::OutputProb(NGramNodePtr_t node) const{
   for(auto it: node->GetFreq()){
     OutputProb(node ,it.first);
   }
 }
-double NGram::Perplexity(const NGramKey_t & strv){
+
+
+double NGram::Perplexity(const NGramKey_t & strv) const{
   double perplexity = 1.0;
   NGramKey_t key = StartNodeKey(N);
   NGramNodePtr_t node = GetNode(key);
 
   for(auto str: strv){
     double prob = GetProb(node, str);
-    OutputProb(node, str);
-    perplexity *= prob;
+    //OutputProb(node, str);
+    perplexity *= pow(prob, -1.0/(double)strv.size());
     key.erase(key.begin());
     key.push_back(str);
     node = GetNode(key);
   }
-  cout << "Total Prob: "<< perplexity <<endl;
-  perplexity = pow(perplexity, -1.0/(double)strv.size());
-  cout << "Perplexity: " << perplexity << endl;
   return perplexity;
 }
+
+
+double NGram::PerplexityTest(){
+  //1つのEOSまでを1シークエンスとする
+  string str;
+  NGramKey_t strv;
+  int c = 0;
+  while( cin >> str ){ 
+    c++;
+    if (str == CORPUS_EOS_STRING){
+      str = EOS;  // コーパス中のEOS記号から変換
+    }
+    strv.push_back(str);
+  }
+  
+  cout << "Used: " << c << " words" <<endl;
+  double perplexity = Perplexity(strv);
+  cout << "Perplexity: " << perplexity << endl;
+
+  return perplexity;
+};
 
 
 
