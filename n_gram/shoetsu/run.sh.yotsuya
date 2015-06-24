@@ -1,6 +1,6 @@
 corpus="/net/157.82.157.42/vol/volExpr2/kaji/tweet/analyzed/2012/01/01.cdr.gz"
 
-N=2
+N=500000
 if [ $# -gt 0 ]; then
   corpus=$1
 fi
@@ -8,4 +8,4 @@ if [ $# -gt 1 ]; then
   N=$2
 fi
  
-gzip -dc $corpus | cut -f 1 | ./a.out $N
+gzip -dc $corpus | head -$N | LC_ALL=C cut -f 1 | ./a.out 2
