@@ -6,8 +6,8 @@
 
 using namespace std;
 
-const wstring EOS = L"";          // 出力・NGramのノードで用いるEOS 
-const wstring CORPUS_EOS_STRING = L"EOS"; // コーパス中のEOS記号 
+const string EOS = "";          // 出力・NGramのノードで用いるEOS 
+const string CORPUS_EOS_STRING = "EOS"; // コーパス中のEOS記号 
 
 
 static NGramKey_t StartNodeKey(int n){
@@ -16,11 +16,11 @@ static NGramKey_t StartNodeKey(int n){
 }
 
 static void OutputKey(NGramNodePtr_t node){
-  wcout << "Key : ( ";
+  cout << "Key : ( ";
   for(auto str: node->GetKey()){
-    wcout <<str << " , ";
+    cout <<str << " , ";
   }
-  wcout << ")" << endl;
+  cout << ")" << endl;
 
 }
 
@@ -35,21 +35,21 @@ NGramNode::NGramNode(const NGramKey_t &strv){
   m_key = make_shared<NGramKey_t>(strv); 
 }
 
-void NGramNode::AddFreq(const wstring &str){
+void NGramNode::AddFreq(const string &str){
   m_total++;
   (*m_freq)[str]++;
 }
 
 
-float NGramNode::OutputProb(const wstring& str){
+float NGramNode::OutputProb(const string& str){
   float prob = this->GetProb(str); 
-  wcout << "Prob[" 
+  cout << "Prob[" 
 	<< str 
 	<< " | (" ; 
   for(auto str: this->GetKey()){
-    wcout <<str << ", ";
+    cout <<str << ", ";
   }
-  wcout << ")] : " 
+  cout << ")] : " 
 	<< prob <<endl;
   return prob;
 }
@@ -75,11 +75,6 @@ NGram::NGram(const int n){
 
 NGramNodePtr_t NGram::GetNode(NGramKey_t key){
   
-  // cout << "Get------------- " <<endl;
-  // for( auto t: key){
-  //   wcout << t << " ";
-  // }
-  // wcout << endl;
   auto it = m_map->find(key);
   assert(it != m_map->end()); // Keyの末尾がEOSの場合のみ遷移先が存在しない
   return it->second;
@@ -106,10 +101,10 @@ NGramNodePtr_t NGram::GetStartNode(){
 
 void NGram::Learn(){
   //1つのEOSまでを1シークエンスとする
-  wstring str;
+  string str;
   NGramKey_t strv;
   int c = 0;
-  while( wcin >> str ){ 
+  while( cin >> str ){ 
     c++;
     strv.push_back(str);
     if (str == CORPUS_EOS_STRING){
@@ -117,7 +112,7 @@ void NGram::Learn(){
       strv.clear();
     }
   }
-  wcout << L"Learned from: " << c << L" words" <<endl;
+  cout << "Learned from: " << c << " words" <<endl;
 };
 
 
@@ -132,16 +127,17 @@ void NGram::Add(NGramKey_t source){
     key.erase(key.begin());
     key.push_back(*it);
   }
+
   //最後にEOSへ飛ばす 
   node = GetOrCreateNode(key);
   node->AddFreq(EOS);
 
 }
 
-wstring NGram::CreateRandomSentence(){
+string NGram::CreateRandomSentence(){
   NGramKey_t strv = StartNodeKey(N);
   auto start_node = GetStartNode();
-  wstring str = Transit(start_node);
+  string str = Transit(start_node);
 
   //start_node->OutputProb();
   
@@ -149,8 +145,8 @@ wstring NGram::CreateRandomSentence(){
 }
 
 
-wstring NGram::Transit(NGramNodePtr_t node){
-  wstring output_str = EOS;
+string NGram::Transit(NGramNodePtr_t node){
+  string output_str = EOS;
   NGramNodePtr_t next_node;
   double r = (double)rand() / (double)RAND_MAX;
   float cum_prob = 0;
