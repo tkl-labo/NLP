@@ -17,7 +17,8 @@ private:
         int m_total_freq;
         std::unordered_map<std::string, int> m_freqs;
         Node() : m_total_freq(0) {}
-        bool insertKey(const std::string& key);
+        bool insertKey(const std::string &key);
+        double prob(const std::string &key);
     };
 
     int m_num_of_ngrams;
@@ -34,10 +35,12 @@ public:
     
     void train(const std::string &training);
     double calcPerplexity(const std::string &testing);
+    double calcPerplexity(std::istream &stream);
     void showAllProbabilities();
     void showAllNgrams();
 
 private:
+    NGram::Node findByKey(const NGramKey &key);
     void insertKey(const NGramKey &key, const std::string &word);
     void constructTree(std::istream &stream);
 };
