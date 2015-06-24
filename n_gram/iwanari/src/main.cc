@@ -6,23 +6,34 @@
 
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
+    if (argc < 3) {
         std::cout << "Usage: " << argv[0] 
-            << " training_data [N = 2]" << std::endl;
+            << " training_data testing_data [N = 2]" 
+            << std::endl;
         return 0;
     }
     
     setlocale(LC_ALL, "ja_JP.UTF-8");
     
     util::Stopwatch<std::chrono::milliseconds> sw;
-    nlp::NGram ngram((argc >= 3) ? std::atoi(argv[2]) : 2);
+    nlp::NGram ngram((argc >= 4) ? std::atoi(argv[3]) : 2);
     ngram.train(argv[1]);
     sw.stop();
     
+    std::cout << "Elapsed (training): " 
+        << sw.showElapsedTime().c_str() << std::endl;
     // debug
     // ngram.showAllProbabilities();
     
-    std::cout << "Elapsed: " << sw.showElapsedTime().c_str() << std::endl;
+    sw.start();
+    std::cout << "perplexity: " 
+        << ngram.calcPerplexity(argv[2]) << std::endl;
+    sw.stop();
+    
+    std::cout << "Elapsed (perplexity): " 
+        << sw.showElapsedTime().c_str() << std::endl;
+    
+    
 
     return 0;
 }
