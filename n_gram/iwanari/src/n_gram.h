@@ -10,7 +10,6 @@ private:
     std::string m_training;
     int m_num_of_pairs;
     
-    
 public:
     NGram(const std::string training) 
     : m_num_of_pairs(0) {
@@ -19,6 +18,9 @@ public:
     virtual ~NGram() {}
     
     std::string trainingFileName() { return m_training; }
-    void calcNgram(const int n);
+    void train(const int n);
+
+private:
+    void readFile();
 };
 }
