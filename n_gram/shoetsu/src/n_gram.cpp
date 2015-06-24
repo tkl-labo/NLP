@@ -143,8 +143,8 @@ void NGram::Add(const NGramKey_t &source){
 }
 
 string NGram::CreateRandomSentence(){
-  NGramKey_t strv = StartNodeKey(N);
-  auto start_node = GetOrCreateNode(strv);
+  NGramKey_t start_key = StartNodeKey(N);
+  auto start_node = GetOrCreateNode(start_key);
   string str = Transit(start_node);
 
   //start_node->OutputProb();
@@ -180,7 +180,7 @@ string NGram::Transit(NGramNodePtr_t node){
 }
 
 void NGram::Save(const string & filename){
-  ofstream ofs("data/"+filename);
+  ofstream ofs(filename);
   if(ofs.fail()){
     cout << "Failed to save n_gram data" << endl;
     return;
@@ -210,7 +210,7 @@ void NGram::Save(const string & filename){
 //     :
 
 void NGram::Load(const string & filename){
-  ifstream ifs("data/" + filename);
+  ifstream ifs(filename);
   if(ifs.fail()){
     cout << "Failed to load n_gram data" << endl;
     exit(1);
@@ -255,9 +255,14 @@ double NGram::OutputProb(NGramNodePtr_t node){
     OutputProb(node ,it.first);
   }
 }
-double NGram::Perplexity(const NGramKey_t & str){
+double NGram::Perplexity(const NGramKey_t & strv){
   double perplexity;
-
+  int N = strv.size();
+  NGramKey_t start_key = StartNodeKey(N);
+  auto start_node = GetNode(start_key);
+   for(auto str: strv){
+    cout << str << endl;
+  }
   return perplexity;
 }
 
@@ -268,9 +273,7 @@ double NGram::Perplexity(const NGramKey_t & str){
 //================================
 
 
-LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n){
-
-}
+LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n){}
 
 string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
   string output_str = EOS;
