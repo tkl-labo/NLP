@@ -2,7 +2,7 @@
 
 #include "n_gram.h"
 #include <cassert>
-
+#include <iostream>
 
 using namespace std;
 
@@ -42,7 +42,7 @@ void NGramNode::AddFreq(const string &str){
 
 
 float NGramNode::OutputProb(const string& str){
-  float prob = this->GetProb(str); 
+  float prob = (float)(*m_freq)[str] / (float)m_total; 
   cout << "Prob[" 
 	<< str 
 	<< " | (" ; 
@@ -67,23 +67,30 @@ float NGramNode::OutputProb(){
 NGram::NGram(const int n){
   N = n;
   m_map = make_shared<NGramMap_t>();
+  m_vocablary = make_unique<NGramVocablary_t>();
 
   GetOrCreateNode(StartNodeKey(N));
 }
 
 
 
-NGramNodePtr_t NGram::GetNode(NGramKey_t key){
-  
+NGramNodePtr_t NGram::GetNode(const NGramKey_t &key){
   auto it = m_map->find(key);
-  assert(it != m_map->end()); // Keyの末尾がEOSの場合のみ遷移先が存在しない
+  if(it == m_map->end()){
+    //ノードが存在しない場合は空のノードを返す
+    NGramNodePtr_t node = make_shared<NGramNode>(key); 
+    return node;
+  }else{
+    return it->second;
+  }
   return it->second;
 }
 
-NGramNodePtr_t NGram::GetOrCreateNode(NGramKey_t key){
+
+NGramNodePtr_t NGram::GetOrCreateNode(const NGramKey_t &key){
   auto it = m_map->find(key);
   if(it == m_map->end()){
-    //ノードが存在しない場合は作成
+    //ノードが存在しない場合は作成して登録
     NGramNodePtr_t node = make_shared<NGramNode>(key); 
     (*m_map)[key] = node;
     return node;
@@ -99,6 +106,11 @@ NGramNodePtr_t NGram::GetStartNode(){
 }
 
 
+void NGram::AddToVocablary(string str){
+  m_vocablary->insert(str);
+}
+
+
 void NGram::Learn(){
   //1つのEOSまでを1シークエンスとする
   string str;
@@ -106,6 +118,7 @@ void NGram::Learn(){
   int c = 0;
   while( cin >> str ){ 
     c++;
+    AddToVocablary(str);
     strv.push_back(str);
     if (str == CORPUS_EOS_STRING){
       Add(strv);
@@ -113,11 +126,12 @@ void NGram::Learn(){
     }
   }
   cout << "Learned from: " << c << " words" <<endl;
+  cout << "Vocablary   : " << m_vocablary->size() << " words" << endl;
 };
 
 
 //１つの文の中の単語列によるN_Gramを追加する
-void NGram::Add(NGramKey_t source){
+void NGram::Add(const NGramKey_t &source){
   NGramKey_t key = StartNodeKey(N);
   NGramNodePtr_t node;
 
@@ -145,7 +159,7 @@ string NGram::CreateRandomSentence(){
 }
 
 
-string NGram::Transit(NGramNodePtr_t node){
+string NGram::Transit(NGramNodePtr_t node, (float)(*Prob)(NGramNodePtr_t node_,const string &str)){
   string output_str = EOS;
   NGramNodePtr_t next_node;
   double r = (double)rand() / (double)RAND_MAX;

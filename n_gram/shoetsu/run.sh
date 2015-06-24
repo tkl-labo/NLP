@@ -1,11 +1,11 @@
 
-corpus="data/2012-02-01.cdr.gz"
-N=2
+CORPUS="data/2012-02-01.cdr.gz"
+NLINE=500000
 if [ $# -gt 0 ]; then
-  corpus=$1
+  NLINE=$1
 fi
 if [ $# -gt 1 ]; then
-  N=$2
+  CORPUS=$2
 fi
  
-gzip -dc $corpus |LC_ALL=C cut -f 1 | ./a.out $N
+gzip -dc $CORPUS | head -$NLINE | LC_ALL=C cut -f 1 | ./a.out 2

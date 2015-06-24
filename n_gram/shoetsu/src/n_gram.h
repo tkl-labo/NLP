@@ -8,10 +8,10 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <string>
 #include <functional>
-#include <wchar.h>
-#include <iostream>
+
 
 class NGram;
 class NGramNode;
@@ -40,9 +40,6 @@ namespace std {
 typedef std::unordered_map<std::string, int> NGramFreq_t;
 typedef std::shared_ptr<NGramFreq_t> NGramFreqPtr_t;
 
-typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
-typedef std::shared_ptr<NGramMap_t> NGramMapPtr_t;
-
 
 class NGramNode{
  private:
@@ -52,9 +49,9 @@ class NGramNode{
  public:
   NGramNode(const NGramKey_t &);
   virtual ~NGramNode() = default;
-  inline NGramKey_t GetKey(){ return *m_key;};
-  inline NGramFreq_t GetFreq(){ return *m_freq;};
-  inline int GetFreq(std::string str){
+  inline NGramKey_t GetKey() const {return *m_key;};
+  inline NGramFreq_t GetFreq() const { return *m_freq;};
+  inline int GetFreq(const std::string &str) const {
     auto it = m_freq->find(str);
     //キーが設定されている場合はキーバリューのPairが返る
     if(it != m_freq->end()){
@@ -63,7 +60,8 @@ class NGramNode{
       return 0;
     }
   }
-  inline float GetProb(std::string str){
+  inline int GetTotal() const {return m_total;}
+  inline float GetProb(const std::string &str){
     return (float)(*m_freq)[str] / (float)m_total;
   }
   void AddFreq(const std::string &);
@@ -72,26 +70,29 @@ class NGramNode{
  
 };
 
+typedef std::set<std::string> NGramVocablary_t;
+typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
+typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
+typedef std::shared_ptr<NGramMap_t> NGramMapPtr_t;
 
 class NGram{
  private:
   NGramMapPtr_t m_map;
-  std::string Transit(NGramNodePtr_t node);
-  NGramNodePtr_t GetOrCreateNode(NGramKey_t key);
-  NGramNodePtr_t GetNode(NGramKey_t key);
-  NGramNodePtr_t GetStartNode();
+  NGramVocablaryPtr_t m_vocablary;
+  int N;
 
+  std::string Transit(NGramNodePtr_t node);
+  NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
+  NGramNodePtr_t GetNode(const NGramKey_t &key);
+  NGramNodePtr_t GetStartNode();
+  void AddToVocablary(std::string);
  public:
   NGram(const int n = 2);
   virtual ~NGram() = default;
 
-  int N;
-  void Add(NGramKey_t);
+  void Add(const NGramKey_t &);
   void Learn();
-
-  inline NGramMap_t GetMap(){return *m_map;}
-
 
   std::string CreateRandomSentence();
 };

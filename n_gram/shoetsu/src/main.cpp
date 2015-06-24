@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include <string>
-#include <wchar.h>
 #include <memory>
 using namespace std;
 
@@ -21,7 +20,7 @@ void NgramTest(int argc, char ** argv)
   n_gram->Learn();
   cout << "Output: " << n_gram->CreateRandomSentence() << endl;
   t1 = cur_time();
-  printf( "Elapsed Time: %.5f sec.\n",t1-t0);
+  printf( "Elapsed Time: %.5f sec\n",t1-t0);
 }
 
 
