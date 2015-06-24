@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cmath>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -10,6 +11,7 @@ const std::string START_SYMBOL = "<s>";
 const std::string END_SYMBOL = "</s>";
 const std::string END_SYMBOL_IN_CORPUS = "EOS";
 const std::string DELIME_IN_CORPUS = "\t";
+const double epsilon = 0.000001;
 
 /* ======== util ========= */
 std::string joinString(const std::vector<std::string> &strings, 
@@ -65,6 +67,13 @@ bool NGram::Node::insertKey(const std::string& key)
         m_freqs.emplace(key, 1);
         return true;
     }
+}
+
+double NGram::Node::prob(const std::string &key)
+{
+    if (m_total_freq == 0)
+        return 0.0;
+    return m_freqs[key] / (double) m_total_freq;
 }
 /* ======== /NGram::NODE ======== */
 
@@ -141,16 +150,72 @@ void NGram::constructTree(std::istream &stream)
     }
 }
 
+NGram::Node NGram::findByKey(const NGramKey &key)
+{
+    auto it = m_root.find(key);
+    if (it != m_root.end()){
+        return it->second;
+    } 
+    else {
+        NGram::Node node;
+        return node;
+    }
+}
+
+double NGram::calcPerplexity(std::istream &stream)
+{
+    std::string str;
+    double perplexity = 1.0;
+    
+    NGramKey key = createNGramKey(m_N);
+    while(std::getline(stream, str)) {
+        // this program assumes processed corpus
+        std::string word = getFirstString(str, DELIME_IN_CORPUS);
+        
+        // if the word is the line end symbol (EOS)
+        if (word == END_SYMBOL_IN_CORPUS)
+            word = END_SYMBOL;
+        
+        // find new key and following word
+        // without smoothing, it often returns 0
+        double p = findByKey(key).prob(word);
+        perplexity *= p;
+        
+        // if the current word is the end of line, initialize the key
+        if (word == END_SYMBOL) {
+            key = createNGramKey(m_N);
+        }
+        else {
+            // erase the front element
+            key.erase(key.begin());
+            // add word
+            key.push_back(word);
+        }
+    }
+    // if (perplexity < epsilon)
+    //     return 1 / epsilon;
+    
+    perplexity = std::pow(1.0 / perplexity, 1.0 / m_num_of_ngrams);
+    
+    return perplexity;
+}
+
 double NGram::calcPerplexity(const std::string &testing)
 {
+    std::cout << "calc perplexity..." << std::endl;
+    
     std::ifstream input_file(testing);
     if (!input_file) {
         std::cerr << "ERROR: No such file (" 
                     << testing << ")" << std::endl;
         std::exit(EXIT_FAILURE);
     }
+    
+    double perplexity = calcPerplexity(input_file);
     input_file.close();
-    return 0.0;
+    std::cout << "calculated!" << std::endl;
+    
+    return perplexity;
 }
 
 // debug function
@@ -163,9 +228,7 @@ void NGram::showAllProbabilities()
             std::cout << joinString(pair.first, ", ");
             std::cout << " ) = ";
             
-            const double p 
-                = freq.second / (double) pair.second.m_total_freq;
-            std::cout << p << std::endl;
+            std::cout << pair.second.prob(freq.first) << std::endl;
         }
     }
 }

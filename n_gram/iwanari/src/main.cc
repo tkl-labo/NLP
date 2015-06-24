@@ -25,9 +25,10 @@ int main(int argc, char** argv)
     // debug
     // ngram.showAllProbabilities();
     
+    double perplexity = ngram.calcPerplexity(argv[2]);
     sw.start();
     std::cout << "perplexity: " 
-        << ngram.calcPerplexity(argv[2]) << std::endl;
+        << perplexity << std::endl;
     sw.stop();
     
     std::cout << "Elapsed (perplexity): " 
