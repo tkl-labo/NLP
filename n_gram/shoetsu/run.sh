@@ -1,5 +1,5 @@
 
-CORPUS="data/2012-02-01.cdr.gz"
+CORPUS="data/2012-01-01.cdr.gz"
 NLINE=500000
 if [ $# -gt 0 ]; then
   NLINE=$1

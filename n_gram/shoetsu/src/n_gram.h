@@ -43,6 +43,7 @@ typedef std::shared_ptr<NGramFreq_t> NGramFreqPtr_t;
 
 class NGramNode{
  private:
+  
   NGramKeyPtr_t m_key;
   NGramFreqPtr_t m_freq;
   int m_total;
@@ -64,10 +65,10 @@ class NGramNode{
   inline float GetProb(const std::string &str){
     return (float)(*m_freq)[str] / (float)m_total;
   }
-  void AddFreq(const std::string &);
   float OutputProb(const std::string &);
   float OutputProb();
- 
+  void AddFreq(const std::string &);
+  void SetFreq(const std::string &, const int);
 };
 
 typedef std::set<std::string> NGramVocablary_t;
@@ -86,13 +87,19 @@ class NGram{
   NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
   NGramNodePtr_t GetNode(const NGramKey_t &key);
   NGramNodePtr_t GetStartNode();
+
+  inline NGramMap_t GetMap(){
+    return *m_map;
+  }
   void AddToVocablary(std::string);
  public:
-  NGram(const int n = 2);
+  NGram(const int n = 3);
   virtual ~NGram() = default;
 
   void Add(const NGramKey_t &);
   void Learn();
+  void Save(const std::string & filename);
+  void Load(const std::string & filename);
 
   std::string CreateRandomSentence();
 };

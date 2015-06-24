@@ -1,6 +1,7 @@
 
 #include "util.h"
 
+#include <sstream>
 #include <sys/time.h>
 #include <wchar.h>
 
@@ -43,4 +44,19 @@ string narrow(const std::wstring &src)
 
 
 
+//============================
+//   Text Parsing
+//============================
 
+
+vector<string> split(const string &s, const char delim) {
+  vector<string> elems;
+  stringstream ss(s);
+  string item;
+  while (getline(ss, item, delim)) {
+    if (!item.empty()) {
+      elems.push_back(item);
+    }
+  }
+  return elems;
+}

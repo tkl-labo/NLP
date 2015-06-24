@@ -1,17 +1,23 @@
 
 
 #include "n_gram.h"
+#include "util.h"
+
 #include <cassert>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
-const string EOS = "";          // 出力・NGramのノードで用いるEOS 
+
+const string START = "<S>";                  // NGramのノードで用いるSTART記号 
+const string EOS = "</S>";                   // NGramのノードで用いるEOS記号 
 const string CORPUS_EOS_STRING = "EOS"; // コーパス中のEOS記号 
+const string HEAD = "-------------";    // ダンプ時のノード毎の区切り
 
 
 static NGramKey_t StartNodeKey(int n){
-  NGramKey_t key(n, EOS);
+  NGramKey_t key(n, START);
   return key;
 }
 
@@ -29,15 +35,20 @@ static void OutputKey(NGramNodePtr_t node){
 //        NGramNode
 //================================
 
-NGramNode::NGramNode(const NGramKey_t &strv){
+NGramNode::NGramNode(const NGramKey_t &key){
   m_total = 0;
   m_freq = make_shared<NGramFreq_t>(); 
-  m_key = make_shared<NGramKey_t>(strv); 
+  m_key = make_shared<NGramKey_t>(key); 
 }
 
-void NGramNode::AddFreq(const string &str){
+void NGramNode::AddFreq(const string &word){
   m_total++;
-  (*m_freq)[str]++;
+  (*m_freq)[word]++;
+}
+
+void NGramNode::SetFreq(const string &word, const int freq){
+  m_total+= freq;
+  (*m_freq)[word]+= freq;
 }
 
 
@@ -65,7 +76,7 @@ float NGramNode::OutputProb(){
 //================================
 
 NGram::NGram(const int n){
-  N = n;
+  N = n-1;
   m_map = make_shared<NGramMap_t>();
   m_vocablary = make_unique<NGramVocablary_t>();
 
@@ -119,10 +130,13 @@ void NGram::Learn(){
   while( cin >> str ){ 
     c++;
     AddToVocablary(str);
-    strv.push_back(str);
     if (str == CORPUS_EOS_STRING){
+      str = EOS;  // コーパス中のEOS記号から変換
+      strv.push_back(str);
       Add(strv);
       strv.clear();
+    }else{
+      strv.push_back(str);
     }
   }
   cout << "Learned from: " << c << " words" <<endl;
@@ -159,7 +173,8 @@ string NGram::CreateRandomSentence(){
 }
 
 
-string NGram::Transit(NGramNodePtr_t node, (float)(*Prob)(NGramNodePtr_t node_,const string &str)){
+//string NGram::Transit(NGramNodePtr_t node, (float)(*Prob)(NGramNodePtr_t node_,const string &str)){
+string NGram::Transit(NGramNodePtr_t node){
   string output_str = EOS;
   NGramNodePtr_t next_node;
   double r = (double)rand() / (double)RAND_MAX;
@@ -172,8 +187,8 @@ string NGram::Transit(NGramNodePtr_t node, (float)(*Prob)(NGramNodePtr_t node_,c
       NGramKey_t key = node->GetKey();
       key.erase(key.begin());
       key.push_back(output_str);
-      if(output_str == CORPUS_EOS_STRING){
-	return EOS; // 末尾EOSのノードは存在しない
+      if(output_str == EOS){
+	return "";
       }
       next_node = GetNode(key);
       break;
@@ -182,3 +197,62 @@ string NGram::Transit(NGramNodePtr_t node, (float)(*Prob)(NGramNodePtr_t node_,c
 
   return output_str + Transit(next_node);
 }
+
+void NGram::Save(const string & filename){
+  ofstream ofs("data/"+filename);
+  if(ofs.fail()){
+    cout << "Failed to save n_gram data" << endl;
+    return;
+  }
+
+  for(auto m: this->GetMap()){
+    //各ノード毎のkey, count, freqを保存 
+    auto node = m.second;
+    ofs << HEAD << endl;
+    for(auto key: node->GetKey()){
+      ofs << key << " ";
+    }
+    ofs << endl;
+    for(auto freq: node->GetFreq()){
+      ofs << freq.first << " " << freq.second << endl;
+    }
+  }
+
+}
+
+
+
+//-------------
+// key1 key2 ..
+// word1 freq1
+//     :
+//-------------
+//     :
+
+void NGram::Load(const string & filename){
+  ifstream ifs("data/" + filename);
+  if(ifs.fail()){
+    cout << "Failed to load n_gram data" << endl;
+    return;
+  }
+  string line;
+  NGramNodePtr_t node; 
+  NGramKey_t key;
+  string word;
+  int freq;
+  while(getline(ifs, line)){
+    if(line == HEAD){
+      getline(ifs, line);
+      key = split(line);
+      node = GetOrCreateNode(key);
+    }else{
+      auto wf = split(line);
+      word = wf[0];
+      freq = stoi(wf[1]);
+      node->SetFreq(word, freq);
+      
+    }
+  }
+}
+
+

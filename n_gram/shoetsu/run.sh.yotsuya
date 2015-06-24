@@ -9,3 +9,4 @@ if [ $# -gt 1 ]; then
 fi
  
 gzip -dc $corpus | head -$N | LC_ALL=C cut -f 1 | ./a.out 2
+#gzip -dc $corpus | LC_ALL=C cut -f 1 | ./a.out 2
