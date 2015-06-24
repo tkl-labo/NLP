@@ -8,6 +8,8 @@
 #include <fstream>
 #include <omp.h>
 
+#include <cmath>
+
 using namespace std;
 
 
@@ -256,13 +258,21 @@ double NGram::OutputProb(NGramNodePtr_t node){
   }
 }
 double NGram::Perplexity(const NGramKey_t & strv){
-  double perplexity;
-  int N = strv.size();
-  NGramKey_t start_key = StartNodeKey(N);
-  auto start_node = GetNode(start_key);
-   for(auto str: strv){
-    cout << str << endl;
+  double perplexity = 1.0;
+  NGramKey_t key = StartNodeKey(N);
+  NGramNodePtr_t node = GetNode(key);
+
+  for(auto str: strv){
+    double prob = GetProb(node, str);
+    OutputProb(node, str);
+    perplexity *= prob;
+    key.erase(key.begin());
+    key.push_back(str);
+    node = GetNode(key);
   }
+  cout << "Total Prob: "<< perplexity <<endl;
+  perplexity = pow(perplexity, -1.0/(double)strv.size());
+  cout << "Perplexity: " << perplexity << endl;
   return perplexity;
 }
 
@@ -273,7 +283,7 @@ double NGram::Perplexity(const NGramKey_t & strv){
 //================================
 
 
-LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n){}
+LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n) : NGram(n){}
 
 string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
   string output_str = EOS;

@@ -17,8 +17,13 @@
 class NGram;
 class NGramNode;
 
-typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
 
+//================================
+//        NGramNode
+//================================
+
+
+typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
 typedef std::vector<std::string> NGramKey_t;
 typedef std::unique_ptr<NGramKey_t> NGramKeyPtr_t;
 
@@ -67,13 +72,28 @@ class NGramNode{
   void SetFreq(const std::string &, const int);
 };
 
+
+//================================
+//          NGram
+//================================
+
 typedef std::set<std::string> NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
 typedef std::unique_ptr<NGramMap_t> NGramMapPtr_t;
 
+
+
 class NGram{
+ private:
+  virtual inline double GetProb(NGramNodePtr_t node,const std::string &str) const{
+    if(node->GetTotal() == 0){
+      return 0;
+    }
+    return (double)(node->GetFreq(str)) / (double)(node->GetTotal());
+  }
+
  protected:
   
   NGramMapPtr_t m_map;
@@ -87,14 +107,11 @@ class NGram{
   void AddToVocablary(std::string);
 
   virtual std::string Transit(NGramNodePtr_t node);
-  virtual inline float GetProb(NGramNodePtr_t node,const std::string &str){
-    return (float)(node->GetFreq(str)) / (float)(node->GetTotal());
-  }
   double OutputProb(NGramNodePtr_t ,const std::string &);
   double OutputProb(NGramNodePtr_t);
  
  public:
-  NGram(const int n = 3);
+  NGram(const int);
   virtual ~NGram() = default;
 
   void Add(const NGramKey_t &);
@@ -103,20 +120,24 @@ class NGram{
   void Load(const std::string & filename);
   double Perplexity(const NGramKey_t &);
   std::string CreateRandomSentence();
+}
+;
 
 
-};
-
+//================================
+//    LaplaceSmoothed-NGram
+//================================
 
 class LaplaceSmoothedNGram : public NGram{
- protected:
-  inline float GetProb(NGramNodePtr_t node,const std::string &str) const{
-    return (float)(node->GetFreq(str) + 1) / (float)(node->GetTotal() + GetVocablary().size());
+ private:
+  inline double GetProb(NGramNodePtr_t node,const std::string &str) const{
+    return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + GetVocablary().size());
   }
+
   std::string Transit(NGramNodePtr_t node);
 
  public:
-  LaplaceSmoothedNGram(const int n = 3);
+  LaplaceSmoothedNGram(const int n);
   ~LaplaceSmoothedNGram() = default;
 };
 

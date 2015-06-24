@@ -17,9 +17,7 @@ void NgramTest_Learn(int argc, char ** argv)
   string filename = (N == 2) ? "data/bi_gram.dat" : "data/tri_gram.dat";
   assert(N < 4);
 
-  //unique_ptr<NGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
   unique_ptr<NGram> n_gram = make_unique<NGram>(N);
-
 
   double t0,t1;
   t0 = cur_time();
@@ -53,13 +51,15 @@ void NgramTest_Perplexity(int argc, char ** argv)
   const int N = stoi(argv[2]);
   assert(N < 4);
   string filename = argv[3];
+  unique_ptr<LaplaceSmoothedNGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
   //unique_ptr<NGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
-  unique_ptr<NGram> n_gram = make_unique<NGram>(N);
+  //unique_ptr<NGram> n_gram = make_unique<NGram>(N);
   double t0,t1;
   t0 = cur_time();
   n_gram->Load(filename);
   cout << "Loaded N-Gram Data: " << filename  << endl;
-  n_gram->Perplexity(split("あけ まし て おめでとう"));
+  //n_gram->Perplexity(split("あけた な ー う ！ ！"));
+  n_gram->Perplexity(split("あけた な ー う ！ ！"));
   t1 = cur_time();
   printf( "Elapsed Time: %.5f sec\n",t1-t0);
 }
