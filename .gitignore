@@ -43,6 +43,7 @@ dist/
 downloads/
 eggs/
 lib/
+gen/
 lib64/
 parts/
 sdist/
