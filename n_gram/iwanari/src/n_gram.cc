@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
+#include <algorithm>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -179,9 +180,11 @@ double NGram::calcPerplexity(std::istream &stream)
     double perplexity = 1.0;
     
     NGramKey key = createNGramKey(m_N);
-    int word_count = 0;
+    // count words (lines)
+    const int NUM_OF_WORDS = std::count(std::istreambuf_iterator<char>(stream), 
+                        std::istreambuf_iterator<char>(), '\n');
+    stream.seekg(0, std::ios_base::beg);
     while(std::getline(stream, str)) {
-        word_count++;
         
         // this program assumes processed corpus
         std::string word = getFirstString(str, DELIME_IN_CORPUS);
@@ -192,9 +195,10 @@ double NGram::calcPerplexity(std::istream &stream)
         
         // find new key and following word
         // without smoothing, it often returns 0
-        double p = prob(findByKey(key), word);
-        perplexity *= p;
-        // std::cout << word << ": " << p << std::endl;
+        const double p = prob(findByKey(key), word);
+        const double pp = std::pow(1.0 / p, 1.0 / NUM_OF_WORDS);
+        perplexity *= pp;
+        // std::cout << word << ": " << pp << std::endl;
         
         
         // if the current word is the end of line, initialize the key
@@ -207,7 +211,6 @@ double NGram::calcPerplexity(std::istream &stream)
             key.emplace_back(word);
         }
     }
-    perplexity = std::pow(1.0 / perplexity, 1.0 / word_count);
     
     return perplexity;
 }
