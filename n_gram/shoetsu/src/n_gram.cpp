@@ -258,39 +258,51 @@ double NGram::OutputProb(NGramNodePtr_t node) const{
 }
 
 
-double NGram::Perplexity(const NGramKey_t & strv) const{
-  double perplexity = 1.0;
+double NGram::SequenceProb(const NGramKey_t & strv) const{
+  double prob = 1.0;
   NGramKey_t key = StartNodeKey(N);
   NGramNodePtr_t node = GetNode(key);
 
   for(auto str: strv){
-    cout << str << endl;
-    double prob = GetProb(node, str);
-    //OutputProb(node, str);
-    perplexity *= pow(prob, -1.0/(double)strv.size());
+    prob *= GetProb(node, str);
     key.erase(key.begin());
     key.push_back(str);
     node = GetNode(key);
   }
-  return perplexity;
+  return prob;
 }
+//perplexity *= pow(prob, -1.0/(double)strv.size());
+  
 
 
 double NGram::PerplexityTest(){
   //1つのEOSまでを1シークエンスとする
   string str;
   NGramKey_t strv;
-  int c = 0;
+  int n = 0;
+  double perplexity = 1.0;
+
+  vector<double> seqprob_list; //全部のseqprobをかけるとdoubleの範囲を超えちゃうので
+
   while( cin >> str ){ 
-    c++;
     if (str == CORPUS_EOS_STRING){
       str = EOS;  // コーパス中のEOS記号から変換
     }
     strv.push_back(str);
+
+    if(str == EOS){
+      double prob = SequenceProb(strv);
+      seqprob_list.push_back(prob);
+      n += strv.size();
+      strv.clear();
+    }
   }
-  
-  cout << "Used: " << c << " words" <<endl;
-  double perplexity = Perplexity(strv);
+  // 各Sequence毎に計算したProbを掛けあわせる
+  for(auto prob: seqprob_list){
+    perplexity *= pow(prob , -1.0 / n);
+  }
+
+  cout << "Used: " << n << " words" <<endl;
   cout << "Perplexity: " << perplexity << endl;
 
   return perplexity;

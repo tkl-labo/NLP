@@ -118,7 +118,7 @@ class NGram{
   void Learn();
   void Save(const std::string & filename);
   void Load(const std::string & filename);
-  double Perplexity(const NGramKey_t &) const;
+  double SequenceProb(const NGramKey_t &) const;
   double PerplexityTest();
   std::string CreateRandomSentence();
 }
@@ -132,7 +132,7 @@ class NGram{
 class LaplaceSmoothedNGram : public NGram{
  private:
   inline double GetProb(NGramNodePtr_t node,const std::string &str) const{
-    return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + GetVocablary().size());
+    return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + GetVocablary().size() + 1);
   }
 
   std::string Transit(NGramNodePtr_t node);

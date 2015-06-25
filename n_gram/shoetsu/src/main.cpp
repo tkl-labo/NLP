@@ -40,7 +40,6 @@ void NgramTest_Create(int argc, char ** argv)
   unique_ptr<NGram> n_gram = make_unique<NGram>(N);
   double t0,t1;
   t0 = cur_time();
-  //n_gram->Load("n_gram_2012-01-01.dat");
   n_gram->Load(filename);
   cout << "Loaded N-Gram Data: " << filename  << endl;
   cout << "Output: " << n_gram->CreateRandomSentence() << endl;
