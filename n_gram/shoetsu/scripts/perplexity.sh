@@ -15,9 +15,9 @@ if [ $# -gt 1 ]; then
     FILE=$2
 else
     if [ $N -eq 2 ]; then
-	FILE="data/bi_gram.dat"
+	FILE="trained/bi_gram.dat"
     elif [ $N -eq 3 ]; then
-	FILE="data/tri_gram.dat"
+	FILE="trained/tri_gram.dat"
     fi
 fi
 

@@ -15,7 +15,7 @@ void NgramTest_Learn(int argc, char ** argv)
 {
   cout << "<Learn>" <<endl;
   const int N = stoi(argv[2]);
-  string filename = (N == 2) ? "data/bi_gram.dat" : "data/tri_gram.dat";
+  string filename = (N == 2) ? "trained/bi_gram.dat" : "trained/tri_gram.dat";
   assert(N < 4);
 
   unique_ptr<NGram> n_gram = make_unique<NGram>(N);
