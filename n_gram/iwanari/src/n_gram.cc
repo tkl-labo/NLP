@@ -2,8 +2,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <memory>
 #include <cmath>
+#include <cassert>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -89,7 +89,8 @@ void NGram::train(const std::string &training)
 {
     m_num_of_ngrams = 0;
     m_root.clear();
-    
+    m_vocab.clear();
+
     std::cout << "training..." << std::endl;
     
     std::ifstream input_file(training);
@@ -112,6 +113,8 @@ NGramKey createNGramKey(const int n)
 void NGram::insertKey(const NGramKey &key, const std::string &word)
 {
     auto it = m_root.find(key);
+    m_vocab.emplace(word);
+    
     if (it != m_root.end()){
         // if it is a new key, increment the num of ngrams
         if (it->second.insertKey(word))
@@ -240,11 +243,18 @@ std::string NGram::genMaximumLikelihoodString(const std::string &seed, const int
 
 double NGram::prob(const NGram::Node &node, const std::string &key)
 {
-    // TODO: smoothing
-    if (node.m_total_freq == 0)
-        return 0.0;
-    return node.m_freqs.find(key)->second 
-                / (double) node.m_total_freq;
+    // assert(node.m_total_freq != 0);
+    const double rho = 1.0;
+    // Laplace Smoothing
+    auto it = node.m_freqs.find(key);
+    const int freq
+        = (it != node.m_freqs.end()) ? it->second : 0;
+    return (freq + rho)
+                / ((double) node.m_total_freq + rho * m_vocab.size());
+    
+    // no smoothing
+    // return node.m_freqs.find(key)->second 
+    //             / (double) node.m_total_freq;
 }
 
 // debug function

@@ -24,15 +24,17 @@ int main(int argc, char** argv)
         << sw.showElapsedTime().c_str() << std::endl;
     // debug
     // ngram.showAllProbabilities();
+    std::cout << "-------" << std::endl;
     
-    // double perplexity = ngram.calcPerplexity(argv[2]);
-    // sw.start();
-    // std::cout << "perplexity: " 
-    //     << perplexity << std::endl;
-    // sw.stop();
-    //
-    // std::cout << "Elapsed (perplexity): " 
-    //     << sw.showElapsedTime().c_str() << std::endl;
+    double perplexity = ngram.calcPerplexity(argv[2]);
+    sw.start();
+    std::cout << "perplexity: " 
+        << perplexity << std::endl;
+    sw.stop();
+
+    std::cout << "Elapsed (perplexity): " 
+        << sw.showElapsedTime().c_str() << std::endl;
+    std::cout << "-------" << std::endl;
     
     while (1) {
         std::cout << "seed: ";

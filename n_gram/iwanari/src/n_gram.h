@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
-#include <memory>
+#include <set>
 
 namespace nlp
 {
@@ -24,6 +24,7 @@ private:
     int m_num_of_ngrams;
     int m_N;
     std::map<NGramKey, NGram::Node> m_root;
+    std::set<std::string> m_vocab;
 
 public:
     NGram(const int N) 
