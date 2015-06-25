@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <cstdlib>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -233,7 +234,15 @@ std::string NGram::genMaximumLikelihoodString(const std::string &seed, const int
         std::string nextWord;
         if (it != m_root.end())
             nextWord = it->second.findMaxiumLikelihoodKey();
+        else {
+            int rnd = std::rand() % m_vocab.size();
+            auto it(m_vocab.begin());
+            advance(it, rnd); 
+            nextWord = *it;
+        }
         maxLilkelihoodString += nextWord;
+        if (nextWord == END_SYMBOL) break;
+
         key.erase(key.begin());
         key.emplace_back(nextWord);
     }
