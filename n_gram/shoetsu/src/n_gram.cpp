@@ -113,13 +113,12 @@ void NGram::Learn(){
     c++;
     if (str == CORPUS_EOS_STRING){
       str = EOS;  // コーパス中のEOS記号から変換
-    }
-    AddToVocablary(str);
-    strv.push_back(str);
-    if (str == EOS){
       Add(strv);
       strv.clear();
+    }else{
+      strv.push_back(str);
     }
+    AddToVocablary(str);
   }
   cout << "Learned from: " << c << " words" <<endl;
   cout << "Vocablary   : " << m_vocablary->size() << " words" << endl;
@@ -265,6 +264,7 @@ double NGram::Perplexity(const NGramKey_t & strv) const{
   NGramNodePtr_t node = GetNode(key);
 
   for(auto str: strv){
+    cout << str << endl;
     double prob = GetProb(node, str);
     //OutputProb(node, str);
     perplexity *= pow(prob, -1.0/(double)strv.size());

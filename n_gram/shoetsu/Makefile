@@ -2,7 +2,7 @@ h_files  := $(wildcard ./src/*.h)
 c_files := $(wildcard ./src/*.c)
 cpp_files := $(wildcard ./src/*.cpp)
 opts := 
-opts += -g -fopenmp -std=c++14 -O2
+opts += -fopenmp -std=c++14 -O2
 //opts += -funroll-loops
 //opts +=  -mmmx -msse -msse2 -msse4.1 -msse4.2 -mavx 
 C := gcc
