@@ -25,17 +25,25 @@ int main(int argc, char** argv)
     // debug
     // ngram.showAllProbabilities();
     
-    double perplexity = ngram.calcPerplexity(argv[2]);
-    sw.start();
-    std::cout << "perplexity: " 
-        << perplexity << std::endl;
-    sw.stop();
+    // double perplexity = ngram.calcPerplexity(argv[2]);
+    // sw.start();
+    // std::cout << "perplexity: " 
+    //     << perplexity << std::endl;
+    // sw.stop();
+    //
+    // std::cout << "Elapsed (perplexity): " 
+    //     << sw.showElapsedTime().c_str() << std::endl;
     
-    std::cout << "Elapsed (perplexity): " 
-        << sw.showElapsedTime().c_str() << std::endl;
-    
-    
-
+    while (1) {
+        std::cout << "seed: ";
+        std::string seed;
+        std::cin >> seed;
+        std::cout << "N: ";
+        int length;
+        std::cin >> length;
+        
+        std::cout << ngram.genMaximumLikelihoodString(seed, length) << std::endl;
+    }
     return 0;
 }
 

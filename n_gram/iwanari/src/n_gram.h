@@ -18,7 +18,7 @@ private:
         std::unordered_map<std::string, int> m_freqs;
         Node() : m_total_freq(0) {}
         bool insertKey(const std::string &key);
-        double prob(const std::string &key);
+        std::string findMaxiumLikelihoodKey();
     };
 
     int m_num_of_ngrams;
@@ -36,6 +36,11 @@ public:
     void train(const std::string &training);
     double calcPerplexity(const std::string &testing);
     double calcPerplexity(std::istream &stream);
+    double prob(const NGram::Node &node, const std::string &key);
+    
+    std::string genMaximumLikelihoodString(const std::string &seed, const int N);
+    
+    // debug functions
     void showAllProbabilities();
     void showAllNgrams();
 
