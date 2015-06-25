@@ -61,9 +61,7 @@ void NgramTest_Perplexity(int argc, char ** argv)
   t0 = cur_time();
   n_gram->Load(filename);
   cout << "Loaded N-Gram Data: " << filename  << endl;
- 
   //n_gram->Perplexity(split("あけた な ー う ！ ！"));
-  //n_gram->Perplexity(split("あけた な ー う ！ ！ 今年 も よろしく ！ 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年 今年"));
   n_gram->PerplexityTest();
   t1 = cur_time();
   printf( "Elapsed Time: %.5f sec\n",t1-t0);

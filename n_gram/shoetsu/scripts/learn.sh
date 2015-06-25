@@ -18,3 +18,4 @@ if [ $# -gt 2 ]; then
     CORPUS=$3
 fi
 gzip -dc $CORPUS | head -$NLINE | LC_ALL=C cut -f 1 | ./a.out $METHOD $N
+#gzip -dc $CORPUS |  LC_ALL=C cut -f 1 | ./a.out $METHOD $N

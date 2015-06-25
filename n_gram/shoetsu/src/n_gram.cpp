@@ -16,7 +16,7 @@ using namespace std;
 const string START = "<S>";                  // NGramのノードで用いるSTART記号 
 const string EOS = "</S>";                   // NGramのノードで用いるEOS記号 
 const string CORPUS_EOS_STRING = "EOS"; // コーパス中のEOS記号 
-const string HEAD = "-------------";    // ダンプ時のノード毎の区切り
+const string HEAD = "";    // ダンプ時のノード毎の区切り
 
 
 static NGramKey_t StartNodeKey(int n){
