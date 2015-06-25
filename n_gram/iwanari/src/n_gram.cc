@@ -152,9 +152,8 @@ void NGram::constructTree(std::istream &stream)
         insertKey(key, word);
         
         // if the current word is the end of line, initialize the key
-        if (word == END_SYMBOL) {
+        if (word == END_SYMBOL)
             key = createNGramKey(m_N);
-        }
         else {
             // erase the front element
             key.erase(key.begin());
@@ -180,7 +179,10 @@ double NGram::calcPerplexity(std::istream &stream)
     double perplexity = 1.0;
     
     NGramKey key = createNGramKey(m_N);
+    int word_count = 0;
     while(std::getline(stream, str)) {
+        word_count++;
+        
         // this program assumes processed corpus
         std::string word = getFirstString(str, DELIME_IN_CORPUS);
         
@@ -192,11 +194,12 @@ double NGram::calcPerplexity(std::istream &stream)
         // without smoothing, it often returns 0
         double p = prob(findByKey(key), word);
         perplexity *= p;
+        // std::cout << word << ": " << p << std::endl;
+        
         
         // if the current word is the end of line, initialize the key
-        if (word == END_SYMBOL) {
+        if (word == END_SYMBOL)
             key = createNGramKey(m_N);
-        }
         else {
             // erase the front element
             key.erase(key.begin());
@@ -204,7 +207,7 @@ double NGram::calcPerplexity(std::istream &stream)
             key.emplace_back(word);
         }
     }
-    perplexity = std::pow(1.0 / perplexity, 1.0 / m_num_of_ngrams);
+    perplexity = std::pow(1.0 / perplexity, 1.0 / word_count);
     
     return perplexity;
 }
@@ -285,7 +288,6 @@ void NGram::showAllProbabilities()
     for (auto pair : m_root) {
         for (auto freq : pair.second.m_freqs) {
             std::cout << "P ( " << freq.first << " | ";
-            
             std::cout << joinString(pair.first, ", ");
             std::cout << " ) = ";
             

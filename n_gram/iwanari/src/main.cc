@@ -25,8 +25,8 @@ int main(int argc, char** argv)
     std::cout << "Elapsed (training): " 
         << sw.showElapsedTime().c_str() << std::endl;
     // debug
-    std::cout << "-------" << std::endl;
-    ngram.showAllProbabilities();
+    // std::cout << "-------" << std::endl;
+    // ngram.showAllProbabilities();
     std::cout << "-------" << std::endl;
     
     double perplexity = ngram.calcPerplexity(argv[2]);
