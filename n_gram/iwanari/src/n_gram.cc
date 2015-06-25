@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cassert>
 #include <cstdlib>
+#include <ctime>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -12,6 +13,7 @@ const std::string START_SYMBOL = "<s>";
 const std::string END_SYMBOL = "</s>";
 const std::string END_SYMBOL_IN_CORPUS = "EOS";
 const std::string DELIME_IN_CORPUS = "\t";
+const std::string UNKNOWN_WORD = " ";
 
 /* ======== util ========= */
 std::string joinString(const std::vector<std::string> &strings, 
@@ -91,7 +93,10 @@ void NGram::train(const std::string &training)
     m_num_of_ngrams = 0;
     m_root.clear();
     m_vocab.clear();
-
+    m_vocab.insert(UNKNOWN_WORD);
+    
+    std::srand((unsigned int) std::time(nullptr));
+    
     std::cout << "training..." << std::endl;
     
     std::ifstream input_file(training);
@@ -232,13 +237,19 @@ std::string NGram::genMaximumLikelihoodString(const std::string &seed, const int
     for (int i = 0; i < N; i++) {
         auto it = m_root.find(key);
         std::string nextWord;
-        if (it != m_root.end())
+        if (it != m_root.end()) {
             nextWord = it->second.findMaxiumLikelihoodKey();
+        }
         else {
-            int rnd = std::rand() % m_vocab.size();
-            auto it(m_vocab.begin());
-            advance(it, rnd); 
-            nextWord = *it;
+            std::string rand_word;
+            do {
+                int rnd = std::rand() % (m_vocab.size());
+                auto it(m_vocab.begin());
+                advance(it, rnd);
+                rand_word = *it;
+            } while(rand_word == UNKNOWN_WORD);
+
+            nextWord = rand_word;
         }
         maxLilkelihoodString += nextWord;
         if (nextWord == END_SYMBOL) break;
@@ -254,12 +265,14 @@ double NGram::prob(const NGram::Node &node, const std::string &key)
 {
     // assert(node.m_total_freq != 0);
     const double rho = 1.0;
+    
     // Laplace Smoothing
     auto it = node.m_freqs.find(key);
     const int freq
         = (it != node.m_freqs.end()) ? it->second : 0;
     return (freq + rho)
-                / ((double) node.m_total_freq + rho * m_vocab.size());
+        / ((double) node.m_total_freq 
+                        + rho * m_vocab.size());
     
     // no smoothing
     // return node.m_freqs.find(key)->second 

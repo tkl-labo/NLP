@@ -16,14 +16,17 @@ int main(int argc, char** argv)
     setlocale(LC_ALL, "ja_JP.UTF-8");
     
     util::Stopwatch<std::chrono::milliseconds> sw;
+    // TODO: implement unigram (N = 1)
     nlp::NGram ngram((argc >= 4) ? std::atoi(argv[3]) : 2);
     ngram.train(argv[1]);
     sw.stop();
     
+    
     std::cout << "Elapsed (training): " 
         << sw.showElapsedTime().c_str() << std::endl;
     // debug
-    // ngram.showAllProbabilities();
+    std::cout << "-------" << std::endl;
+    ngram.showAllProbabilities();
     std::cout << "-------" << std::endl;
     
     double perplexity = ngram.calcPerplexity(argv[2]);
