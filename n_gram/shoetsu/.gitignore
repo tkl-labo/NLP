@@ -1,3 +1,4 @@
 a.out*
 data/
-scripts
+trained/
+.DS_Store

@@ -180,7 +180,7 @@ string NGram::Transit(NGramNodePtr_t node){
   return output_str + Transit(next_node);
 }
 
-void NGram::Save(const string & filename){
+void NGram::Save(const string & filename) const{
   ofstream ofs(filename);
   if(ofs.fail()){
     cout << "Failed to save n_gram data" << endl;
@@ -271,9 +271,6 @@ double NGram::SequenceProb(const NGramKey_t & strv) const{
   }
   return prob;
 }
-//perplexity *= pow(prob, -1.0/(double)strv.size());
-  
-
 
 double NGram::PerplexityTest(){
   //1つのEOSまでを1シークエンスとする
@@ -302,7 +299,6 @@ double NGram::PerplexityTest(){
     perplexity *= pow(prob , -1.0 / n);
   }
 
-  cout << "Used: " << n << " words" <<endl;
   cout << "Perplexity: " << perplexity << endl;
 
   return perplexity;

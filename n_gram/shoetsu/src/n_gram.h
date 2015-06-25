@@ -116,7 +116,7 @@ class NGram{
 
   void Add(const NGramKey_t &);
   void Learn();
-  void Save(const std::string & filename);
+  void Save(const std::string & filename) const;
   void Load(const std::string & filename);
   double SequenceProb(const NGramKey_t &) const;
   double PerplexityTest();
