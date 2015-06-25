@@ -2,8 +2,10 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <memory>
 #include <cmath>
+#include <cassert>
+#include <cstdlib>
+#include <ctime>
 #include "n_gram.h"
 using namespace nlp;
 
@@ -11,7 +13,7 @@ const std::string START_SYMBOL = "<s>";
 const std::string END_SYMBOL = "</s>";
 const std::string END_SYMBOL_IN_CORPUS = "EOS";
 const std::string DELIME_IN_CORPUS = "\t";
-const double epsilon = 0.000001;
+const std::string UNKNOWN_WORD = " ";
 
 /* ======== util ========= */
 std::string joinString(const std::vector<std::string> &strings, 
@@ -55,6 +57,20 @@ std::vector<std::string> splitString(const std::string &str, const std::string &
 
 
 /* ======== NGram::NODE ======== */
+std::string NGram::Node::findMaxiumLikelihoodKey()
+{
+    int maxFreq = 0;
+    std::string resString = "";
+    for (auto freq : m_freqs) {
+        // key: string, value: freq
+        if (freq.second > maxFreq) {
+            resString = freq.first;
+            maxFreq = freq.second;
+        }
+    }
+    return resString;
+}
+
 bool NGram::Node::insertKey(const std::string& key)
 {
     m_total_freq++;
@@ -68,22 +84,18 @@ bool NGram::Node::insertKey(const std::string& key)
         return true;
     }
 }
-
-double NGram::Node::prob(const std::string &key)
-{
-    if (m_total_freq == 0)
-        return 0.0;
-    return m_freqs[key] / (double) m_total_freq;
-}
 /* ======== /NGram::NODE ======== */
 
 
 /* ======== NGram ======== */
-
 void NGram::train(const std::string &training)
 {
     m_num_of_ngrams = 0;
     m_root.clear();
+    m_vocab.clear();
+    m_vocab.insert(UNKNOWN_WORD);
+    
+    std::srand((unsigned int) std::time(nullptr));
     
     std::cout << "training..." << std::endl;
     
@@ -107,6 +119,8 @@ NGramKey createNGramKey(const int n)
 void NGram::insertKey(const NGramKey &key, const std::string &word)
 {
     auto it = m_root.find(key);
+    m_vocab.emplace(word);
+    
     if (it != m_root.end()){
         // if it is a new key, increment the num of ngrams
         if (it->second.insertKey(word))
@@ -138,14 +152,13 @@ void NGram::constructTree(std::istream &stream)
         insertKey(key, word);
         
         // if the current word is the end of line, initialize the key
-        if (word == END_SYMBOL) {
+        if (word == END_SYMBOL)
             key = createNGramKey(m_N);
-        }
         else {
             // erase the front element
             key.erase(key.begin());
             // add word
-            key.push_back(word);
+            key.emplace_back(word);
         }
     }
 }
@@ -153,13 +166,11 @@ void NGram::constructTree(std::istream &stream)
 NGram::Node NGram::findByKey(const NGramKey &key)
 {
     auto it = m_root.find(key);
-    if (it != m_root.end()){
+    if (it != m_root.end())
         return it->second;
-    } 
-    else {
-        NGram::Node node;
-        return node;
-    }
+    
+    NGram::Node node;
+    return node;
 }
 
 double NGram::calcPerplexity(std::istream &stream)
@@ -168,7 +179,10 @@ double NGram::calcPerplexity(std::istream &stream)
     double perplexity = 1.0;
     
     NGramKey key = createNGramKey(m_N);
+    int word_count = 0;
     while(std::getline(stream, str)) {
+        word_count++;
+        
         // this program assumes processed corpus
         std::string word = getFirstString(str, DELIME_IN_CORPUS);
         
@@ -178,24 +192,22 @@ double NGram::calcPerplexity(std::istream &stream)
         
         // find new key and following word
         // without smoothing, it often returns 0
-        double p = findByKey(key).prob(word);
+        double p = prob(findByKey(key), word);
         perplexity *= p;
+        // std::cout << word << ": " << p << std::endl;
+        
         
         // if the current word is the end of line, initialize the key
-        if (word == END_SYMBOL) {
+        if (word == END_SYMBOL)
             key = createNGramKey(m_N);
-        }
         else {
             // erase the front element
             key.erase(key.begin());
             // add word
-            key.push_back(word);
+            key.emplace_back(word);
         }
     }
-    // if (perplexity < epsilon)
-    //     return 1 / epsilon;
-    
-    perplexity = std::pow(1.0 / perplexity, 1.0 / m_num_of_ngrams);
+    perplexity = std::pow(1.0 / perplexity, 1.0 / word_count);
     
     return perplexity;
 }
@@ -218,17 +230,68 @@ double NGram::calcPerplexity(const std::string &testing)
     return perplexity;
 }
 
+std::string NGram::genMaximumLikelihoodString(const std::string &seed, const int N)
+{
+    // search max prob string
+    NGramKey key = createNGramKey(m_N - 1);
+    key.emplace_back(seed);
+    
+    std::string maxLilkelihoodString(seed);
+    for (int i = 0; i < N; i++) {
+        auto it = m_root.find(key);
+        std::string nextWord;
+        if (it != m_root.end()) {
+            nextWord = it->second.findMaxiumLikelihoodKey();
+        }
+        else {
+            std::string rand_word;
+            do {
+                int rnd = std::rand() % (m_vocab.size());
+                auto it(m_vocab.begin());
+                advance(it, rnd);
+                rand_word = *it;
+            } while(rand_word == UNKNOWN_WORD);
+
+            nextWord = rand_word;
+        }
+        maxLilkelihoodString += nextWord;
+        if (nextWord == END_SYMBOL) break;
+
+        key.erase(key.begin());
+        key.emplace_back(nextWord);
+    }
+    
+    return maxLilkelihoodString;
+}
+
+double NGram::prob(const NGram::Node &node, const std::string &key)
+{
+    // assert(node.m_total_freq != 0);
+    const double rho = 1.0;
+    
+    // Laplace Smoothing
+    auto it = node.m_freqs.find(key);
+    const int freq
+        = (it != node.m_freqs.end()) ? it->second : 0;
+    return (freq + rho)
+        / ((double) node.m_total_freq 
+                        + rho * m_vocab.size());
+    
+    // no smoothing
+    // return node.m_freqs.find(key)->second 
+    //             / (double) node.m_total_freq;
+}
+
 // debug function
 void NGram::showAllProbabilities()
 {
     for (auto pair : m_root) {
         for (auto freq : pair.second.m_freqs) {
             std::cout << "P ( " << freq.first << " | ";
-            
             std::cout << joinString(pair.first, ", ");
             std::cout << " ) = ";
             
-            std::cout << pair.second.prob(freq.first) << std::endl;
+            std::cout << prob(pair.second, freq.first) << std::endl;
         }
     }
 }
