@@ -1,6 +1,4 @@
 h_files  := $(wildcard *.h)
-h_files  += $(wildcard dataset/*.h)
-h_files  += $(wildcard rpq/*.h)
 cc_files := $(wildcard *.cc)
 opts := 
 opts += -O3
