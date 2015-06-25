@@ -41,10 +41,14 @@ void NgramTest_Create(int argc, char ** argv)
   double t0,t1;
   t0 = cur_time();
   n_gram->Load(filename);
+  t1 = cur_time();
   cout << "Loaded N-Gram Data: " << filename  << endl;
+  printf( "Elapsed Time(Load): %.5f sec\n",t1-t0);
+
+  t0 = cur_time();
   cout << "Output: " << n_gram->CreateRandomSentence() << endl;
   t1 = cur_time();
-  printf( "Elapsed Time: %.5f sec\n",t1-t0);
+  printf( "Elapsed Time(Create): %.5f sec\n",t1-t0);
 }
 
 void NgramTest_Perplexity(int argc, char ** argv)
@@ -59,11 +63,14 @@ void NgramTest_Perplexity(int argc, char ** argv)
   double t0,t1;
   t0 = cur_time();
   n_gram->Load(filename);
-  cout << "Loaded N-Gram Data: " << filename  << endl;
-  //n_gram->Perplexity(split("あけた な ー う ！ ！"));
+  t1 = cur_time();
+  cout << "Loaded N-Gram Data      : " << filename  << endl;
+  printf( "Elapsed Time(Load)      : %.5f sec\n",t1-t0);
+
+  t0 = cur_time();
   n_gram->PerplexityTest();
   t1 = cur_time();
-  printf( "Elapsed Time: %.5f sec\n",t1-t0);
+  printf( "Elapsed Time(Perplexity): %.5f sec\n",t1-t0);
 }
 
 
