@@ -1,4 +1,5 @@
 勘違いして POS の調べ物をしたのでちょっとメモ．
+tokenizer のほうにはいってます
 
 # TreeTagger
 For OSX users, TreeTagger can be installed according 
