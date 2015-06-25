@@ -31,9 +31,6 @@ public:
         : m_N(N) { }
     virtual ~NGram() {}
     
-    void setN(const int N) { m_N = N; }
-    int N() { return m_N; }
-    
     void train(const std::string &training);
     double calcPerplexity(const std::string &testing);
     double calcPerplexity(std::istream &stream);
