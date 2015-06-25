@@ -13,6 +13,7 @@
 #include <string>
 #include <functional>
 
+#include <map>
 
 class NGram;
 class NGramNode;
@@ -81,6 +82,7 @@ typedef std::set<std::string> NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
+//typedef std::map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
 typedef std::unique_ptr<NGramMap_t> NGramMapPtr_t;
 
 
@@ -131,9 +133,7 @@ class NGram{
 
 class LaplaceSmoothedNGram : public NGram{
  private:
-  inline double GetProb(NGramNodePtr_t node,const std::string &str) const{
-    return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + GetVocablary().size() + 1);
-  }
+  double GetProb(NGramNodePtr_t node,const std::string &str) const;
 
   std::string Transit(NGramNodePtr_t node);
 

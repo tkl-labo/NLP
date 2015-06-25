@@ -263,12 +263,17 @@ double NGram::SequenceProb(const NGramKey_t & strv) const{
   NGramKey_t key = StartNodeKey(N);
   NGramNodePtr_t node = GetNode(key);
 
+  double t0,t1,t2,t3;
+  double ta,tb,tc;
   for(auto str: strv){
     prob *= GetProb(node, str);
     key.erase(key.begin());
     key.push_back(str);
     node = GetNode(key);
   }
+  
+
+  
   return prob;
 }
 
@@ -280,7 +285,7 @@ double NGram::PerplexityTest(){
   double perplexity = 1.0;
 
   vector<double> seqprob_list; //全部のseqprobをかけるとdoubleの範囲を超えちゃうので
-
+  double t = 0;
   while( cin >> str ){ 
     if (str == CORPUS_EOS_STRING){
       str = EOS;  // コーパス中のEOS記号から変換
@@ -300,7 +305,6 @@ double NGram::PerplexityTest(){
   }
 
   cout << "Perplexity: " << perplexity << endl;
-
   return perplexity;
 };
 
@@ -312,6 +316,13 @@ double NGram::PerplexityTest(){
 
 
 LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n) : NGram(n){}
+
+double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const string &str) const
+{
+   return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + m_vocablary->size() + 1);
+  
+}
+
 
 string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
   string output_str = EOS;
