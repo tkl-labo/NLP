@@ -12,7 +12,6 @@ std::wstring widen(const std::string &);
 std::string narrow(const std::wstring &src);
 
 
-std::vector<std::string> split(const std::string &s, const char delim = ' ');
-//std::deque<std::string> split(const std::string &s, const char delim = ' ');
+std::vector<std::string> split(const std::string &, const char delim = ' ');
 
 #endif

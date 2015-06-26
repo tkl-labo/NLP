@@ -61,16 +61,14 @@ vector<string> split(const string &s, const char delim) {
   return elems;
 }
 
-/*
-deque<string> split(const string &s, const char delim) {
-  deque<string> elems;
-  stringstream ss(s);
-  string item;
-  while (getline(ss, item, delim)) {
-    if (!item.empty()) {
-      elems.push_back(item);
-    }
+
+vector<string> split2(const string &str, const char delim){
+  vector<string> res;
+  size_t current = 0, found;
+  while((found = str.find_first_of(delim, current)) != string::npos){
+    res.push_back(string(str, current, found - current));
+    current = found + 1;
   }
-  return elems;
+  res.push_back(string(str, current, str.size() - current));
+  return res;
 }
-*/

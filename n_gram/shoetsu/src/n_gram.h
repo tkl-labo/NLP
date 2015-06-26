@@ -14,6 +14,7 @@
 #include <functional>
 
 #include <map>
+#include <unordered_set>
 
 class NGram;
 class NGramNode;
@@ -78,7 +79,7 @@ class NGramNode{
 //          NGram
 //================================
 
-typedef std::set<std::string> NGramVocablary_t;
+typedef std::unordered_set<std::string> NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;

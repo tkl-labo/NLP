@@ -10,6 +10,12 @@
 
 #include <cmath>
 
+/*
+
+#pragma omp parallel sections
+
+*/
+
 using namespace std;
 
 
@@ -18,6 +24,7 @@ const string EOS = "</S>";                   // NGramのノードで用いるEOS
 const string CORPUS_EOS_STRING = "EOS"; // コーパス中のEOS記号 
 const string HEAD = "";    // ダンプ時のノード毎の区切り
 
+const double LLimit = 1.0e-300; //ある文章の出力確率の下限(0になるとperplexityがinfになるので)
 
 static NGramKey_t StartNodeKey(int n){
   NGramKey_t key(n, START);
@@ -221,19 +228,36 @@ void NGram::Load(const string & filename){
   NGramKey_t key;
   string word;
   int freq;
+
+  double t0,t1,t2,t3,ta,tb,tc;
   while(getline(ifs, line)){
     if(line == HEAD){
       getline(ifs, line);
+      t0 = cur_time();
       key = split(line);
+      t1 = cur_time();
       node = GetOrCreateNode(key);
+      t2 = cur_time();
+      t3 = cur_time();
+
     }else{
+      t0 = cur_time();
       NGramKey_t wf = split(line);
+      t1 = cur_time(); 
       word = wf[0];
       freq = stoi(wf[1]);
       node->SetFreq(word, freq);
+      t2 = cur_time();
       AddToVocablary(word);
+      t3 = cur_time();
     }
+    ta += t1-t0;
+    tb += t2-t1;
+    tc += t3-t2;
   }
+  printf( "Elapsed Time(Load-split): %.5f sec\n",ta);
+  printf( "Elapsed Time(Load-node) : %.5f sec\n",tb);
+  printf( "Elapsed Time(Load-addtovocab) : %.5f sec\n",tc);
 }
 
 double NGram::OutputProb(NGramNodePtr_t node, const string& str) const{
@@ -263,17 +287,16 @@ double NGram::SequenceProb(const NGramKey_t & strv) const{
   NGramKey_t key = StartNodeKey(N);
   NGramNodePtr_t node = GetNode(key);
 
-  double t0,t1,t2,t3;
-  double ta,tb,tc;
   for(auto str: strv){
     prob *= GetProb(node, str);
+    if (prob < LLimit){
+      return LLimit;
+    }
     key.erase(key.begin());
     key.push_back(str);
     node = GetNode(key);
   }
-  
 
-  
   return prob;
 }
 
@@ -304,7 +327,7 @@ double NGram::PerplexityTest(){
     perplexity *= pow(prob , -1.0 / n);
   }
 
-  cout << "Perplexity: " << perplexity << endl;
+  cout << "Perplexity      : " << perplexity << endl;
   return perplexity;
 };
 
@@ -320,7 +343,6 @@ LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n) : NGram(n){}
 double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const string &str) const
 {
    return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + m_vocablary->size() + 1);
-  
 }
 
 
