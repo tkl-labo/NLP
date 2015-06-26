@@ -24,7 +24,7 @@ const string EOS = "</S>";                   // NGramのノードで用いるEOS
 const string CORPUS_EOS_STRING = "EOS"; // コーパス中のEOS記号 
 const string HEAD = "";    // ダンプ時のノード毎の区切り
 
-const double LLimit = 1.0e-300; //ある文章の出力確率の下限(0になるとperplexityがinfになるので)
+const double LLimit = 1.0e-307; //ある文章の出力確率の下限(0になるとperplexityがinfになるので)
 
 static NGramKey_t StartNodeKey(int n){
   NGramKey_t key(n, START);

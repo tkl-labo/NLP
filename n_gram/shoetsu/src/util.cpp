@@ -49,26 +49,33 @@ string narrow(const std::wstring &src)
 //============================
 
 
-vector<string> split(const string &s, const char delim) {
-  vector<string> elems;
-  stringstream ss(s);
-  string item;
-  while (getline(ss, item, delim)) {
-    if (!item.empty()) {
-      elems.push_back(item);
-    }
-  }
-  return elems;
-}
+// vector<string> split(const string &s, const char delim) {
+//   vector<string> elems;
+//   stringstream ss(s);
+//   string item;
+//   while (getline(ss, item, delim)) {
+//     if (!item.empty()) {
+//       elems.push_back(item);
+//     }
+//   }
+//   return elems;
+// }
 
-
-vector<string> split2(const string &str, const char delim){
+//こっちのほうが速い
+vector<string> split(const string &str, const char delim){
   vector<string> res;
   size_t current = 0, found;
+  string s;
   while((found = str.find_first_of(delim, current)) != string::npos){
-    res.push_back(string(str, current, found - current));
+    s = string(str, current, found - current);
+    if(!s.empty()){
+      res.push_back(s);
+    }
     current = found + 1;
   }
-  res.push_back(string(str, current, str.size() - current));
+  s = string(str, current, str.size() - current);
+  if(!s.empty()){
+    res.push_back(s);
+  }
   return res;
 }
