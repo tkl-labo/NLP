@@ -37,13 +37,14 @@ void NgramTest_Create(int argc, char ** argv)
   assert(N < 4);
   string filename = argv[3];
   //unique_ptr<NGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
-  unique_ptr<NGram> n_gram = make_unique<NGram>(N);
+  unique_ptr<NGram> n_gram = make_unique<NGram>(N); 
+  cout << "Loaded N-Gram Data: " << filename  << endl;
+
   double t0,t1;
   t0 = cur_time();
   n_gram->Load(filename);
   t1 = cur_time();
-  cout << "Loaded N-Gram Data: " << filename  << endl;
-  printf( "Elapsed Time(Load): %.5f sec\n",t1-t0);
+  printf( "Elapsed Time(Load-Total): %.5f sec\n",t1-t0);
 
   t0 = cur_time();
   cout << "Output: " << n_gram->CreateRandomSentence() << endl;
@@ -53,7 +54,6 @@ void NgramTest_Create(int argc, char ** argv)
 
 void NgramTest_Perplexity(int argc, char ** argv)
 {
-  cout << "<Perplexity>" <<endl;
   const int N = stoi(argv[2]);
   assert(N < 4);
   string filename = argv[3];
@@ -61,16 +61,18 @@ void NgramTest_Perplexity(int argc, char ** argv)
   //unique_ptr<NGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
   //unique_ptr<NGram> n_gram = make_unique<NGram>(N);
   double t0,t1;
+  cout << "Loaded N-Gram Data      : " << filename  << endl;
   t0 = cur_time();
   n_gram->Load(filename);
   t1 = cur_time();
-  cout << "Loaded N-Gram Data      : " << filename  << endl;
-  printf( "Elapsed Time(Load)      : %.5f sec\n",t1-t0);
+  printf( "Elapsed Time(Load-Total)      : %.5f sec\n",t1-t0);
 
   t0 = cur_time();
-  n_gram->PerplexityTest();
+  double perplexity = n_gram->PerplexityTest();
   t1 = cur_time();
   printf( "Elapsed Time(Perplexity): %.5f sec\n",t1-t0);
+  cout << "Perplexity              : " << perplexity << endl;
+
 }
 
 

@@ -28,4 +28,9 @@ if [ $# -gt 3 ]; then
     CORPUS=$4
 fi
 
+echo "<Perplexity>"
+echo "Test Corpus         : ${CORPUS}"
+echo "Test Corpus lines   : ${NLINE}"
+echo ""
+
 gzip -dc $CORPUS | head -$NLINE | LC_ALL=C cut -f 1 | ./a.out $METHOD $N $FILE

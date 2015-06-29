@@ -327,7 +327,6 @@ double NGram::PerplexityTest(){
     perplexity *= pow(prob , -1.0 / n);
   }
 
-  cout << "Perplexity      : " << perplexity << endl;
   return perplexity;
 };
 
