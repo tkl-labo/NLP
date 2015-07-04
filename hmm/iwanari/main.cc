@@ -22,7 +22,6 @@ int main(int argc, char** argv)
     
     sw.start();
     sw.stop();
-
     std::cout << "Elapsed (test): " 
         << sw.showElapsedTime().c_str() << std::endl;
     std::cout << "-------" << std::endl;
