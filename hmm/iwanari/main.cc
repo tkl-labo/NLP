@@ -1,7 +1,9 @@
 #include <iostream>
 #include <wchar.h>
 #include <memory>
+#include "tagger.h"
 #include "stopwatch.h"
+using namespace nlp;
 
 int main(int argc, char** argv)
 {
@@ -15,10 +17,14 @@ int main(int argc, char** argv)
     setlocale(LC_ALL, "ja_JP.UTF-8");
     
     util::Stopwatch<std::chrono::milliseconds> sw;
+	Tagger tagger(0);
+	tagger.train(argv[1]);
     sw.stop();
     std::cout << "Elapsed (training): " 
         << sw.showElapsedTime().c_str() << std::endl;
     std::cout << "-------" << std::endl;
+	
+	tagger.showAllProbabilities();
     
     sw.start();
     sw.stop();
