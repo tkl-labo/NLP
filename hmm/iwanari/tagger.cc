@@ -56,8 +56,17 @@ void Tagger::train(const std::string &training)
 	std::cout << "trained!" << std::endl;
 }
 
-void Tagger::forwardTest(std::ifstream &stream)
+void Tagger::forwardTest(std::ifstream &input_file)
 {
+	std::string line;
+	while(std::getline(input_file, line)) {
+		// rows[0]: word, rows[1]: POS
+		std::vector<std::string> rows 
+			= Util::splitString(line, DELIME_IN_CORPUS);
+		
+		
+	}
+	
 }
 
 void Tagger::viterbiTest(std::ifstream &stream)
@@ -99,8 +108,9 @@ void Tagger::showSuccProbs()
 	for (auto f : m_succFreqs) {
 		long total = m_posFreqs[f.first];
 		for (auto s : f.second) {
-			std::cout << "Prob(" << f.first << ", "
-				<< s.first << ") = " 
+			std::cout << "Prob("
+				<< s.first << " | "
+				<< f.first << ") = " 
 				<< s.second / (double) m_posFreqs[f.first] 
 				<< std::endl;
 		}
@@ -112,8 +122,9 @@ void Tagger::showWordPosProbs()
 {
 	for (auto f : m_wordPosFreqs) {
 		for (auto s : f.second) {
-			std::cout << "Prob(" << f.first << ", "
-				<< s.first << ") = " 
+			std::cout << "Prob(" 
+				<< s.first << " | "
+				<< f.first << ") = " 
 				<< s.second / (double) m_wordFreqs[f.first] 
 				<< std::endl;
 		}

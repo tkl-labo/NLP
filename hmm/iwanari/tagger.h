@@ -26,8 +26,8 @@ public:
 	void showWordPosProbs();
 	void showAllProbs();
 private:
-	void forwardTest(std::ifstream &stream);
-	void viterbiTest(std::ifstream &stream);
+	void forwardTest(std::ifstream &input_file);
+	void viterbiTest(std::ifstream &input_file);
 
 };
 }

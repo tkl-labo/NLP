@@ -26,7 +26,8 @@ int main(int argc, char** argv)
 
 	// tagger.showWordPosProbs();
 	// tagger.showSuccProbs();
-
+	tagger.showAllProbs();
+	
 	sw.start();
 	sw.stop();
 	std::cout << "Elapsed (test): " 
