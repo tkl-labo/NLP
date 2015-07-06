@@ -7,6 +7,8 @@ namespace nlp
 {
 typedef std::unordered_map<std::string,
 			std::unordered_map<std::string, long>> PairFreqList;
+typedef std::unordered_map<std::string, 
+				std::pair<double, std::string>> ScoreList;
 
 class Tagger
 {
