@@ -1,7 +1,7 @@
 
 #include <memory>
 #include <vector>
-#include <string>
+#include <string.h>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -28,8 +28,9 @@ class HmmNode{
   HmmKey GetKey() { return m_key;};
   void EmissionLearning(const std::string &);
   void TransitionLearning(const HmmKey &);
-  inline double GetEmissionProb(const std::string &word){
-    return (double)(*m_emissions)[word] / (double)m_emissions_count;
+  //ラプラススムージングを使用
+  inline double GetEmissionProb(const std::string &word, const int n_vocab){
+    return (double)((*m_emissions)[word] + 1) / (double)(m_emissions_count + n_vocab + 1);
   }
   inline double GetTransitionProb(const HmmKey & key){
     return (double)(*m_transitions)[key] / (double)m_transitions_count;
@@ -55,23 +56,33 @@ class Hmm{
   inline void AddToVocablary(const HmmKey &key){
     m_vocablary->insert(key);
   };
+  inline int GetVocablarySize(){
+   return m_vocablary->size();
+  }
+  inline double GetEmissionProb(const std::string & word, const HmmNodePtr node){
+    return node->GetEmissionProb(word, GetVocablarySize());
+  }
+  inline double GetTransitionProb(const std::string & word, const HmmNodePtr node){
+    return node->GetTransitionProb(word);
+  }
+
   inline HmmNodePtr GetNode(const HmmKey & key){
     return (*m_nodes)[key];
   }
   HmmNodePtr CreateNode(const HmmKey &key);
   HmmNodePtr GetOrCreateNode(const HmmKey &);
+  void Smoothing();
+  
  public:
   Hmm();
   virtual ~Hmm() = default;
  
-  void Learn();
-  void Show();
-  double Test();
+  void Show(HmmNodePtr node, const std::string &type);
+  void Learn(const std::string &filename = "data/train.txt");
+  double Test(const std::string &filename = "data/test.txt");
   std::vector<HmmKey> Viterbi(const std::vector<std::string>&);
-  
-  
-  //inline std::unordered_set<HmmKey> GetVocablary(){ return *m_vocablary;};
-  //inline std::unordered_map<std::string,HmmNode> GetNodes(){return *m_nodes};
+
+
 };
 
 

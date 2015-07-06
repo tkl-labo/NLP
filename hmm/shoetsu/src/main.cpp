@@ -22,9 +22,10 @@ void hmm_learn(int argc, char ** argv)
   double t0,t1;
   t0 = cur_time();
   hmm->Learn();
-  hmm->Test();
+  double accuracy = hmm->Test();
   t1 = cur_time();
   printf( "Elapsed Time : %.5f sec\n",t1-t0);
+  cout << "Accuracy : " << accuracy << " % " <<endl;
 }
 
 
