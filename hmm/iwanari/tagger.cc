@@ -70,6 +70,7 @@ void Tagger::forwardTest(std::ifstream &input_file)
 		
 		// the end of sentence
 		if (rows.size() == 1) {
+			// calculate likelihood
 			std::cout << std::endl;
 			std::cout << "Likelihood: " << std::exp(logLikelihood);
 			
@@ -79,25 +80,14 @@ void Tagger::forwardTest(std::ifstream &input_file)
 			logLikelihood = 0.0;
 		}
 		else {
-			// calculate likelihood
+			// calculate likelihood in log
 			// TODO: zero check
-			// std::cout << "PREV_POS: "
-			// 	<< cur_pos << ", CUR_POS: "
-			// 	<< rows[1] << ", L: "
-			// 	<< std::log(m_succFreqs[cur_pos][rows[1]] / (double) m_posFreqs[cur_pos]) << std::endl;
-			// std::cout << "CUR_WORD: " 
-			// 	<< rows[0] << ", CUR_POS: "
-			// 	<< rows[1] << ", L: "
-			// 	<< std::log(m_wordPosFreqs[rows[0]][rows[1]] / (double) m_wordFreqs[rows[0]]) << std::endl;
-			// std::cout << "wordPos: " << m_wordPosFreqs[rows[0]][rows[1]]
-			// 			<< ", word: " << m_wordFreqs[rows[0]] << std::endl;
 			logLikelihood += std::log(m_succFreqs[cur_pos][rows[1]] / (double) m_posFreqs[cur_pos]);
 			logLikelihood += std::log(m_wordPosFreqs[rows[0]][rows[1]] / (double) m_wordFreqs[rows[0]]);
 			std::cout << rows[0] << " ";
 			cur_pos = rows[1];
 		}
 	}
-	
 }
 
 void Tagger::viterbiTest(std::ifstream &stream)
