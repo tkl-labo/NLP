@@ -32,16 +32,23 @@ void Tagger::train(const std::string &training)
 		std::vector<std::string> rows 
 			= Util::splitString(line, DELIME_IN_CORPUS);
 		
-		m_freqs[cur_pos]++;
+		// count the frequency of POS
+		m_posFreqs[cur_pos]++;
 		
-		// end of sentence
+		// the end of sentence
 		if (rows.size() == 1) {
+			// added end symbol
 			m_succFreqs[cur_pos][END_SYMBOL]++;
+			// init
 			cur_pos = START_SYMBOL;
 		}
 		else {
 			m_succFreqs[cur_pos][rows[1]]++;
 			cur_pos = rows[1];
+			
+			// count the frequency of (word, pos) pair
+			m_wordPosFreqs[rows[0]][rows[1]]++;
+			m_wordFreqs[rows[0]]++;
 		}
 	}
 
@@ -49,19 +56,78 @@ void Tagger::train(const std::string &training)
 	std::cout << "trained!" << std::endl;
 }
 
-void Tagger::test(const std::string &testing)
+void Tagger::forwardTest(std::ifstream &stream)
 {
 }
 
-void Tagger::showAllProbabilities()
+void Tagger::viterbiTest(std::ifstream &stream)
+{
+}
+
+
+void Tagger::test(const std::string &testing)
+{
+	std::cout << "testing..." << std::endl;
+	std::ifstream input_file(testing);
+	if (!input_file) {
+		std::cerr << "ERROR: No such file (" 
+			<< testing << ")" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+	
+	switch (m_mode) {
+		case 0:
+			forwardTest(input_file);
+			break;
+		case 1:
+			viterbiTest(input_file);
+			break;
+		default:
+			forwardTest(input_file);
+			break;
+	}
+	
+	input_file.close();
+	std::cout << "tested!" << std::endl;
+}
+
+
+
+// ===== for debug =====
+void Tagger::showSuccProbs()
 {
 	for (auto f : m_succFreqs) {
-		long total = m_freqs[f.first];
+		long total = m_posFreqs[f.first];
 		for (auto s : f.second) {
 			std::cout << "Prob(" << f.first << ", "
-				<< s.first << ") = " << 
-				s.second / (double) total << std::endl;
+				<< s.first << ") = " 
+				<< s.second / (double) m_posFreqs[f.first] 
+				<< std::endl;
 		}
 		std::cout << "=======" << std::endl << std::endl;
 	}
 }
+
+void Tagger::showWordPosProbs()
+{
+	for (auto f : m_wordPosFreqs) {
+		for (auto s : f.second) {
+			std::cout << "Prob(" << f.first << ", "
+				<< s.first << ") = " 
+				<< s.second / (double) m_wordFreqs[f.first] 
+				<< std::endl;
+		}
+		std::cout << "=======" << std::endl << std::endl;
+	}
+}
+
+void Tagger::showAllProbs()
+{
+	showSuccProbs();
+	
+	std::cout << "************" << std::endl << std::endl;
+	
+	showWordPosProbs();
+}
+// ===== /for debug =====
+
