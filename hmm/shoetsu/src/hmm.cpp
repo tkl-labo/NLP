@@ -6,12 +6,42 @@
 #include <fstream>
 #include <cassert>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
 const string START_NODE_KEY = "<S>";
 const vector<string> EXCEPTION_KEYS = {",", "."};
 const string END_LINE = "";
+
+
+//========================
+//   Minimal Functions
+//========================
+void ShowDetail(const vector<string>& sentence, const vector<HmmKey>& pos_answers, const vector<HmmKey>& pos_results)
+{
+
+  // for(int i = 0; i < sentence.size(); i++){
+  //   cout << sentence[i] << " ";
+  // }
+  // cout << endl;
+
+  for(int i = 0; i < sentence.size(); i++){
+    cout << setw(15) << sentence[i] << " " 
+	 << setw(4)  << pos_answers[i] << " ";
+
+      if(pos_answers[i] == pos_results[i]){
+	cout << setw(4)  << pos_results[i] << endl;
+      }else{
+	cout << "\x1b[31m" << setw(4) << pos_results[i] << "\x1b[0m" <<endl;
+      }
+  }
+  cout << endl;
+}
+
+
+
+
 
 //========================
 //       HmmNode
@@ -77,10 +107,11 @@ void Hmm::Learn(const string &filename){
     auto strv = split(line);
  
     if (strv.size() != 0){
-      node->EmissionLearning(strv[0]);
-      AddToVocablary(strv[0]);
       node->TransitionLearning(strv[1]);
       node = GetOrCreateNode(strv[1]);
+
+      node->EmissionLearning(strv[0]);
+      AddToVocablary(strv[0]);
     }else{
       node = GetNode(START_NODE_KEY);
     }
@@ -110,7 +141,6 @@ void Hmm::Show(HmmNodePtr node, const string &type){
 
 
 vector<HmmKey> Hmm::Viterbi(const vector<string> &o){
-  HmmNodePtr start_node = GetOrCreateNode(START_NODE_KEY);
   int i,j,k;
 
   unordered_map<HmmKey, vector<HmmKey>> route_prev;
@@ -120,7 +150,9 @@ vector<HmmKey> Hmm::Viterbi(const vector<string> &o){
  
 
   // from start node
-  for(auto it = m_nodes->begin(); it != m_nodes->end(); it++){
+  HmmNodePtr start_node = GetOrCreateNode(START_NODE_KEY);
+ 
+ for(auto it = m_nodes->begin(); it != m_nodes->end(); it++){
     const HmmKey key = it->first; 
     const HmmNodePtr node = it->second;
     route_prev[key].push_back(key);
@@ -136,6 +168,7 @@ vector<HmmKey> Hmm::Viterbi(const vector<string> &o){
       double max_prob = 0;
       HmmKey max_prob_key;
 
+      //1つ前のイテレーションにおける各ノードからの遷移確率を合計 
       for(auto it_prev = m_nodes->begin(); it_prev != m_nodes->end(); it_prev++){
 	const HmmKey key_prev = it_prev->first;
 	const HmmNodePtr node_prev = it_prev->second;
@@ -176,15 +209,6 @@ vector<HmmKey> Hmm::Viterbi(const vector<string> &o){
 
 double Hmm::Test(const string & filename){
 
-  vector<string> test_str = split("Confidence in the pound is widely expected to take another sharp dive");
-  vector<HmmKey> result = Viterbi(test_str);
-
-  int i;
-  for(i = 0 ; i < test_str.size();i++){
-    cout << test_str[i] << " " << result[i] << endl; 
-  }
-
-/*
   ifstream ifs(filename);
   if(ifs.fail()){
     cout << "failed to read text." << endl;
@@ -196,7 +220,6 @@ double Hmm::Test(const string & filename){
 
   int total_word_count = 0;
   int right_word_count = 0;
-
   while(getline(ifs,line)){
     auto strv = split(line);
     
@@ -205,19 +228,30 @@ double Hmm::Test(const string & filename){
       sentence.push_back(strv[0]);
       pos_answers.push_back(strv[1]);
     }else{
+      bool mistake_flag = false;
       auto pos_results = Viterbi(sentence);
 
-      for(i = 0; i < pos_results.size(); i++){
+      for(int i = 0; i < pos_results.size(); i++){
 	if(pos_results[i] == pos_answers[i]){
 	  right_word_count++;
+	}else{
+	  mistake_flag = true;
 	}
       }
+#ifdef DETAIL
+      if (mistake_flag == true){
+	ShowDetail(sentence, pos_answers, pos_results);
+      }
+#endif
       sentence.clear();
       pos_answers.clear();
     }
   }
   return (double)right_word_count / (double)(total_word_count) * 100.0;
   
-*/
+
   return 0;
 }
+
+
+

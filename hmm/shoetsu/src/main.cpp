@@ -19,13 +19,15 @@ using namespace std;
 void hmm_learn(int argc, char ** argv)
 {
   unique_ptr<Hmm> hmm = make_unique<Hmm>();
-  double t0,t1;
+  double t0,t1,t2;
   t0 = cur_time();
   hmm->Learn();
-  double accuracy = hmm->Test();
   t1 = cur_time();
-  printf( "Elapsed Time : %.5f sec\n",t1-t0);
-  cout << "Accuracy : " << accuracy << " % " <<endl;
+  double accuracy = hmm->Test("data/small_test.txt");
+  t2 = cur_time();
+  printf( "Elapsed Time (Learn): %.5f sec\n",t1-t0);
+  printf( "Elapsed Time (Test) : %.5f sec\n",t2-t1);
+  cout << "Accuracy            : " << accuracy << " % " <<endl;
 }
 
 
