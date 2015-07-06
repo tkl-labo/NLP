@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <cmath>
 #include "nlp.h"
 #include "util.h"
 #include "tagger.h"
@@ -59,12 +60,42 @@ void Tagger::train(const std::string &training)
 void Tagger::forwardTest(std::ifstream &input_file)
 {
 	std::string line;
+	std::string cur_pos = START_SYMBOL;
+	double logLikelihood = 0.0;
+	
 	while(std::getline(input_file, line)) {
 		// rows[0]: word, rows[1]: POS
 		std::vector<std::string> rows 
 			= Util::splitString(line, DELIME_IN_CORPUS);
 		
-		
+		// the end of sentence
+		if (rows.size() == 1) {
+			std::cout << std::endl;
+			std::cout << "Likelihood: " << std::exp(logLikelihood);
+			
+			// init
+			std::cout << std::endl << std::endl;
+			cur_pos = START_SYMBOL;
+			logLikelihood = 0.0;
+		}
+		else {
+			// calculate likelihood
+			// TODO: zero check
+			// std::cout << "PREV_POS: "
+			// 	<< cur_pos << ", CUR_POS: "
+			// 	<< rows[1] << ", L: "
+			// 	<< std::log(m_succFreqs[cur_pos][rows[1]] / (double) m_posFreqs[cur_pos]) << std::endl;
+			// std::cout << "CUR_WORD: " 
+			// 	<< rows[0] << ", CUR_POS: "
+			// 	<< rows[1] << ", L: "
+			// 	<< std::log(m_wordPosFreqs[rows[0]][rows[1]] / (double) m_wordFreqs[rows[0]]) << std::endl;
+			// std::cout << "wordPos: " << m_wordPosFreqs[rows[0]][rows[1]]
+			// 			<< ", word: " << m_wordFreqs[rows[0]] << std::endl;
+			logLikelihood += std::log(m_succFreqs[cur_pos][rows[1]] / (double) m_posFreqs[cur_pos]);
+			logLikelihood += std::log(m_wordPosFreqs[rows[0]][rows[1]] / (double) m_wordFreqs[rows[0]]);
+			std::cout << rows[0] << " ";
+			cur_pos = rows[1];
+		}
 	}
 	
 }

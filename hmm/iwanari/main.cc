@@ -7,7 +7,7 @@ using namespace nlp;
 
 int main(int argc, char** argv)
 {
-	if (argc < 3) {
+	if (argc < 4) {
 		std::cout << "Usage: " << argv[0] 
 			<< " training_data testing_data [Forward:1 Viterbi:2]" 
 			<< std::endl;
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	setlocale(LC_ALL, "ja_JP.UTF-8");
 
 	util::Stopwatch<std::chrono::milliseconds> sw;
-	Tagger tagger(0);
+	Tagger tagger(std::atoi(argv[3]));
 	tagger.train(argv[1]);
 	sw.stop();
 	std::cout << "Elapsed (training): " 
@@ -26,9 +26,10 @@ int main(int argc, char** argv)
 
 	// tagger.showWordPosProbs();
 	// tagger.showSuccProbs();
-	tagger.showAllProbs();
+	// tagger.showAllProbs();
 	
 	sw.start();
+	tagger.test(argv[2]);
 	sw.stop();
 	std::cout << "Elapsed (test): " 
 		<< sw.showElapsedTime().c_str() << std::endl;
