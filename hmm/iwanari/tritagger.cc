@@ -65,26 +65,6 @@ void TriTagger::train(const std::string &training)
 	std::cout << "trained!" << std::endl;
 }
 
-std::vector<std::pair<std::string, std::string>> 
-TriTagger::nextSenetence(std::ifstream &stream)
-{
-	std::string line;
-	// sentence contains (word, ans) pair
-	std::vector<std::pair<std::string, std::string>> sentence;
-	while(std::getline(stream, line)) {
-		// rows[0]: word, rows[1]: POS
-		std::vector<std::string> rows 
-			= splitString(line, DELIME_IN_CORPUS);
-		
-		// the end of sentence
-		if (rows.size() == 1)
-			return sentence;
-		
-		sentence.emplace_back(rows[0], rows[1]);
-	}
-	return sentence;
-}
-
 void TriTagger::forwardTest(std::ifstream &input_file)
 {
 	std::string line;
@@ -127,6 +107,11 @@ void TriTagger::forwardPropagate(
 	std::vector<std::pair<std::string, std::string>> &sentence,
 	std::vector<ScoreList> &scores)
 {
+	// initialize senetence and scores
+	sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
+	sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
+	sentence.emplace_back(END_SYMBOL, END_SYMBOL);
+	scores.resize(sentence.size());
 	
 	// start state
 	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
@@ -136,6 +121,9 @@ void TriTagger::forwardPropagate(
 		
 		// prevprev.first: POS, prevprev.second: <prob, previous POS>
 		for (auto prevprev : scores[i - 2]) {
+			
+			if (m_triSuccFreqs.find(prevprev.first) == m_triSuccFreqs.end())
+				continue;
 			
 			// prev.first: POS, prev.second: <prob, previous POS>
 			for (auto prev : m_triSuccFreqs[prevprev.first]) {
@@ -160,63 +148,6 @@ void TriTagger::forwardPropagate(
 	}
 }
 
-void TriTagger::viterbiTest(std::ifstream &input_file)
-{
-	// get sentence one by one
-	// sentence contains (word, ans) pair
-	std::vector<std::pair<std::string, std::string>> sentence;
-	WrongList wrongList;
-	long counter = 0;
-	long incorrect = 0;
-	while((sentence = nextSenetence(input_file)).size() != 0) {
-		sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
-		sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
-		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
-		
-		// current POS -> (prob, previous POS)
-		std::vector<ScoreList> scores(sentence.size());
-		
-		forwardPropagate(sentence, scores);
-		
-		// word, pos
-		std::vector<std::string> chk;
-		std::string cur_pos = END_SYMBOL;
-
-		// // back trace
-		// for (int i = sentence.size() - 1; i >= 0; i--) {
-		// 	chk.emplace_back(scores[i][cur_pos].second);
-		// 	cur_pos = scores[i][cur_pos].second;
-		// }
-
-		// // test
-		// for (int i = 1; i < sentence.size() - 1; i++) {
-		// 	const std::string word = sentence.at(i).first;
-		// 	const std::string ansPos = sentence.at(i).second;
-		// 	const std::string tesPos = chk.at(sentence.size() - i - 2);
-		// 	if (ansPos != tesPos) {
-		// 		incorrect++;
-		// 		std::cout << "\x1b[31m";
-		// 		if (m_debug)
-		// 			wrongList[std::make_pair(ansPos, tesPos)]++;
-		// 	}
-		// 	std::cout << word << " (ANS: " 
-		// 				<< ansPos << ", TES: " 
-		// 				<< tesPos << ") ";
-		// 	std::cout << "\x1b[39m";
-		// 	counter++;
-		// }
-	}
-	std::cout << std::endl;
-	// if (m_debug) {
-	// 	for (auto wrong : wrongList) {
-	// 		std::cout << "count (ANS: " << wrong.first.first 
-	// 			<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
-	// 	}
-	// }
-	// 
-	// std::cout << "word count " << counter << std::endl;
-	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
-}
 
 void TriTagger::test(const std::string &testing)
 {

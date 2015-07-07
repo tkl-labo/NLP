@@ -167,6 +167,10 @@ void Tagger::forwardPropagate(
 	std::vector<std::pair<std::string, std::string>> &sentence,
 	std::vector<ScoreList> &scores)
 {
+	// initialize sentence and scores
+	sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
+	sentence.emplace_back(END_SYMBOL, END_SYMBOL);
+	scores.resize(sentence.size());
 	
 	// start state
 	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
@@ -205,11 +209,9 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 	long counter = 0;
 	long incorrect = 0;
 	while((sentence = nextSenetence(input_file)).size() != 0) {
-		sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
-		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
 		
 		// current POS -> (prob, previous POS)
-		std::vector<ScoreList> scores(sentence.size());
+		std::vector<ScoreList> scores;
 		
 		forwardPropagate(sentence, scores);
 		
@@ -217,7 +219,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		std::vector<std::string> chk;
 		std::string cur_pos = END_SYMBOL;
 
-		// back trace
+		// // back trace
 		for (int i = sentence.size() - 1; i >= 0; i--) {
 			chk.emplace_back(scores[i][cur_pos].second);
 			cur_pos = scores[i][cur_pos].second;
@@ -248,7 +250,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 				<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
 		}
 	}
-	
+	// 
 	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }

@@ -39,11 +39,8 @@ public:
 
 protected:
 	virtual void forwardTest(std::ifstream &input_file);
-	virtual void viterbiTest(std::ifstream &input_file);
 	virtual void forwardPropagate(
 		std::vector<std::pair<std::string, std::string>> &sentence,
 		std::vector<ScoreList> &scores);
-	std::vector<std::pair<std::string, std::string>>
-		nextSenetence(std::ifstream &stream);
 };
 }
