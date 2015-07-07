@@ -1,4 +1,8 @@
 
+
+#ifndef HMM_H_INCLUDED
+#define HMM_H_INCLUDED
+
 #include <memory>
 #include <vector>
 #include <string.h>
@@ -13,7 +17,7 @@ typedef std::unordered_map<std::string, int> Emissions;
 
 #include <iostream>
 class HmmNode{
- private:
+ protected:
   std::unique_ptr<Transitions> m_transitions;
   std::unique_ptr<Emissions> m_emissions;
   int m_transitions_count;
@@ -50,7 +54,7 @@ typedef std::unordered_set<HmmKey> Vocablary;
 
 
 class Hmm{
- private:
+ protected:
   std::unique_ptr<HmmNodes> m_nodes;
   std::unique_ptr<Vocablary> m_vocablary;
   inline void AddToVocablary(const HmmKey &key){
@@ -86,3 +90,4 @@ class Hmm{
 };
 
 
+#endif

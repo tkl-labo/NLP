@@ -236,11 +236,11 @@ double Hmm::Test(const string & filename){
   vector<HmmKey> pos_answers;
 
   int total_word_count = 0;
-  int right_word_count = 0;
+  int right_unknown_word_count = 0;
+  int right_known_word_count = 0;
 
-  //shared_ptr<unordered_set<string>> unk_words = make_shared<unordered_set<string>>();
   vector<bool> unknown_flags;
-  int unknown_count =0;
+  int unknown_word_count =0;
 
   while(getline(ifs,line)){
     auto strv = split(line);
@@ -248,25 +248,31 @@ double Hmm::Test(const string & filename){
     if (strv.size() != 0){
       total_word_count++;
       if (m_vocablary->find(strv[0]) == m_vocablary->end()){
-	unknown_count++;
+	unknown_word_count++;
 	unknown_flags.push_back(true);
       }else{
 	unknown_flags.push_back(false);
       }
-
       sentence.push_back(strv[0]);
       pos_answers.push_back(strv[1]);
+
     }else{
       bool mistake_flag = false;
       auto pos_results = Viterbi(sentence);
-     
+
+      //未知語or既知語に分けて正解と比較 
       for(int i = 0; i < pos_results.size(); i++){
 	if(pos_results[i] == pos_answers[i]){
-	  right_word_count++;
+	  if(m_vocablary->find(sentence[i]) != m_vocablary->end()){
+	    right_known_word_count++;
+	  }else{
+	    right_unknown_word_count++;
+	  }
 	}else{
 	  mistake_flag = true;
 	}
       }
+
 #ifdef DETAIL
       if (mistake_flag == true){
 	ShowDetail(sentence, pos_answers, pos_results, unknown_flags);
@@ -279,12 +285,22 @@ double Hmm::Test(const string & filename){
     }
   }
 
+  cout << "Accuracy(Known)   : " 
+       << 100.0 * (double)right_known_word_count / (double)(total_word_count - unknown_word_count) 
+       << "% (" << right_known_word_count << "/" << (total_word_count - unknown_word_count) << ")"
+       << endl;
 
-  cout << unknown_count << " unknown words found" << endl;
+  cout << "Accuracy(Unknown) : " 
+       << 100.0 * (double)right_unknown_word_count / (double)(unknown_word_count) 
+       << "% (" << right_unknown_word_count << "/" << (unknown_word_count) << ")"
+       << endl;
 
-  return (double)right_word_count / (double)(total_word_count) * 100.0;
-  
+  cout << "Accuracy(Total)   : " 
+       << 100.0 * (double)(right_known_word_count + right_unknown_word_count) / (double)(total_word_count) 
+       << "% (" << (right_unknown_word_count + right_known_word_count) << "/" << (total_word_count) << ")"
+       << endl;
 
+  return (double)(right_known_word_count + right_unknown_word_count) / (double)(total_word_count) * 100.0;
 }
 
 
