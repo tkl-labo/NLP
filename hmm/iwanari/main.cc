@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include <memory>
 #include "tagger.h"
+#include "tri_tagger.h"
 #include "stopwatch.h"
 using namespace nlp;
 
@@ -17,7 +18,7 @@ int main(int argc, char** argv)
 	setlocale(LC_ALL, "ja_JP.UTF-8");
 
 	util::Stopwatch<std::chrono::milliseconds> sw;
-	Tagger tagger(std::atoi(argv[3]), 
+	TriTagger tagger(std::atoi(argv[3]), 
 				(argc > 4) && std::atoi(argv[4]) != 0);
 	tagger.train(argv[1]);
 	sw.stop();
@@ -25,8 +26,8 @@ int main(int argc, char** argv)
 		<< sw.showElapsedTime().c_str() << std::endl;
 	std::cout << "-------" << std::endl;
 
-	// tagger.showWordPosProbs();
 	// tagger.showSuccProbs();
+	// tagger.showWordPosProbs();
 	// tagger.showAllProbs();
 	
 	sw.start();

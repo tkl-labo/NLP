@@ -3,6 +3,16 @@
 #include <vector>
 #include <unordered_map>
 
+namespace std {
+template <>
+class hash<std::pair<std::string, std::string>> {
+public:
+	size_t operator()(const std::pair<std::string, std::string>& x) const {
+		return hash<std::string>()(x.first) 
+					^ hash<std::string>()(x.second);
+	}
+};
+}
 
 namespace nlp
 {
@@ -15,6 +25,7 @@ typedef std::unordered_map<std::pair<std::string, std::string>, long> WrongList;
 
 class Tagger
 {
+protected:
 	int m_mode;
 	int m_debug;
 	PairFreqList m_succFreqs;	// count(pos_1 | pos_0)
@@ -43,13 +54,20 @@ public:
 		// UNKNOWN_WORD
 		return 1 / (double) (m_wordFreqs.size() + 1);
 	}
-	
-private:
+
+protected:
+    std::string joinString(const std::vector<std::string> &strings, 
+         const std::string &delim);
+    std::string getFirstString(const std::string &str, 
+         const std::string &delim);
+    std::vector<std::string> splitString(const std::string &str,
+                const std::string &delim);
 	void forwardTest(std::ifstream &input_file);
 	void viterbiTest(std::ifstream &input_file);
 	void forwardPropagate(
 		std::vector<std::pair<std::string, std::string>> &sentence,
 		std::vector<ScoreList> &scores);
-
+	std::vector<std::pair<std::string, std::string>>
+		nextSenetence(std::ifstream &stream);
 };
 }

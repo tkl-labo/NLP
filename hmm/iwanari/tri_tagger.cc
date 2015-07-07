@@ -4,63 +4,18 @@
 #include <unordered_map>
 #include <cmath>
 #include "nlp.h"
-#include "tagger.h"
+#include "tri_tagger.h"
 using namespace nlp;
 
-std::string 
-Tagger::joinString(const std::vector<std::string> &strings, 
-    const std::string &delim)
+void TriTagger::init()
 {
-    std::string joined_string;
-    if (strings.size() > 0) {
-        joined_string = strings[0];
-        for (int i = 1; i < strings.size(); i++) {
-            joined_string += delim;
-            joined_string += strings[i];
-        }
-    }
-    return joined_string;
-}
-
-std::string 
-Tagger::getFirstString(const std::string &str, 
-    const std::string &delim)
-{
-    size_t fp; // current position, found position
-    
-    if ((fp =  str.find(delim)) != std::string::npos)
-        return str.substr(0, fp);
-    
-    return str; // EOS has no following delim
-}
-
-std::vector<std::string> 
-Tagger::splitString(const std::string &str,
-    const std::string &delim)
-{
-    std::vector<std::string> tokens;
-
-    size_t cp, fp; // current position, found position
-    const size_t dsize = delim.size();
-
-    for (cp = 0; 
-            (fp = str.find(delim, cp)) != std::string::npos;
-            cp = fp + dsize)
-        tokens.emplace_back(str, cp, fp - cp);
-
-    tokens.emplace_back(str, cp, str.size() - cp);
-    return tokens;
-}
-
-void Tagger::init()
-{
-	m_succFreqs.clear();
+	m_triSuccFreqs.clear();
 	m_wordFreqs.clear();
-	m_posFreqs.clear();
+	m_triPosFreqs.clear();
 	m_wordFreqs.clear();
 }
 
-void Tagger::train(const std::string &training)
+void TriTagger::train(const std::string &training)
 {
 	init();
 	
@@ -73,7 +28,8 @@ void Tagger::train(const std::string &training)
 	}
 
 	std::string line;
-	std::string cur_pos = START_SYMBOL;
+	std::string cur_pos0 = START_SYMBOL;
+	std::string cur_pos1 = START_SYMBOL;
 
 	while(std::getline(input_file, line)) {
 		// rows[0]: word, rows[1]: POS
@@ -81,21 +37,23 @@ void Tagger::train(const std::string &training)
 			= splitString(line, DELIME_IN_CORPUS);
 		
 		// count the frequency of POS
-		m_posFreqs[cur_pos]++;
+		m_triPosFreqs[cur_pos0][cur_pos1]++;
 		
 		// the end of sentence
 		if (rows.size() == 1) {
 			// added end symbol
-			m_succFreqs[cur_pos][END_SYMBOL]++;
+			m_triSuccFreqs[cur_pos0][cur_pos1][END_SYMBOL]++;
 			m_wordPosFreqs[END_SYMBOL][END_SYMBOL]++;
 			m_wordFreqs[END_SYMBOL]++;
 			
 			// init
-			cur_pos = START_SYMBOL;
+			cur_pos0 = START_SYMBOL;
+			cur_pos1 = START_SYMBOL;
 		}
 		else {
-			m_succFreqs[cur_pos][rows[1]]++;
-			cur_pos = rows[1];
+			m_triSuccFreqs[cur_pos0][cur_pos1][rows[1]]++;
+			cur_pos0 = cur_pos1;
+			cur_pos1 = rows[1];
 			
 			// count the frequency of (word, pos) pair
 			m_wordPosFreqs[rows[0]][rows[1]]++;
@@ -107,8 +65,8 @@ void Tagger::train(const std::string &training)
 	std::cout << "trained!" << std::endl;
 }
 
-std::vector<std::pair<std::string, std::string>>
-Tagger::nextSenetence(std::ifstream &stream)
+std::vector<std::pair<std::string, std::string>> 
+TriTagger::nextSenetence(std::ifstream &stream)
 {
 	std::string line;
 	// sentence contains (word, ans) pair
@@ -127,10 +85,11 @@ Tagger::nextSenetence(std::ifstream &stream)
 	return sentence;
 }
 
-void Tagger::forwardTest(std::ifstream &input_file)
+void TriTagger::forwardTest(std::ifstream &input_file)
 {
 	std::string line;
-	std::string cur_pos = START_SYMBOL;
+	std::string cur_pos0 = START_SYMBOL;
+	std::string cur_pos1 = START_SYMBOL;
 	double logLikelihood = 0.0;
 	
 	while(std::getline(input_file, line)) {
@@ -141,7 +100,7 @@ void Tagger::forwardTest(std::ifstream &input_file)
 		// the end of sentence
 		if (rows.size() == 1) {
 			// TODO: is this necessary?
-			logLikelihood += std::log(getSuccProb(cur_pos, END_SYMBOL));
+			logLikelihood += std::log(getSuccProb(cur_pos0, cur_pos1, END_SYMBOL));
 			
 			// calculate likelihood
 			std::cout << std::endl;
@@ -149,27 +108,28 @@ void Tagger::forwardTest(std::ifstream &input_file)
 			
 			// init
 			std::cout << std::endl << std::endl;
-			cur_pos = START_SYMBOL;
+			std::string cur_pos0 = START_SYMBOL;
+			std::string cur_pos1 = START_SYMBOL;
 			logLikelihood = 0.0;
 		}
 		else {
 			// calculate likelihood in log
-			// TODO: zero check
-			logLikelihood += std::log(getSuccProb(cur_pos, rows[1]));
+			logLikelihood += std::log(getSuccProb(cur_pos0, cur_pos1, rows[1]));
 			logLikelihood += std::log(getWordPosProb(rows[0], rows[1]));
 			std::cout << rows[0] << " ";
-			cur_pos = rows[1];
+			cur_pos0 = cur_pos1;
+			cur_pos1 = rows[1];
 		}
 	}
 }
 
-void Tagger::forwardPropagate(
+void TriTagger::forwardPropagate(
 	std::vector<std::pair<std::string, std::string>> &sentence,
-	std::vector<ScoreList> &scores)
+	std::vector<TriScoreList> &scores)
 {
 	
 	// start state
-	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
+	// scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
 	for (int i = 1; i < sentence.size(); i++) {
 		std::string word = sentence.at(i).first;
 		
@@ -179,24 +139,24 @@ void Tagger::forwardPropagate(
 			// NOTE: using wordPosFreq may be faster than using m_succFreqs
 			// because of the number of combination
 			// auto list = m_succFreqs[prev.first];
-			auto list = m_wordPosFreqs[word].size() != 0 ? 
-				m_wordPosFreqs[word] : m_succFreqs[prev.first];
-			// cur.first: POS, cur.second: freq
-			for (auto cur : list) {
-				double logProb = 0.0;
-				logProb += std::log(prev.second.first);
-				logProb += std::log(getSuccProb(prev.first, cur.first));
-				logProb += std::log(getWordPosProb(word, cur.first));
-				
-				// update
-				if (std::exp(logProb) >= scores[i][cur.first].first)
-					scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first);
-			}
+			/* auto list = m_wordPosFreqs[word].size() != 0 ?  */
+			/* 	m_wordPosFreqs[word] : m_succFreqs[prev.first]; */
+			/* // cur.first: POS, cur.second: freq */
+			/* for (auto cur : list) { */
+			/* 	double logProb = 0.0; */
+			/* 	logProb += std::log(prev.second.first); */
+			/* 	logProb += std::log(getSuccProb(prev.first, cur.first)); */
+			/* 	logProb += std::log(getWordPosProb(word, cur.first)); */
+			/* 	 */
+			/* 	// update */
+			/* 	if (std::exp(logProb) >= scores[i][cur.first].first) */
+			/* 		scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first); */
+			/* } */
 		}
 	}
 }
 
-void Tagger::viterbiTest(std::ifstream &input_file)
+void TriTagger::viterbiTest(std::ifstream &input_file)
 {
 	// get sentence one by one
 	// sentence contains (word, ans) pair
@@ -209,7 +169,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
 		
 		// current POS -> (prob, previous POS)
-		std::vector<ScoreList> scores(sentence.size());
+		std::vector<TriScoreList> scores(sentence.size());
 		
 		forwardPropagate(sentence, scores);
 		
@@ -217,43 +177,43 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		std::vector<std::string> chk;
 		std::string cur_pos = END_SYMBOL;
 
-		// back trace
-		for (int i = sentence.size() - 1; i >= 0; i--) {
-			chk.emplace_back(scores[i][cur_pos].second);
-			cur_pos = scores[i][cur_pos].second;
-		}
+		// // back trace
+		// for (int i = sentence.size() - 1; i >= 0; i--) {
+		// 	chk.emplace_back(scores[i][cur_pos].second);
+		// 	cur_pos = scores[i][cur_pos].second;
+		// }
 
-		// test
-		for (int i = 1; i < sentence.size() - 1; i++) {
-			const std::string word = sentence.at(i).first;
-			const std::string ansPos = sentence.at(i).second;
-			const std::string tesPos = chk.at(sentence.size() - i - 2);
-			if (ansPos != tesPos) {
-				incorrect++;
-				std::cout << "\x1b[31m";
-				if (m_debug)
-					wrongList[std::make_pair(ansPos, tesPos)]++;
-			}
-			std::cout << word << " (ANS: " 
-						<< ansPos << ", TES: " 
-						<< tesPos << ") ";
-			std::cout << "\x1b[39m";
-			counter++;
-		}
+		// // test
+		// for (int i = 1; i < sentence.size() - 1; i++) {
+		// 	const std::string word = sentence.at(i).first;
+		// 	const std::string ansPos = sentence.at(i).second;
+		// 	const std::string tesPos = chk.at(sentence.size() - i - 2);
+		// 	if (ansPos != tesPos) {
+		// 		incorrect++;
+		// 		std::cout << "\x1b[31m";
+		// 		if (m_debug)
+		// 			wrongList[std::make_pair(ansPos, tesPos)]++;
+		// 	}
+		// 	std::cout << word << " (ANS: " 
+		// 				<< ansPos << ", TES: " 
+		// 				<< tesPos << ") ";
+		// 	std::cout << "\x1b[39m";
+		// 	counter++;
+		// }
 	}
 	std::cout << std::endl;
-	if (m_debug) {
-		for (auto wrong : wrongList) {
-			std::cout << "count (ANS: " << wrong.first.first 
-				<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
-		}
-	}
-	
+	// if (m_debug) {
+	// 	for (auto wrong : wrongList) {
+	// 		std::cout << "count (ANS: " << wrong.first.first 
+	// 			<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
+	// 	}
+	// }
+	// 
 	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }
 
-void Tagger::test(const std::string &testing)
+void TriTagger::test(const std::string &testing)
 {
 	std::cout << "testing..." << std::endl;
 	std::ifstream input_file(testing);
@@ -280,21 +240,24 @@ void Tagger::test(const std::string &testing)
 }
 
 // ===== for debug =====
-void Tagger::showSuccProbs()
+void TriTagger::showSuccProbs()
 {
 	for (auto f : m_succFreqs) {
 		for (auto s : f.second) {
-			std::cout << "Prob("
-				<< s.first << " | "
-				<< f.first << ") = " 
-				<< getSuccProb(f.first, s.first)
-				<< std::endl;
+			for (auto t : f.second) {
+				std::cout << "Prob("
+					<< t.first << " | "
+					<< f.first << ", " 
+					<< s.first << ") = " 
+					<< getSuccProb(f.first, s.first, t.first)
+					<< std::endl;
+			}
 		}
 		std::cout << "=======" << std::endl << std::endl;
 	}
 }
 
-void Tagger::showWordPosProbs()
+void TriTagger::showWordPosProbs()
 {
 	for (auto f : m_wordPosFreqs) {
 		for (auto s : f.second) {
@@ -308,7 +271,7 @@ void Tagger::showWordPosProbs()
 	}
 }
 
-void Tagger::showAllProbs()
+void TriTagger::showAllProbs()
 {
 	showSuccProbs();
 	
@@ -317,4 +280,5 @@ void Tagger::showAllProbs()
 	showWordPosProbs();
 }
 // ===== /for debug =====
+
 
