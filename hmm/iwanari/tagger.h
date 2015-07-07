@@ -31,7 +31,6 @@ public:
 	void showWordPosProbs();
 	void showAllProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1) {
-		// UNKNOWN_WORD
 		return m_succFreqs[pos0][pos1] / (double) m_posFreqs[pos0];
 	}
 	inline double getWordPosProb(const std::string word, const std::string pos) {
