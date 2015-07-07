@@ -78,8 +78,8 @@ class Hmm{
   virtual ~Hmm() = default;
  
   void Show(HmmNodePtr node, const std::string &type);
-  void Learn(const std::string &filename = "data/train.txt");
-  double Test(const std::string &filename = "data/test.txt");
+  void Learn(const std::string &filename);
+  double Test(const std::string &filename);
   std::vector<HmmKey> Viterbi(const std::vector<std::string>&);
 
 

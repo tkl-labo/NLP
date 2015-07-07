@@ -18,23 +18,40 @@ const string END_LINE = "";
 //========================
 //   Minimal Functions
 //========================
-void ShowDetail(const vector<string>& sentence, const vector<HmmKey>& pos_answers, const vector<HmmKey>& pos_results)
+void ShowDetail(const vector<string>& sentence, const vector<HmmKey>& pos_answers, const vector<HmmKey>& pos_results, const vector<bool> &unknown_flags)
 {
 
-  // for(int i = 0; i < sentence.size(); i++){
-  //   cout << sentence[i] << " ";
-  // }
-  // cout << endl;
 
   for(int i = 0; i < sentence.size(); i++){
+
     cout << setw(15) << sentence[i] << " " 
 	 << setw(4)  << pos_answers[i] << " ";
+
+    //未知語のチェック 
+    if (unknown_flags[i] == true){
+
+      if(pos_answers[i] == pos_results[i]){
+	cout << setw(4)  << pos_results[i]
+	     << "   Unknown"
+	     << endl;
+      }else{
+	cout << "\x1b[31m" 
+	     << setw(4) << pos_results[i] 
+	     << "   Unknown" 
+	     << "\x1b[0m"  
+	     << endl;
+      }
+
+    }else{
 
       if(pos_answers[i] == pos_results[i]){
 	cout << setw(4)  << pos_results[i] << endl;
       }else{
 	cout << "\x1b[31m" << setw(4) << pos_results[i] << "\x1b[0m" <<endl;
       }
+
+    }
+
   }
   cout << endl;
 }
@@ -220,17 +237,29 @@ double Hmm::Test(const string & filename){
 
   int total_word_count = 0;
   int right_word_count = 0;
+
+  //shared_ptr<unordered_set<string>> unk_words = make_shared<unordered_set<string>>();
+  vector<bool> unknown_flags;
+  int unknown_count =0;
+
   while(getline(ifs,line)){
     auto strv = split(line);
     
     if (strv.size() != 0){
       total_word_count++;
+      if (m_vocablary->find(strv[0]) == m_vocablary->end()){
+	unknown_count++;
+	unknown_flags.push_back(true);
+      }else{
+	unknown_flags.push_back(false);
+      }
+
       sentence.push_back(strv[0]);
       pos_answers.push_back(strv[1]);
     }else{
       bool mistake_flag = false;
       auto pos_results = Viterbi(sentence);
-
+     
       for(int i = 0; i < pos_results.size(); i++){
 	if(pos_results[i] == pos_answers[i]){
 	  right_word_count++;
@@ -240,17 +269,22 @@ double Hmm::Test(const string & filename){
       }
 #ifdef DETAIL
       if (mistake_flag == true){
-	ShowDetail(sentence, pos_answers, pos_results);
+	ShowDetail(sentence, pos_answers, pos_results, unknown_flags);
       }
 #endif
       sentence.clear();
       pos_answers.clear();
+      unknown_flags.clear();
+	
     }
   }
+
+
+  cout << unknown_count << " unknown words found" << endl;
+
   return (double)right_word_count / (double)(total_word_count) * 100.0;
   
 
-  return 0;
 }
 
 

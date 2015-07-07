@@ -18,13 +18,18 @@ using namespace std;
 
 void hmm_learn(int argc, char ** argv)
 {
+  const string TRAIN_DATA = "data/train.txt";
+  const string TEST_DATA = "data/test.txt";
   unique_ptr<Hmm> hmm = make_unique<Hmm>();
   double t0,t1,t2;
   t0 = cur_time();
-  hmm->Learn();
+  hmm->Learn(TRAIN_DATA);
   t1 = cur_time();
-  double accuracy = hmm->Test("data/small_test.txt");
+  double accuracy = hmm->Test(TEST_DATA);
   t2 = cur_time();
+ 
+  cout << "Train Data        : " << TRAIN_DATA << endl;
+  cout << "Test  Data        : " << TEST_DATA  << endl;
   printf( "Elapsed Time (Learn): %.5f sec\n",t1-t0);
   printf( "Elapsed Time (Test) : %.5f sec\n",t2-t1);
   cout << "Accuracy            : " << accuracy << " % " <<endl;
