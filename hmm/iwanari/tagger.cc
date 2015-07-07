@@ -23,7 +23,7 @@ void Tagger::train(const std::string &training)
 	std::cout << "training..." << std::endl;
 	std::ifstream input_file(training);
 	if (!input_file) {
-		std::cerr << "ERROR: No such file (" 
+		std::cerr << "ERROR: No such training file (" 
 			<< training << ")" << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
@@ -213,7 +213,7 @@ void Tagger::test(const std::string &testing)
 	std::cout << "testing..." << std::endl;
 	std::ifstream input_file(testing);
 	if (!input_file) {
-		std::cerr << "ERROR: No such file (" 
+		std::cerr << "ERROR: No such testing file (" 
 			<< testing << ")" << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
