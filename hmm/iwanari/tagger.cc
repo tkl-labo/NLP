@@ -209,6 +209,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 	long counter = 0;
 	long incorrect = 0;
 	while((sentence = nextSenetence(input_file)).size() != 0) {
+		const int prevSize = sentence.size();
 		
 		// current POS -> (prob, previous POS)
 		std::vector<ScoreList> scores;
@@ -226,7 +227,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		}
 
 		// test
-		for (int i = 1; i < sentence.size() - 1; i++) {
+		for (int i = sentence.size() - prevSize - 1; i < sentence.size() - 1; i++) {
 			const std::string word = sentence.at(i).first;
 			const std::string ansPos = sentence.at(i).second;
 			const std::string tesPos = chk.at(sentence.size() - i - 2);
