@@ -65,6 +65,7 @@ HmmNode::HmmNode(const HmmKey key) : m_key(key){
   m_emissions_count = 0;
   m_transitions = make_unique<Transitions>();
   m_emissions = make_unique<Emissions>();
+  m_femissions = make_unique<FeatureEmissions>();
 }
 
 void HmmNode::EmissionLearning(const string &word){
@@ -78,6 +79,10 @@ void HmmNode::TransitionLearning(const HmmKey &key){
 }
 
 
+void HmmNode::FeatureEmissionLearning(F_TYPE type){
+  (*m_femissions)[type]++;
+}
+
 
 //========================
 //         Hmm
@@ -87,6 +92,8 @@ Hmm::Hmm(){
   m_nodes = make_unique<HmmNodes>();
   m_vocablary = make_unique<Vocablary>();
   CreateNode(START_NODE_KEY);
+
+  SetupClassifiers();
 }
 
 HmmNodePtr Hmm::GetOrCreateNode(const HmmKey &key){
@@ -124,11 +131,21 @@ void Hmm::Learn(const string &filename){
 
       node->EmissionLearning(strv[0]);
       AddToVocablary(strv[0]);
+
+      // 訓練時に使った単語の特徴についても記録
+      auto f_type = ClassifyUnknown(strv[0]);
+      node->FeatureEmissionLearning(f_type);
+
     }else{
       node = GetNode(START_NODE_KEY);
     }
   }
-  
+
+  node = GetNode(START_NODE_KEY);
+  for(int it = F_CAP; it != F_OTHERS; it++){
+    cout << it << " " << node->GetFeatureEmissionProb((F_TYPE)it, GetVocablarySize()) << endl;
+  }
+  exit(1);
 }
 
 
@@ -295,6 +312,121 @@ double Hmm::Test(const string & filename){
        << endl;
 
   return (double)(right_known_word_count + right_unknown_word_count) / (double)(total_word_count) * 100.0;
+}
+
+F_TYPE Hmm::ClassifyUnknown(const string &str){
+  for(int type = F_CAP; type != F_OTHERS; type++){
+    if (Classifiers[type] == NULL){
+      continue; 
+    }
+    
+    if (Classifiers[type](str)){
+      return (F_TYPE)type; 
+    }
+  }
+  return F_OTHERS;
+}
+
+void Hmm::SetupClassifiers(){
+
+  auto matchSuffix = [](const string & str, const vector<string> tokens){
+    for(auto it = tokens.begin(); it != tokens.end(); it++){
+      int len =  it->size();
+      if(str.size() >= len){
+	if(str.substr(str.size() - len) == *it){
+	  return true;
+	}
+      }
+    }
+    return false;
+  };
+
+  auto matchAll = [](const string & str, const vector<string> tokens){
+    for(auto it = tokens.begin(); it != tokens.end(); it++){
+      if(str == *it){
+	return true;
+      }
+    }
+    return false;
+  };
+
+  // 未知語に対する分類
+  // ここでは各単語が一意に属するように分類する
+
+  Classifiers[F_CAP] = [&](const string& str){
+    assert(str.size() > 0);
+    if(str[0] >= 'A' && str[0] <= 'Z'){
+      return true;
+    }
+    return false;
+  };
+
+  Classifiers[F_CD] = [&](const string& str){
+    int n = str.size();
+    assert(str.size() > 0);
+    
+    if(str[0] >= '0' && str[0] <= '9' && str[n-1] >= '0' && str[n-1] <= '9'){
+      return true;
+    }
+    return false;
+  };
+
+  Classifiers[F_END_ADJ] = [&](const string& str){
+    const vector<string> tokens = {
+      "less", "ible", "able", "ful", "ous", "al", "an"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_END_NOUN] = [&](const string& str){
+    const vector<string> tokens = {
+      "eer", "ess", "ion", "age", "ty"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_END_ED] = [&](const string& str){
+    const vector<string> tokens = {
+      "ed"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_END_ER] = [&](const string& str){
+    const vector<string> tokens = {
+      "er"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_END_EST] = [&](const string& str){
+    const vector<string> tokens = {
+      "est"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_END_ING] = [&](const string& str){
+    const vector<string> tokens = {
+      "ing"
+    };
+    return matchSuffix(str, tokens);
+  };
+  Classifiers[F_END_S] = [&](const string& str){
+    const vector<string> tokens = {
+      "s"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+  Classifiers[F_VERB] = [&](const string& str){
+    const vector<string> tokens = {
+      "ate"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+
 }
 
 

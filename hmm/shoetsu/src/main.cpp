@@ -2,7 +2,6 @@
 
 #include "util.h"
 #include "hmm.h"
-#include "f_hmm.h"
 
 #include <iostream>
 #include <memory>
@@ -21,7 +20,7 @@ void hmm_learn(int argc, char ** argv)
 {
   const string TRAIN_DATA = "data/train.txt";
   const string TEST_DATA = "data/test.txt";
-  unique_ptr<F_Hmm> hmm = make_unique<F_Hmm>();
+  unique_ptr<Hmm> hmm = make_unique<Hmm>();
   double t0,t1,t2;
   t0 = cur_time();
   hmm->Learn(TRAIN_DATA);
