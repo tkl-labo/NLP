@@ -30,6 +30,9 @@ public:
 private:
 	void forwardTest(std::ifstream &input_file);
 	void viterbiTest(std::ifstream &input_file);
+	void forwardPropagate(
+		std::vector<std::pair<std::string, std::string>> &sentence,
+		std::vector<ScoreList> &scores);
 
 };
 }

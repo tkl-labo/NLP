@@ -40,6 +40,9 @@ void Tagger::train(const std::string &training)
 		if (rows.size() == 1) {
 			// added end symbol
 			m_succFreqs[cur_pos][END_SYMBOL]++;
+			m_wordPosFreqs[END_SYMBOL][END_SYMBOL]++;
+			m_wordFreqs[END_SYMBOL]++;
+			
 			// init
 			cur_pos = START_SYMBOL;
 		}
@@ -112,73 +115,75 @@ void Tagger::forwardTest(std::ifstream &input_file)
 	}
 }
 
+void Tagger::forwardPropagate(
+	std::vector<std::pair<std::string, std::string>> &sentence,
+	std::vector<ScoreList> &scores)
+{
+	
+	// start state
+	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
+	for (int i = 1; i < sentence.size(); i++) {
+		std::string word = sentence.at(i).first;
+		
+		// prev.first: POS, prev.second: <prob, previous POS>
+		for (auto prev : scores[i - 1]) {
+			
+			// cur.first: POS, cur.second: freq
+			for (auto cur : m_wordPosFreqs[word]) {
+				double logProb = 0.0;
+				logProb += std::log(prev.second.first);
+				logProb += std::log(m_succFreqs[prev.first][cur.first] / (double) m_posFreqs[prev.first]);
+				logProb += std::log(cur.second / (double) m_wordFreqs[word]);
+
+				// update
+				if (std::exp(logProb) >= scores[i][cur.first].first)
+					scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first);
+			}
+		}
+	}
+}
+
 void Tagger::viterbiTest(std::ifstream &input_file)
 {
-	std::cout << "START: " << m_posFreqs[START_SYMBOL] << std::endl;
 	// get sentence one by one
 	// sentence contains (word, ans) pair
 	std::vector<std::pair<std::string, std::string>> sentence;
 	
 	while((sentence = nextSenetence(input_file)).size() != 0) {
-
-		const int sequenceLength = sentence.size() + 2;
-
-		// current POS -> (prob, previous POS)
-		std::vector<ScoreList> scores(sequenceLength);
-		
-		// start state
-		// scores[0].emplace(START_SYMBOL, std::make_pair(1.0, nullptr));
-		scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
-		
-		// end state
+		sentence.insert(sentence.begin(), std::make_pair(START_SYMBOL, START_SYMBOL));
 		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
-		for (int i = 1; i < sequenceLength; i++) {
-			std::string word = sentence.at(i - 1).first;
+		
+		// current POS -> (prob, previous POS)
+		std::vector<ScoreList> scores(sentence.size());
+		
+		forwardPropagate(sentence, scores);
+		
+		// word, pos
+		std::vector<std::string> chk;
+		std::string cur_pos = END_SYMBOL;
 
-			for (auto prev : scores[i - 1]) {
-				// prev.first: POS, prev.second: <prob, previous POS>
-				std::cout << "pf[" << i << "]: " << prev.first << ", " << prev.second.first << std::endl;
+		// back trace
+		for (int i = sentence.size() - 1; i >= 0; i--) {
+			chk.push_back(scores[i][cur_pos].second);
+			cur_pos = scores[i][cur_pos].second;
+		}
 
-				for (auto cur : m_wordPosFreqs[word]) {
-					std::cout << "cf[" << i << "]: " 
-						<< cur.first << ", " << cur.second << std::endl;
-					// cur.first: POS, cur.second: freq
-					double logProb = 0.0;
-					logProb += std::log(prev.second.first);
-					std::cout << "m_succFreqs: " << m_succFreqs[prev.first][cur.first]
-						<< ", posFreq: " << m_posFreqs[prev.first] << std::endl;
-					logProb += std::log(m_succFreqs[prev.first][cur.first] / (double) m_posFreqs[prev.first]);
-					//// logProb += std::log(m_wordPosFreqs[word][cur.first] / (double) m_wordFreqs[word]);
-					std::cout << "cur.second: " << cur.second << ", wordFreq: " << m_wordFreqs[word] << std::endl;
-					logProb += std::log(cur.second / (double) m_wordFreqs[word]);
-
-					// update
-					std::cout << "exp: " << std::exp(logProb) << std::endl;
-					// std::cout << "score: " << scores[i][cur.first].first << std::endl;
-					if (std::exp(logProb) > scores[i][cur.first].first) {
-						scores[i].emplace(cur.first, std::make_pair(std::exp(logProb), prev.first));
-					}
-				}
-			}
-			
-			// word, pos
-			std::vector<std::pair<std::string, std::string>> chk;
-			std::string cur_pos = END_SYMBOL;
-			// back trace
-			for (int i = sequenceLength - 1; i >= 0; i--) {
-				chk.emplace_back(sentence[i].first, scores[i][cur_pos].second);
-				cur_pos = scores[i][cur_pos].second;
-			}
-			
-			// test
-			// std::cout << "---" << std::endl;
-			// for (int i = 0; i < sentence.size() - 1; i++) {
-			// 	std::cout << "ans: " << sentence.at(i).first << ", " << sentence.at(i).second << std::endl; 
-			// 	std::cout << "chk: " << chk.at(sentence.size() - i).first 
-			// 						<< ", " << chk.at(sentence.size() - i).second << std::endl; 
-			// }
+		// test
+		// std::cout << "---" << std::endl;
+		for (int i = 1; i < sentence.size() - 1; i++) {
+			const std::string word = sentence.at(i).first;
+			const std::string ansPos = sentence.at(i).second;
+			const std::string tesPos = chk.at(sentence.size() - i - 2);
+			if (ansPos != tesPos)
+				std::cerr << "\x1b[31m";
+			std::cerr << word << " (ANS: " 
+						<< ansPos << ", TES: " 
+						<< tesPos << ") ";
+			if (ansPos != tesPos)
+				std::cerr << "\x1b[39m";
 		}
 	}
+	std::cout << std::endl;
 }
 
 void Tagger::test(const std::string &testing)
