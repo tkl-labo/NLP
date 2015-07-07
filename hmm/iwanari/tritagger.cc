@@ -118,12 +118,9 @@ void TriTagger::forwardPropagate(
 		// prevprev.first: POS, prevprev.second: <prob, previous POS>
 		for (auto prevprev : scores[i - 2]) {
 			
-			if (m_triSuccFreqs.find(prevprev.first) == m_triSuccFreqs.end())
-				continue;
-			
 			// prev.first: POS, prev.second: <prob, previous POS>
 			for (auto prev : m_triSuccFreqs[prevprev.first]) {
-				// NOTE: using wordPosFreq may be faster than using m_triSuccFreqs
+				// NOTE: using wordPosFreq may be faster than using triSuccFreqs
 				// because of the number of combination
 				// auto list = m_succFreqs[prev.first];
 				auto list = m_wordPosFreqs[word].size() != 0 ?

@@ -1,11 +1,9 @@
 # MEMO
 
 trigram
-correct: 93.8326%
-tested!
-Elapsed (test): 693954 [ms]
+correct: 93.5707%
+Elapsed (test): 737987 [ms]
 
 bigram
 correct: 93.8514%
-tested!
 Elapsed (test): 1053 [ms]

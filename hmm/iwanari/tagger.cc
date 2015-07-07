@@ -180,7 +180,7 @@ void Tagger::forwardPropagate(
 		// prev.first: POS, prev.second: <prob, previous POS>
 		for (auto prev : scores[i - 1]) {
 			
-			// NOTE: using wordPosFreq may be faster than using m_succFreqs
+			// NOTE: using wordPosFreq may be faster than using succFreqs
 			// because of the number of combination
 			// auto list = m_succFreqs[prev.first];
 			auto list = m_wordPosFreqs[word].size() != 0 ? 
@@ -251,7 +251,6 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 				<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
 		}
 	}
-	// 
 	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }
