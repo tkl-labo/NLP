@@ -49,8 +49,9 @@ public:
 	inline double getWordPosProb(const std::string word, const std::string pos) {
 		// NOTE: a speed up way
 		if (m_wordFreqs.find(word) != m_wordFreqs.end())
-			return (m_wordPosFreqs[word][pos] + 1)
-				/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
+			if (m_wordPosFreqs[word].find(pos) != m_wordPosFreqs[word].end())
+				return (m_wordPosFreqs[word][pos] + 1)
+					/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
 		// UNKNOWN_WORD
 		return 1 / (double) (m_wordFreqs.size() + 1);
 	}

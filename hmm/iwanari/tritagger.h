@@ -25,14 +25,16 @@ public:
 	virtual void train(const std::string &training);
 	virtual void showSuccProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1, const std::string pos2) {
+		// interpolation
+		// double lambda0 = 0.7, lambda1 = 0.25, lambda3 = 0.05;
 		// NOTE: a speed up way
-		// TODO: interpolation 
-		if (m_triSuccFreqs.find(pos0) != m_triSuccFreqs.end() 
-				&& m_triSuccFreqs[pos0].find(pos1) != m_triSuccFreqs[pos0].end())
-			return (m_triSuccFreqs[pos0][pos1][pos2] + 1) 
-					/ (double) (m_triPosFreqs[pos0][pos1] + m_triPosFreqs.size() + 1);
+		if (m_triPosFreqs.find(pos0) != m_triPosFreqs.end())
+			if (m_triPosFreqs[pos0].find(pos1) != m_triPosFreqs[pos0].end())
+				if (m_triSuccFreqs[pos0][pos1].find(pos2) != m_triSuccFreqs[pos0][pos1].end())
+						return (m_triSuccFreqs[pos0][pos1][pos2] + 1) 
+								/ (double) (m_triPosFreqs[pos0][pos1] + m_triPosFreqs.size() + 1);
 		// UNKNOWN_SEQUENCE
-		return 1 / (double) (m_triPosFreqs[pos0][pos1] + m_triPosFreqs.size() + 1);
+		return 1 / (double) (m_triPosFreqs.size() + 1);
 	}
 
 protected:

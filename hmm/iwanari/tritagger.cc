@@ -37,11 +37,13 @@ void TriTagger::train(const std::string &training)
 			= splitString(line, DELIME_IN_CORPUS);
 		
 		// count the frequency of POS
+		m_posFreqs[cur_pos.second]++;
 		m_triPosFreqs[cur_pos.first][cur_pos.second]++;
 		
 		// the end of sentence
 		if (rows.size() == 1) {
 			// added end symbol
+			m_succFreqs[cur_pos.second][END_SYMBOL]++;
 			m_triSuccFreqs[cur_pos.first][cur_pos.second][END_SYMBOL]++;
 			m_wordPosFreqs[END_SYMBOL][END_SYMBOL]++;
 			m_wordFreqs[END_SYMBOL]++;
@@ -50,6 +52,7 @@ void TriTagger::train(const std::string &training)
 			cur_pos = std::make_pair(START_SYMBOL, START_SYMBOL);
 		}
 		else {
+			m_succFreqs[cur_pos.second][rows[1]]++;
 			m_triSuccFreqs[cur_pos.first][cur_pos.second][rows[1]]++;
 			cur_pos = std::make_pair(cur_pos.second, rows[1]);
 			
