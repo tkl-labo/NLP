@@ -134,7 +134,7 @@ void Tagger::forwardPropagate(
 				logProb += std::log(prev.second.first);
 				logProb += std::log(m_succFreqs[prev.first][cur.first] / (double) m_posFreqs[prev.first]);
 				logProb += std::log(cur.second / (double) m_wordFreqs[word]);
-
+				
 				// update
 				if (std::exp(logProb) >= scores[i][cur.first].first)
 					scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first);
@@ -149,6 +149,8 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 	// sentence contains (word, ans) pair
 	std::vector<std::pair<std::string, std::string>> sentence;
 	
+	long counter = 0;
+	long incorrect = 0;
 	while((sentence = nextSenetence(input_file)).size() != 0) {
 		sentence.insert(sentence.begin(), std::make_pair(START_SYMBOL, START_SYMBOL));
 		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
@@ -169,21 +171,26 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		}
 
 		// test
-		// std::cout << "---" << std::endl;
 		for (int i = 1; i < sentence.size() - 1; i++) {
 			const std::string word = sentence.at(i).first;
 			const std::string ansPos = sentence.at(i).second;
 			const std::string tesPos = chk.at(sentence.size() - i - 2);
-			if (ansPos != tesPos)
+			if (ansPos != tesPos) {
+				incorrect++;
 				std::cerr << "\x1b[31m";
-			std::cerr << word << " (ANS: " 
+				std::cerr << word << " (ANS: " 
+							<< ansPos << ", TES: " 
+							<< tesPos << ") ";
+			}
+			std::cout << word << " (ANS: " 
 						<< ansPos << ", TES: " 
 						<< tesPos << ") ";
-			if (ansPos != tesPos)
-				std::cerr << "\x1b[39m";
+			std::cout << "\x1b[39m";
+			counter++;
 		}
 	}
 	std::cout << std::endl;
+	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }
 
 void Tagger::test(const std::string &testing)
