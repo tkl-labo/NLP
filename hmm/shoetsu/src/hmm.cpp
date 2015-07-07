@@ -63,6 +63,7 @@ void ShowDetail(const vector<string>& sentence, const vector<HmmKey>& pos_answer
 HmmNode::HmmNode(const HmmKey key) : m_key(key){
   m_transitions_count = 0;
   m_emissions_count = 0;
+  m_rareword_count = 0;
   m_transitions = make_unique<Transitions>();
   m_emissions = make_unique<Emissions>();
   m_femissions = make_unique<FeatureEmissions>();
@@ -79,8 +80,9 @@ void HmmNode::TransitionLearning(const HmmKey &key){
 }
 
 
-void HmmNode::FeatureEmissionLearning(F_TYPE type){
-  (*m_femissions)[type]++;
+void HmmNode::FeatureEmissionLearning(F_TYPE type, const int count){
+  (*m_femissions)[type]+= count;
+  m_rareword_count += count;
 }
 
 
@@ -88,7 +90,7 @@ void HmmNode::FeatureEmissionLearning(F_TYPE type){
 //         Hmm
 //========================
 
-Hmm::Hmm(){
+Hmm::Hmm(const int th) : RareWordThreshold(th){
   m_nodes = make_unique<HmmNodes>();
   m_vocablary = make_unique<Vocablary>();
   CreateNode(START_NODE_KEY);
@@ -132,18 +134,33 @@ void Hmm::Learn(const string &filename){
       node->EmissionLearning(strv[0]);
       AddToVocablary(strv[0]);
 
-      // 訓練時に使った単語の特徴についても記録
-      auto f_type = ClassifyUnknown(strv[0]);
-      node->FeatureEmissionLearning(f_type);
-
     }else{
       node = GetNode(START_NODE_KEY);
     }
   }
 
+
+  for(auto node_map = m_nodes->begin(); node_map != m_nodes->end(); node_map++){
+    HmmNodePtr node = node_map->second;
+    const Emissions & emissions = node->GetEmissions();
+    for(auto emission = emissions.begin(); emission != emissions.end(); emission++){
+      // 訓練時に使った単語の特徴についても記録
+
+      int count = emission->second;
+      
+      //頻度が一定以下の単語のみ未知語の特徴からの推定に用いる 
+      if (count <= RareWordThreshold){
+	const string& word = emission->first;
+	auto f_type = ClassifyUnknown(word);
+	node->FeatureEmissionLearning(f_type, count);
+      }
+      
+    }
+  }
+      
   // node = GetNode("NN");
   // for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
-  //   cout << *it << " " << node->GetFeatureEmissionProb((F_TYPE)(*it), GetVocablarySize()) << endl;
+  //   cout << *it << " " << node->GetFeatureEmissionProb((F_TYPE)(*it)) << endl;
   // }
   // exit(1);
 }

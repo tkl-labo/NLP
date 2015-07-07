@@ -46,6 +46,8 @@ class HmmNode{
   int m_transitions_count;
   int m_emissions_count;
 
+  int m_rareword_count;
+
   const HmmKey m_key;
  public:
   HmmNode(const HmmKey key);
@@ -54,11 +56,13 @@ class HmmNode{
   HmmKey GetKey() { return m_key;};
   void EmissionLearning(const std::string &);
   void TransitionLearning(const HmmKey &);
-  void FeatureEmissionLearning(const F_TYPE);
+  void FeatureEmissionLearning(const F_TYPE, const int);
 
   // 単語の特徴量の記録
   inline double GetFeatureEmissionProb(F_TYPE type){
-    return (double)((*m_femissions)[type]) / (double)(m_emissions_count);
+    //std::cout << (*m_femissions)[type] << " " << (double)(m_rareword_count) <<std::endl;
+    //return (double)((*m_femissions)[type]);
+    return (double)((*m_femissions)[type] + 1) / (double)(m_rareword_count + F_TYPES.size());
   }
 
   //ラプラススムージングを使用
@@ -84,7 +88,8 @@ typedef std::unordered_set<HmmKey> Vocablary;
 
 
 class Hmm{
- protected:
+ protected:					
+  const int RareWordThreshold;
   std::unique_ptr<HmmNodes> m_nodes;
   std::unique_ptr<Vocablary> m_vocablary;
   inline void AddToVocablary(const HmmKey &key){
@@ -99,8 +104,8 @@ class Hmm{
     if (m_vocablary->find(word) != m_vocablary->end()){
       return node->GetEmissionProb(word, GetVocablarySize());
     }else{
-      return node->GetEmissionProb(word, GetVocablarySize());
-      //return node->GetFeatureEmissionProb( ClassifyUnknown(word) );
+      //return node->GetEmissionProb(word, GetVocablarySize());
+      return node->GetFeatureEmissionProb( ClassifyUnknown(word) );
     }
 
   }
@@ -120,7 +125,7 @@ class Hmm{
   std::unordered_map<std::string, std::function<bool(const std::string&)>> Classifiers;
   
  public:
-  Hmm();
+  Hmm(const int th);
   virtual ~Hmm() = default;
  
   void Show(HmmNodePtr node, const std::string &type);
