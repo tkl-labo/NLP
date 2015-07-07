@@ -9,9 +9,6 @@ namespace nlp
 typedef std::unordered_map<std::string,
 			std::unordered_map<std::string, 
 				std::unordered_map<std::string, long>>> TriFreqList;
-typedef std::unordered_map<std::string, 
-				std::pair<double, 
-					std::pair<std::string, std::string>>> TriScoreList;
 
 class TriTagger : public Tagger
 {
@@ -45,7 +42,7 @@ protected:
 	virtual void viterbiTest(std::ifstream &input_file);
 	virtual void forwardPropagate(
 		std::vector<std::pair<std::string, std::string>> &sentence,
-		std::vector<TriScoreList> &scores);
+		std::vector<ScoreList> &scores);
 	std::vector<std::pair<std::string, std::string>>
 		nextSenetence(std::ifstream &stream);
 };

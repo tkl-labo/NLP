@@ -125,33 +125,37 @@ void TriTagger::forwardTest(std::ifstream &input_file)
 
 void TriTagger::forwardPropagate(
 	std::vector<std::pair<std::string, std::string>> &sentence,
-	std::vector<TriScoreList> &scores)
+	std::vector<ScoreList> &scores)
 {
 	
 	// start state
-	// scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
-	for (int i = 1; i < sentence.size(); i++) {
+	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
+	scores[1].emplace(START_SYMBOL, std::make_pair(1.0, START_SYMBOL));
+	for (int i = 2; i < sentence.size(); i++) {
 		std::string word = sentence.at(i).first;
 		
-		// prev.first: POS, prev.second: <prob, previous POS>
-		for (auto prev : scores[i - 1]) {
+		// prevprev.first: POS, prevprev.second: <prob, previous POS>
+		for (auto prevprev : scores[i - 2]) {
 			
-			// NOTE: using wordPosFreq may be faster than using m_succFreqs
-			// because of the number of combination
-			// auto list = m_succFreqs[prev.first];
-			/* auto list = m_wordPosFreqs[word].size() != 0 ?  */
-			/* 	m_wordPosFreqs[word] : m_succFreqs[prev.first]; */
-			/* // cur.first: POS, cur.second: freq */
-			/* for (auto cur : list) { */
-			/* 	double logProb = 0.0; */
-			/* 	logProb += std::log(prev.second.first); */
-			/* 	logProb += std::log(getSuccProb(prev.first, cur.first)); */
-			/* 	logProb += std::log(getWordPosProb(word, cur.first)); */
-			/* 	 */
-			/* 	// update */
-			/* 	if (std::exp(logProb) >= scores[i][cur.first].first) */
-			/* 		scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first); */
-			/* } */
+			// prev.first: POS, prev.second: <prob, previous POS>
+			for (auto prev : m_triSuccFreqs[prevprev.first]) {
+				// NOTE: using wordPosFreq may be faster than using m_triSuccFreqs
+				// because of the number of combination
+				// auto list = m_succFreqs[prev.first];
+				auto list = m_wordPosFreqs[word].size() != 0 ?
+					m_wordPosFreqs[word] : m_triSuccFreqs[prevprev.first][prev.first];
+				// cur.first: POS, cur.second: freq
+				for (auto cur : list) {
+					double logProb = 0.0;
+					logProb += std::log(scores[i - 1][prev.first].first);
+					logProb += std::log(getSuccProb(prevprev.first, prev.first, cur.first));
+					logProb += std::log(getWordPosProb(word, cur.first));
+					
+					// update
+					if (std::exp(logProb) >= scores[i][cur.first].first)
+						scores[i][cur.first] = std::make_pair(std::exp(logProb), prev.first);
+				}
+			}
 		}
 	}
 }
@@ -166,10 +170,11 @@ void TriTagger::viterbiTest(std::ifstream &input_file)
 	long incorrect = 0;
 	while((sentence = nextSenetence(input_file)).size() != 0) {
 		sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
+		sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
 		sentence.emplace_back(END_SYMBOL, END_SYMBOL);
 		
 		// current POS -> (prob, previous POS)
-		std::vector<TriScoreList> scores(sentence.size());
+		std::vector<ScoreList> scores(sentence.size());
 		
 		forwardPropagate(sentence, scores);
 		
@@ -242,7 +247,7 @@ void TriTagger::test(const std::string &testing)
 // ===== for debug =====
 void TriTagger::showSuccProbs()
 {
-	for (auto f : m_succFreqs) {
+	for (auto f : m_triSuccFreqs) {
 		for (auto s : f.second) {
 			for (auto t : f.second) {
 				std::cout << "Prob("
