@@ -23,9 +23,7 @@ public:
 	virtual ~TriTagger() {};
 	virtual void init();
 	virtual void train(const std::string &training);
-	virtual void test(const std::string &testing);
 	virtual void showSuccProbs();
-	virtual void showWordPosProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1, const std::string pos2) {
 		// NOTE: a speed up way
 		// TODO: interpolation 

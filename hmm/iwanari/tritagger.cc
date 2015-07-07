@@ -28,8 +28,8 @@ void TriTagger::train(const std::string &training)
 	}
 
 	std::string line;
-	std::string cur_pos0 = START_SYMBOL;
-	std::string cur_pos1 = START_SYMBOL;
+	std::pair<std::string, std::string> cur_pos
+		= {START_SYMBOL, START_SYMBOL};
 
 	while(std::getline(input_file, line)) {
 		// rows[0]: word, rows[1]: POS
@@ -37,23 +37,21 @@ void TriTagger::train(const std::string &training)
 			= splitString(line, DELIME_IN_CORPUS);
 		
 		// count the frequency of POS
-		m_triPosFreqs[cur_pos0][cur_pos1]++;
+		m_triPosFreqs[cur_pos.first][cur_pos.second]++;
 		
 		// the end of sentence
 		if (rows.size() == 1) {
 			// added end symbol
-			m_triSuccFreqs[cur_pos0][cur_pos1][END_SYMBOL]++;
+			m_triSuccFreqs[cur_pos.first][cur_pos.second][END_SYMBOL]++;
 			m_wordPosFreqs[END_SYMBOL][END_SYMBOL]++;
 			m_wordFreqs[END_SYMBOL]++;
 			
 			// init
-			cur_pos0 = START_SYMBOL;
-			cur_pos1 = START_SYMBOL;
+			cur_pos = std::make_pair(START_SYMBOL, START_SYMBOL);
 		}
 		else {
-			m_triSuccFreqs[cur_pos0][cur_pos1][rows[1]]++;
-			cur_pos0 = cur_pos1;
-			cur_pos1 = rows[1];
+			m_triSuccFreqs[cur_pos.first][cur_pos.second][rows[1]]++;
+			cur_pos = std::make_pair(cur_pos.second, rows[1]);
 			
 			// count the frequency of (word, pos) pair
 			m_wordPosFreqs[rows[0]][rows[1]]++;
@@ -68,8 +66,8 @@ void TriTagger::train(const std::string &training)
 void TriTagger::forwardTest(std::ifstream &input_file)
 {
 	std::string line;
-	std::string cur_pos0 = START_SYMBOL;
-	std::string cur_pos1 = START_SYMBOL;
+	std::pair<std::string, std::string> cur_pos
+		= {START_SYMBOL, START_SYMBOL};
 	double logLikelihood = 0.0;
 	
 	while(std::getline(input_file, line)) {
@@ -80,7 +78,7 @@ void TriTagger::forwardTest(std::ifstream &input_file)
 		// the end of sentence
 		if (rows.size() == 1) {
 			// TODO: is this necessary?
-			logLikelihood += std::log(getSuccProb(cur_pos0, cur_pos1, END_SYMBOL));
+			logLikelihood += std::log(getSuccProb(cur_pos.first, cur_pos.second, END_SYMBOL));
 			
 			// calculate likelihood
 			std::cout << std::endl;
@@ -88,17 +86,15 @@ void TriTagger::forwardTest(std::ifstream &input_file)
 			
 			// init
 			std::cout << std::endl << std::endl;
-			cur_pos0 = START_SYMBOL;
-			cur_pos1 = START_SYMBOL;
+			cur_pos = std::make_pair(START_SYMBOL, START_SYMBOL);
 			logLikelihood = 0.0;
 		}
 		else {
 			// calculate likelihood in log
-			logLikelihood += std::log(getSuccProb(cur_pos0, cur_pos1, rows[1]));
+			logLikelihood += std::log(getSuccProb(cur_pos.first, cur_pos.second, rows[1]));
 			logLikelihood += std::log(getWordPosProb(rows[0], rows[1]));
 			std::cout << rows[0] << " ";
-			cur_pos0 = cur_pos1;
-			cur_pos1 = rows[1];
+			cur_pos = std::make_pair(cur_pos.second, rows[1]);
 		}
 	}
 }
@@ -148,33 +144,6 @@ void TriTagger::forwardPropagate(
 	}
 }
 
-
-void TriTagger::test(const std::string &testing)
-{
-	std::cout << "testing..." << std::endl;
-	std::ifstream input_file(testing);
-	if (!input_file) {
-		std::cerr << "ERROR: No such testing file (" 
-			<< testing << ")" << std::endl;
-		std::exit(EXIT_FAILURE);
-	}
-	
-	switch (m_mode) {
-		case 0:
-			forwardTest(input_file);
-			break;
-		case 1:
-			viterbiTest(input_file);
-			break;
-		default:
-			forwardTest(input_file);
-			break;
-	}
-	
-	input_file.close();
-	std::cout << "tested!" << std::endl;
-}
-
 // ===== for debug =====
 void TriTagger::showSuccProbs()
 {
@@ -188,20 +157,6 @@ void TriTagger::showSuccProbs()
 					<< getSuccProb(f.first, s.first, t.first)
 					<< std::endl;
 			}
-		}
-		std::cout << "=======" << std::endl << std::endl;
-	}
-}
-
-void TriTagger::showWordPosProbs()
-{
-	for (auto f : m_wordPosFreqs) {
-		for (auto s : f.second) {
-			std::cout << "Prob(" 
-				<< s.first << " | "
-				<< f.first << ") = " 
-				<< getWordPosProb(f.first, s.first)
-				<< std::endl;
 		}
 		std::cout << "=======" << std::endl << std::endl;
 	}
