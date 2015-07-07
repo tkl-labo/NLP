@@ -186,7 +186,8 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 			if (ansPos != tesPos) {
 				incorrect++;
 				std::cout << "\x1b[31m";
-				wrongList[std::make_pair(ansPos, tesPos)]++;
+				if (m_debug)
+					wrongList[std::make_pair(ansPos, tesPos)]++;
 			}
 			std::cout << word << " (ANS: " 
 						<< ansPos << ", TES: " 
@@ -196,10 +197,13 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		}
 	}
 	std::cout << std::endl;
-	for (auto wrong : wrongList) {
-		std::cout << "count (ANS: " << wrong.first.first 
-			<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
+	if (m_debug) {
+		for (auto wrong : wrongList) {
+			std::cout << "count (ANS: " << wrong.first.first 
+				<< " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
+		}
 	}
+	
 	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }

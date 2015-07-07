@@ -16,13 +16,15 @@ typedef std::unordered_map<std::pair<std::string, std::string>, long> WrongList;
 class Tagger
 {
 	int m_mode;
+	int m_debug;
 	PairFreqList m_succFreqs;	// count(pos_1 | pos_0)
 	PairFreqList m_wordPosFreqs;	// count(word | pos)
 	std::unordered_map<std::string, long> m_posFreqs;	// count(pos_0)
 	std::unordered_map<std::string, long> m_wordFreqs;	// count(word)
 
 public:
-	Tagger(const int mode) : m_mode(mode) {};
+	Tagger(const int mode, const bool debug = false)
+		: m_mode(mode), m_debug(debug) {};
 	virtual ~Tagger() {};
 	void init();
 	void train(const std::string &training);

@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	if (argc < 4) {
 		std::cout << "Usage: " << argv[0] 
-			<< " training_data testing_data [Forward:0, Viterbi:1]" 
+			<< " training_data testing_data (Forward:0 | Viterbi:1) [debug = 0]" 
 			<< std::endl;
 		return 0;
 	}
@@ -17,7 +17,8 @@ int main(int argc, char** argv)
 	setlocale(LC_ALL, "ja_JP.UTF-8");
 
 	util::Stopwatch<std::chrono::milliseconds> sw;
-	Tagger tagger(std::atoi(argv[3]));
+	Tagger tagger(std::atoi(argv[3]), 
+				(argc > 4) && std::atoi(argv[4]) != 0);
 	tagger.train(argv[1]);
 	sw.stop();
 	std::cout << "Elapsed (training): " 
