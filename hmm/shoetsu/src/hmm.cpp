@@ -141,11 +141,11 @@ void Hmm::Learn(const string &filename){
     }
   }
 
-  node = GetNode(START_NODE_KEY);
-  for(int it = F_CAP; it != F_OTHERS; it++){
-    cout << it << " " << node->GetFeatureEmissionProb((F_TYPE)it, GetVocablarySize()) << endl;
-  }
-  exit(1);
+  // node = GetNode("NN");
+  // for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
+  //   cout << *it << " " << node->GetFeatureEmissionProb((F_TYPE)(*it), GetVocablarySize()) << endl;
+  // }
+  // exit(1);
 }
 
 
@@ -175,7 +175,7 @@ vector<HmmKey> Hmm::Viterbi(const vector<string> &o){
   unordered_map<HmmKey, vector<HmmKey>> route_next;
   unordered_map<HmmKey, double> prob_prev;
   unordered_map<HmmKey, double> prob_next;
- 
+
 
   // from start node
   HmmNodePtr start_node = GetOrCreateNode(START_NODE_KEY);
@@ -251,7 +251,7 @@ double Hmm::Test(const string & filename){
   int right_known_word_count = 0;
 
   vector<bool> unknown_flags;
-  int unknown_word_count =0;
+  int unknown_word_count = 0;
 
   while(getline(ifs,line)){
     auto strv = split(line);
@@ -315,16 +315,16 @@ double Hmm::Test(const string & filename){
 }
 
 F_TYPE Hmm::ClassifyUnknown(const string &str){
-  for(int type = F_CAP; type != F_OTHERS; type++){
-    if (Classifiers[type] == NULL){
+  for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
+    if (Classifiers[*it] == NULL){
       continue; 
     }
     
-    if (Classifiers[type](str)){
-      return (F_TYPE)type; 
+    if (Classifiers[*it](str)){
+      return (F_TYPE)(*it); 
     }
   }
-  return F_OTHERS;
+  return "F_OTHERS";
 }
 
 void Hmm::SetupClassifiers(){
@@ -353,7 +353,7 @@ void Hmm::SetupClassifiers(){
   // 未知語に対する分類
   // ここでは各単語が一意に属するように分類する
 
-  Classifiers[F_CAP] = [&](const string& str){
+  Classifiers["F_CAP"] = [&](const string& str){
     assert(str.size() > 0);
     if(str[0] >= 'A' && str[0] <= 'Z'){
       return true;
@@ -361,7 +361,7 @@ void Hmm::SetupClassifiers(){
     return false;
   };
 
-  Classifiers[F_CD] = [&](const string& str){
+  Classifiers["F_CD"] = [&](const string& str){
     int n = str.size();
     assert(str.size() > 0);
     
@@ -371,55 +371,55 @@ void Hmm::SetupClassifiers(){
     return false;
   };
 
-  Classifiers[F_END_ADJ] = [&](const string& str){
+  Classifiers["F_END_ADJ"] = [&](const string& str){
     const vector<string> tokens = {
       "less", "ible", "able", "ful", "ous", "al", "an"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_END_NOUN] = [&](const string& str){
+  Classifiers["F_END_NOUN"] = [&](const string& str){
     const vector<string> tokens = {
       "eer", "ess", "ion", "age", "ty"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_END_ED] = [&](const string& str){
+  Classifiers["F_END_ED"] = [&](const string& str){
     const vector<string> tokens = {
       "ed"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_END_ER] = [&](const string& str){
+  Classifiers["F_END_ER"] = [&](const string& str){
     const vector<string> tokens = {
       "er"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_END_EST] = [&](const string& str){
+  Classifiers["F_END_EST"] = [&](const string& str){
     const vector<string> tokens = {
       "est"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_END_ING] = [&](const string& str){
+  Classifiers["F_END_ING"] = [&](const string& str){
     const vector<string> tokens = {
       "ing"
     };
     return matchSuffix(str, tokens);
   };
-  Classifiers[F_END_S] = [&](const string& str){
+  Classifiers["F_END_S"] = [&](const string& str){
     const vector<string> tokens = {
       "s"
     };
     return matchSuffix(str, tokens);
   };
 
-  Classifiers[F_VERB] = [&](const string& str){
+  Classifiers["F_VERB"] = [&](const string& str){
     const vector<string> tokens = {
       "ate"
     };

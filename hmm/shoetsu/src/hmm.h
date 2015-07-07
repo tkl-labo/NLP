@@ -10,11 +10,11 @@
 #include <unordered_set>
 #include <functional>
 
-typedef std::string F_Key;
-const std::vector<std::string> F_type = {
+// 未知語のグループ
+typedef std::string F_TYPE;
+const std::vector<F_TYPE> F_TYPES = {
   "F_CAP",
   "F_CD",
-  "F_DT",
   "F_END_ADJ",
   "F_END_NOUN",
   "F_END_ED",
@@ -26,22 +26,6 @@ const std::vector<std::string> F_type = {
   "F_OTHERS"
 };
 
-/* enum F_TYPE{ */
-/*   F_CAP, */
-/*   F_CD, */
-/*   F_DT, */
-/*   F_END_ADJ, */
-/*   F_END_NOUN, */
-/*   F_END_ED, */
-/*   F_END_ER, */
-/*   F_END_EST, */
-/*   F_END_ING, */
-/*   F_END_S, */
-/*   F_VERB, */
-/*   F_OTHERS */
-/* }; */
-
-
 const std::string START_NODE_KEY = "<S>";
 const std::vector<std::string> EXCEPTION_KEYS = {",", "."};
 const std::string END_LINE = "";
@@ -50,7 +34,7 @@ const std::string END_LINE = "";
 typedef std::string HmmKey;
 typedef std::unordered_map<HmmKey, int> Transitions;
 typedef std::unordered_map<std::string, int> Emissions;
-typedef std::unordered_map<int, int> FeatureEmissions;
+typedef std::unordered_map<F_TYPE, int> FeatureEmissions;
 
 
 #include <iostream>
@@ -70,11 +54,10 @@ class HmmNode{
   HmmKey GetKey() { return m_key;};
   void EmissionLearning(const std::string &);
   void TransitionLearning(const HmmKey &);
-  void FeatureEmissionLearning(F_TYPE);
+  void FeatureEmissionLearning(const F_TYPE);
 
   // 単語の特徴量の記録
-  inline double GetFeatureEmissionProb(F_TYPE type, const int n_vocab){
-    return (*m_femissions)[type];
+  inline double GetFeatureEmissionProb(F_TYPE type){
     return (double)((*m_femissions)[type]) / (double)(m_emissions_count);
   }
 
@@ -110,8 +93,16 @@ class Hmm{
   inline int GetVocablarySize(){
    return m_vocablary->size();
   }
+
   inline double GetEmissionProb(const std::string & word, const HmmNodePtr node){
-    return node->GetEmissionProb(word, GetVocablarySize());
+
+    if (m_vocablary->find(word) != m_vocablary->end()){
+      return node->GetEmissionProb(word, GetVocablarySize());
+    }else{
+      return node->GetEmissionProb(word, GetVocablarySize());
+      //return node->GetFeatureEmissionProb( ClassifyUnknown(word) );
+    }
+
   }
   inline double GetTransitionProb(const std::string & word, const HmmNodePtr node){
     return node->GetTransitionProb(word);
@@ -126,7 +117,7 @@ class Hmm{
 
   void SetupClassifiers();
   F_TYPE ClassifyUnknown(const std::string &);
-  std::unordered_map<int, std::function<bool(const std::string&)>> Classifiers;
+  std::unordered_map<std::string, std::function<bool(const std::string&)>> Classifiers;
   
  public:
   Hmm();
