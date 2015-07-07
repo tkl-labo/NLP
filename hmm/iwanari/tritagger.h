@@ -24,12 +24,11 @@ public:
 	TriTagger(const int mode, const bool debug = false)
 		: Tagger(mode, debug) {};
 	virtual ~TriTagger() {};
-	void init();
-	void train(const std::string &training);
-	void test(const std::string &testing);
-	void showSuccProbs();
-	void showWordPosProbs();
-	void showAllProbs();
+	virtual void init();
+	virtual void train(const std::string &training);
+	virtual void test(const std::string &testing);
+	virtual void showSuccProbs();
+	virtual void showWordPosProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1, const std::string pos2) {
 		// NOTE: a speed up way
 		// TODO: interpolation 
@@ -42,9 +41,9 @@ public:
 	}
 
 protected:
-	void forwardTest(std::ifstream &input_file);
-	void viterbiTest(std::ifstream &input_file);
-	void forwardPropagate(
+	virtual void forwardTest(std::ifstream &input_file);
+	virtual void viterbiTest(std::ifstream &input_file);
+	virtual void forwardPropagate(
 		std::vector<std::pair<std::string, std::string>> &sentence,
 		std::vector<TriScoreList> &scores);
 	std::vector<std::pair<std::string, std::string>>

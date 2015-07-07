@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <cmath>
 #include "nlp.h"
-#include "tri_tagger.h"
+#include "tritagger.h"
 using namespace nlp;
 
 void TriTagger::init()
@@ -108,8 +108,8 @@ void TriTagger::forwardTest(std::ifstream &input_file)
 			
 			// init
 			std::cout << std::endl << std::endl;
-			std::string cur_pos0 = START_SYMBOL;
-			std::string cur_pos1 = START_SYMBOL;
+			cur_pos0 = START_SYMBOL;
+			cur_pos1 = START_SYMBOL;
 			logLikelihood = 0.0;
 		}
 		else {
@@ -269,15 +269,6 @@ void TriTagger::showWordPosProbs()
 		}
 		std::cout << "=======" << std::endl << std::endl;
 	}
-}
-
-void TriTagger::showAllProbs()
-{
-	showSuccProbs();
-	
-	std::cout << "************" << std::endl << std::endl;
-	
-	showWordPosProbs();
 }
 // ===== /for debug =====
 

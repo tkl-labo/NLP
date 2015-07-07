@@ -38,11 +38,11 @@ public:
 		: m_mode(mode), m_debug(debug) {};
 	virtual ~Tagger() {};
 	void init();
-	void train(const std::string &training);
-	void test(const std::string &testing);
-	void showSuccProbs();
-	void showWordPosProbs();
-	void showAllProbs();
+	virtual void train(const std::string &training);
+	virtual void test(const std::string &testing);
+	virtual void showSuccProbs();
+	virtual void showWordPosProbs();
+	virtual void showAllProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1) {
 		return m_succFreqs[pos0][pos1] / (double) m_posFreqs[pos0];
 	}
@@ -62,9 +62,9 @@ protected:
          const std::string &delim);
     std::vector<std::string> splitString(const std::string &str,
                 const std::string &delim);
-	void forwardTest(std::ifstream &input_file);
-	void viterbiTest(std::ifstream &input_file);
-	void forwardPropagate(
+	virtual void forwardTest(std::ifstream &input_file);
+	virtual void viterbiTest(std::ifstream &input_file);
+	virtual void forwardPropagate(
 		std::vector<std::pair<std::string, std::string>> &sentence,
 		std::vector<ScoreList> &scores);
 	std::vector<std::pair<std::string, std::string>>
