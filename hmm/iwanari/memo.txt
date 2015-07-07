@@ -1,0 +1,20 @@
+# MEMO
+
+
+bigram
+correct: 93.8514%
+Elapsed (test): 1053 [ms]
+
+trigram
+correct: 93.5728%
+Elapsed (test): 226444 [ms]
+
+correct: 93.7839%
+Elapsed (test): 271036 [ms]
+
+correct: 93.748%
+Elapsed (test): 315274 [ms]
+
+pos base
+correct: 89.8664%
+Elapsed (test): 749645 [ms]

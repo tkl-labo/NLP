@@ -23,7 +23,6 @@ double cur_time(){
 //===========================
 
 
-
 wstring widen(const std::string &src) 
 {
 	wchar_t *wcs = new wchar_t[src.length() + 1];
