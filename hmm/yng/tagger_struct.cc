@@ -7,7 +7,7 @@
 #include <limits>
 #include <vector>
 #include <algorithm>
-#include <cedar.h>
+#include <cedarpp.h>
 
 typedef cedar::da <int> trie_t;
 
@@ -51,6 +51,7 @@ size_t compute_features (const sbag_t& word_bag,
   features.reserve (words.size ());
   static std::vector <int> feature;
   for (size_t i = 0; i < words.size (); ++i) {
+    static size_t fi_ = 0;
     feature.clear ();
     fi = 0;
     if (i >= 2 && words[i - 2] < static_cast <int> (n))
@@ -108,13 +109,15 @@ size_t compute_features (const sbag_t& word_bag,
     for (const char* p = word; *p && ! has_number; ++p)
       has_number |= *p >= '0' && *p <= '9';
     if (has_number) feature.push_back (fi); ++fi;
-    for (size_t from (0), pos (0); word[pos]; ) {
+    // prefix
+    for (size_t from (0), pos (0); pos <= 4 && word[pos]; ) {
       int n = prefix_trie.traverse (word, from, pos, pos + 1);
       if (n < 0) break;
       feature.push_back (fi + n);
     }
     fi += prefix_size;
     const char* end = word + std::strlen (word);
+    // suffix
     for (size_t from (0), pos (1); word + pos <= end; ++pos) {
       size_t pos_ = 0;
       int n = suffix_trie.traverse (end - pos, from, pos_ = 0, 1);
@@ -122,6 +125,7 @@ size_t compute_features (const sbag_t& word_bag,
       feature.push_back (fi + n);
     }
     fi += suffix_size;
+    assert (! fi_ || fi == fi_);
     features.push_back (feature);
   }
   return fi;
@@ -185,8 +189,8 @@ double viterbi (const std::vector <int>& words, std::vector <int>& tags_,
 }
 
 int main (int argc, char** argv) {
-  if (argc < 4) {
-    std::fprintf (stderr, "Usage: %s train model test niter\n", argv[0]);
+  if (argc < 5) {
+    std::fprintf (stderr, "Usage: %s train model test niter [-q]\n", argv[0]);
     std::exit (1);
   }
   //
@@ -351,6 +355,7 @@ int main (int argc, char** argv) {
     std::fprintf (stderr, "%.3fs\n", end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) * 1e-6);
   }
   { // test
+    bool quiet = argc > 5 && std::strcmp (argv[5], "-q") == 0;
     num_tokens = num_sents = 0;
     std::fprintf (stderr, "test: ");
     gettimeofday (&start, 0);
@@ -376,16 +381,21 @@ int main (int argc, char** argv) {
             { if (words[i] < static_cast <int> (n)) ++si; else ++ui; }
         }
 #ifndef NDEBUG
+        bool success = true;
+        char str[1 << 21];
+        char* p = str;
         for (size_t i = 0; i < words.size (); ++i) {
-          if (tags[i] != tags_[i]) std::fprintf (stdout, "\x1b[31m");
-          if (words[i] >= static_cast <int> (n)) std::fprintf (stdout, "*");
-          std::fprintf (stdout, "%s/%s/%s ",
-                        word_bag.id2str (words[i]),
-                        tag_bag.id2str (tags[i]),
-                        tag_bag.id2str (tags_[i]));
-          if (tags[i] != tags_[i]) std::fprintf (stdout, "\x1b[39m");
+          success &= tags[i] == tags_[i];
+          if (tags[i] != tags_[i]) p += std::sprintf (p, "\x1b[31m");
+          if (words[i] >= static_cast <int> (n)) p += std::sprintf (p, "*");
+          p += std::sprintf (p, "%s/%s/%s ",
+                             word_bag.id2str (words[i]),
+                             tag_bag.id2str (tags[i]),
+                             tag_bag.id2str (tags_[i]));
+          if (tags[i] != tags_[i]) p += std::sprintf (p, "\x1b[39m");
         }
-        std::fprintf (stdout, "\n");
+        if (! quiet || ! success)
+          std::fprintf (stdout, "%s\n", str);
 #endif
         if (++num_sents % 1000 == 0) std::fprintf (stderr, ".");
         words.clear ();
