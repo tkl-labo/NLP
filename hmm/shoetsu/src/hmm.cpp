@@ -158,11 +158,11 @@ void Hmm::Learn(const string &filename){
     }
   }
       
-  // node = GetNode("NN");
-  // for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
-  //   cout << *it << " " << node->GetFeatureEmissionProb((F_TYPE)(*it)) << endl;
-  // }
-  // exit(1);
+   // node = GetNode("NN");
+   // for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
+   //  cout << *it << " " << node->GetFeatureEmissionProb((F_TYPE)(*it)) << endl;
+   // }
+   // exit(1);
 }
 
 
@@ -331,6 +331,13 @@ double Hmm::Test(const string & filename){
   return (double)(right_known_word_count + right_unknown_word_count) / (double)(total_word_count) * 100.0;
 }
 
+
+
+//===========================
+//     Features
+//===========================
+
+
 F_TYPE Hmm::ClassifyUnknown(const string &str){
   for(auto it = F_TYPES.begin(); it != F_TYPES.end(); it++){
     if (Classifiers[*it] == NULL){
@@ -368,7 +375,7 @@ void Hmm::SetupClassifiers(){
   };
 
   // 未知語に対する分類
-  // ここでは各単語が一意に属するように分類する
+  // ここでは各単語が一意に属するように分類するため、F_TYPESの先頭のほうが優先度が高い
 
   Classifiers["F_CAP"] = [&](const string& str){
     assert(str.size() > 0);
@@ -388,16 +395,24 @@ void Hmm::SetupClassifiers(){
     return false;
   };
 
+  Classifiers["F_END_LY"] = [&](const string& str){
+    const vector<string> tokens = {
+      "ly"
+    };
+    return matchSuffix(str, tokens);
+  };
+
+
   Classifiers["F_END_ADJ"] = [&](const string& str){
     const vector<string> tokens = {
-      "less", "ible", "able", "ful", "ous", "al", "an"
+      "less", "ible", "able", "ful", "ous", "al", "an", "ent", "ical", "ive", "ary", "esque"
     };
     return matchSuffix(str, tokens);
   };
 
   Classifiers["F_END_NOUN"] = [&](const string& str){
     const vector<string> tokens = {
-      "eer", "ess", "ion", "age", "ty"
+      "eer", "ess", "ion", "age", "ty", "hood", "ment", "ics" , "dom", "ist", "ance", "cy"
     };
     return matchSuffix(str, tokens);
   };
@@ -438,11 +453,10 @@ void Hmm::SetupClassifiers(){
 
   Classifiers["F_VERB"] = [&](const string& str){
     const vector<string> tokens = {
-      "ate"
+      "ize", "lify"
     };
     return matchSuffix(str, tokens);
   };
-
 
 }
 

@@ -15,6 +15,7 @@ typedef std::string F_TYPE;
 const std::vector<F_TYPE> F_TYPES = {
   "F_CAP",
   "F_CD",
+  "F_END_LY",
   "F_END_ADJ",
   "F_END_NOUN",
   "F_END_ED",
@@ -60,7 +61,6 @@ class HmmNode{
 
   // 単語の特徴量の記録
   inline double GetFeatureEmissionProb(F_TYPE type){
-    //std::cout << (*m_femissions)[type] << " " << (double)(m_rareword_count) <<std::endl;
     //return (double)((*m_femissions)[type]);
     return (double)((*m_femissions)[type] + 1) / (double)(m_rareword_count + F_TYPES.size());
   }
@@ -103,6 +103,7 @@ class Hmm{
 
     if (m_vocablary->find(word) != m_vocablary->end()){
       return node->GetEmissionProb(word, GetVocablarySize());
+      // * node->GetFeatureEmissionProb( ClassifyUnknown(word) );
     }else{
       //return node->GetEmissionProb(word, GetVocablarySize());
       return node->GetFeatureEmissionProb( ClassifyUnknown(word) );
