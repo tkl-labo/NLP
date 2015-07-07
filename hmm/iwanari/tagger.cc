@@ -7,6 +7,12 @@
 #include "tagger.h"
 using namespace nlp;
 
+bool Tagger::hasSuffix(const std::string &str, const std::string &suffix)
+{
+    return str.size() >= suffix.size() &&
+        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 std::string 
 Tagger::joinString(const std::vector<std::string> &strings, 
     const std::string &delim)
@@ -58,6 +64,7 @@ void Tagger::init()
 	m_wordFreqs.clear();
 	m_posFreqs.clear();
 	m_wordFreqs.clear();
+	m_totalFreqs = 0;
 }
 
 void Tagger::train(const std::string &training)
@@ -82,6 +89,7 @@ void Tagger::train(const std::string &training)
 		
 		// count the frequency of POS
 		m_posFreqs[cur_pos]++;
+		m_totalFreqs++;
 		
 		// the end of sentence
 		if (rows.size() == 1) {

@@ -39,6 +39,7 @@ void TriTagger::train(const std::string &training)
 		// count the frequency of POS
 		m_posFreqs[cur_pos.second]++;
 		m_triPosFreqs[cur_pos.first][cur_pos.second]++;
+		m_totalFreqs++;
 		
 		// the end of sentence
 		if (rows.size() == 1) {
@@ -125,7 +126,7 @@ void TriTagger::forwardPropagate(
 			for (auto prev : m_triSuccFreqs[prevprev.first]) {
 				// NOTE: using wordPosFreq may be faster than using triSuccFreqs
 				// because of the number of combination
-				// auto list = m_succFreqs[prev.first];
+				// auto list = m_triSuccFreqs[prevprev.first][prev.first];
 				auto list = m_wordPosFreqs[word].size() != 0 ?
 					m_wordPosFreqs[word] : m_triSuccFreqs[prevprev.first][prev.first];
 				// cur.first: POS, cur.second: freq
