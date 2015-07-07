@@ -10,10 +10,6 @@
 
 using namespace std;
 
-const string START_NODE_KEY = "<S>";
-const vector<string> EXCEPTION_KEYS = {",", "."};
-const string END_LINE = "";
-
 
 //========================
 //   Minimal Functions
@@ -69,7 +65,6 @@ HmmNode::HmmNode(const HmmKey key) : m_key(key){
   m_emissions_count = 0;
   m_transitions = make_unique<Transitions>();
   m_emissions = make_unique<Emissions>();
-  
 }
 
 void HmmNode::EmissionLearning(const string &word){
@@ -134,7 +129,6 @@ void Hmm::Learn(const string &filename){
     }
   }
   
-  //Show(GetNode(START_NODE_KEY), "transition");
 }
 
 

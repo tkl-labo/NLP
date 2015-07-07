@@ -11,6 +11,11 @@
 #include <unordered_set>
 
 
+const std::string START_NODE_KEY = "<S>";
+const std::vector<std::string> EXCEPTION_KEYS = {",", "."};
+const std::string END_LINE = "";
+
+
 typedef std::string HmmKey;
 typedef std::unordered_map<HmmKey, int> Transitions;
 typedef std::unordered_map<std::string, int> Emissions;
@@ -27,11 +32,11 @@ class HmmNode{
  public:
   HmmNode(const HmmKey key);
   virtual ~HmmNode() = default;
-  //inline Transitions GetTransitions(){ return *m_transitions; };
-  //inline Emissions GetEmissions(){ return *m_emissions; };
+
   HmmKey GetKey() { return m_key;};
   void EmissionLearning(const std::string &);
   void TransitionLearning(const HmmKey &);
+
   //ラプラススムージングを使用
   inline double GetEmissionProb(const std::string &word, const int n_vocab){
     return (double)((*m_emissions)[word] + 1) / (double)(m_emissions_count + n_vocab + 1);
