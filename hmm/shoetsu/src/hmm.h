@@ -88,11 +88,13 @@ typedef std::unordered_set<HmmKey> Vocablary;
 
 
 class Hmm{
- protected:					
-  const int RareWordThreshold;
+ protected:
+  const int N;  // HmmのN-GramのN
+  const int RareWordThreshold; //未知語の学習に使うレア単語の閾値
+
   std::unique_ptr<HmmNodes> m_nodes;
   std::unique_ptr<Vocablary> m_vocablary;
-  inline void AddToVocablary(const HmmKey &key){
+  inline void AddToVocablary(const std::string &key){
     m_vocablary->insert(key);
   };
   inline int GetVocablarySize(){
@@ -103,9 +105,7 @@ class Hmm{
 
     if (m_vocablary->find(word) != m_vocablary->end()){
       return node->GetEmissionProb(word, GetVocablarySize());
-      // * node->GetFeatureEmissionProb( ClassifyUnknown(word) );
     }else{
-      //return node->GetEmissionProb(word, GetVocablarySize());
       return node->GetFeatureEmissionProb( ClassifyUnknown(word) );
     }
 
@@ -126,7 +126,7 @@ class Hmm{
   std::unordered_map<std::string, std::function<bool(const std::string&)>> Classifiers;
   
  public:
-  Hmm(const int th);
+  Hmm(const int th, const int n = 2);
   virtual ~Hmm() = default;
  
   void Show(HmmNodePtr node, const std::string &type);
