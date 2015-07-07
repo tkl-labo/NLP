@@ -11,6 +11,9 @@ using namespace nlp;
 void Tagger::init()
 {
 	m_succFreqs.clear();
+	m_wordFreqs.clear();
+	m_posFreqs.clear();
+	m_wordFreqs.clear();
 }
 
 void Tagger::train(const std::string &training)
@@ -93,7 +96,7 @@ void Tagger::forwardTest(std::ifstream &input_file)
 		// the end of sentence
 		if (rows.size() == 1) {
 			// TODO: is this necessary?
-			logLikelihood += std::log(m_succFreqs[cur_pos][END_SYMBOL] / (double) m_posFreqs[cur_pos]);
+			logLikelihood += std::log(getSuccProb(cur_pos, END_SYMBOL));
 			
 			// calculate likelihood
 			std::cout << std::endl;
@@ -107,8 +110,8 @@ void Tagger::forwardTest(std::ifstream &input_file)
 		else {
 			// calculate likelihood in log
 			// TODO: zero check
-			logLikelihood += std::log(m_succFreqs[cur_pos][rows[1]] / (double) m_posFreqs[cur_pos]);
-			logLikelihood += std::log(m_wordPosFreqs[rows[0]][rows[1]] / (double) m_wordFreqs[rows[0]]);
+			logLikelihood += std::log(getSuccProb(cur_pos, rows[1]));
+			logLikelihood += std::log(getWordPosProb(rows[0], rows[1]));
 			std::cout << rows[0] << " ";
 			cur_pos = rows[1];
 		}
@@ -128,12 +131,17 @@ void Tagger::forwardPropagate(
 		// prev.first: POS, prev.second: <prob, previous POS>
 		for (auto prev : scores[i - 1]) {
 			
+			// NOTE: using wordPosFreq may be faster than using m_succFreqs
+			// because of the number of combination
+			// auto list = m_succFreqs[prev.first];
+			auto list = m_wordPosFreqs[word].size() != 0 ? 
+				m_wordPosFreqs[word] : m_succFreqs[prev.first];
 			// cur.first: POS, cur.second: freq
-			for (auto cur : m_wordPosFreqs[word]) {
+			for (auto cur : list) {
 				double logProb = 0.0;
 				logProb += std::log(prev.second.first);
-				logProb += std::log(m_succFreqs[prev.first][cur.first] / (double) m_posFreqs[prev.first]);
-				logProb += std::log(cur.second / (double) m_wordFreqs[word]);
+				logProb += std::log(getSuccProb(prev.first, cur.first));
+				logProb += std::log(getWordPosProb(word, cur.first));
 				
 				// update
 				if (std::exp(logProb) >= scores[i][cur.first].first)
@@ -190,6 +198,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		}
 	}
 	std::cout << std::endl;
+	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }
 
@@ -219,8 +228,6 @@ void Tagger::test(const std::string &testing)
 	std::cout << "tested!" << std::endl;
 }
 
-
-
 // ===== for debug =====
 void Tagger::showSuccProbs()
 {
@@ -230,7 +237,7 @@ void Tagger::showSuccProbs()
 			std::cout << "Prob("
 				<< s.first << " | "
 				<< f.first << ") = " 
-				<< s.second / (double) m_posFreqs[f.first] 
+				<< getSuccProb(f.first, s.first)
 				<< std::endl;
 		}
 		std::cout << "=======" << std::endl << std::endl;
@@ -244,7 +251,7 @@ void Tagger::showWordPosProbs()
 			std::cout << "Prob(" 
 				<< s.first << " | "
 				<< f.first << ") = " 
-				<< s.second / (double) m_wordFreqs[f.first] 
+				<< getWordPosProb(f.first, s.first)
 				<< std::endl;
 		}
 		std::cout << "=======" << std::endl << std::endl;

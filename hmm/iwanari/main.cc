@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	if (argc < 4) {
 		std::cout << "Usage: " << argv[0] 
-			<< " training_data testing_data [Forward:1 Viterbi:2]" 
+			<< " training_data testing_data [Forward:0, Viterbi:1]" 
 			<< std::endl;
 		return 0;
 	}

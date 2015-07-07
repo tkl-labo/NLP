@@ -27,6 +27,14 @@ public:
 	void showSuccProbs();
 	void showWordPosProbs();
 	void showAllProbs();
+	inline double getSuccProb(const std::string pos0, const std::string pos1) {
+		return m_succFreqs[pos0][pos1] / (double) m_posFreqs[pos0];
+	}
+	inline double getWordPosProb(const std::string word, const std::string pos) {
+		return (m_wordPosFreqs[word][pos] + 1)
+			/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
+	}
+	
 private:
 	void forwardTest(std::ifstream &input_file);
 	void viterbiTest(std::ifstream &input_file);
