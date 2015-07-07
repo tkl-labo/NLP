@@ -1,6 +1,18 @@
 #pragma once
+#include <unordered_map>
 #include <vector>
 #include <string>
+
+namespace std {
+template <>
+class hash<std::pair<std::string, std::string>> {
+public:
+	size_t operator()(const std::pair<std::string, std::string>& x) const {
+		return hash<std::string>()(x.first) 
+					^ hash<std::string>()(x.second);
+	}
+};
+}
 
 namespace nlp
 {

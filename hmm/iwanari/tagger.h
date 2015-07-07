@@ -3,12 +3,15 @@
 #include <vector>
 #include <unordered_map>
 
+
 namespace nlp
 {
 typedef std::unordered_map<std::string,
 			std::unordered_map<std::string, long>> PairFreqList;
 typedef std::unordered_map<std::string, 
 				std::pair<double, std::string>> ScoreList;
+typedef std::unordered_map<std::pair<std::string, std::string>, long> WrongList;
+
 
 class Tagger
 {
@@ -28,11 +31,16 @@ public:
 	void showWordPosProbs();
 	void showAllProbs();
 	inline double getSuccProb(const std::string pos0, const std::string pos1) {
+		// UNKNOWN_WORD
 		return m_succFreqs[pos0][pos1] / (double) m_posFreqs[pos0];
 	}
 	inline double getWordPosProb(const std::string word, const std::string pos) {
-		return (m_wordPosFreqs[word][pos] + 1)
-			/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
+		// NOTE: a speed up way
+		if (m_wordFreqs.find(word) != m_wordFreqs.end())
+			return (m_wordPosFreqs[word][pos] + 1)
+				/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
+		// UNKNOWN_WORD
+		return 1 / (double) (m_wordFreqs.size() + 1);
 	}
 	
 private:

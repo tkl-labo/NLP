@@ -156,7 +156,7 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 	// get sentence one by one
 	// sentence contains (word, ans) pair
 	std::vector<std::pair<std::string, std::string>> sentence;
-	
+	WrongList wrongList;
 	long counter = 0;
 	long incorrect = 0;
 	while((sentence = nextSenetence(input_file)).size() != 0) {
@@ -185,10 +185,8 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 			const std::string tesPos = chk.at(sentence.size() - i - 2);
 			if (ansPos != tesPos) {
 				incorrect++;
-				std::cerr << "\x1b[31m";
-				std::cerr << word << " (ANS: " 
-							<< ansPos << ", TES: " 
-							<< tesPos << ") ";
+				std::cout << "\x1b[31m";
+				wrongList[std::make_pair(ansPos, tesPos)]++;
 			}
 			std::cout << word << " (ANS: " 
 						<< ansPos << ", TES: " 
@@ -198,6 +196,9 @@ void Tagger::viterbiTest(std::ifstream &input_file)
 		}
 	}
 	std::cout << std::endl;
+	for (auto wrong : wrongList) {
+		std::cout << "count (ANS: " << wrong.first.first << " -> TES: " << wrong.first.second << ") = " << wrong.second << std::endl;
+	}
 	// std::cout << "word count " << counter << std::endl;
 	std::cout << "correct: " << (counter - incorrect) / (double) (counter) * 100 << "%" << std::endl;
 }
