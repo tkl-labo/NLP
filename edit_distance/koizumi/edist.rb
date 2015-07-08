@@ -77,7 +77,7 @@ class Edist
     end
     if @btrace[s][t].include? :sub
       @align.push(:sub)
-      @result << @target[t-1]
+      @result << "|" #@target[t-1]
       back_trace(s-1, t-1)
       @align.pop
       @result.chop!
@@ -91,7 +91,7 @@ class Edist
     end
     if @btrace[s][t].include? :eq
       @align.push(:eq)
-      @result << @source[s-1]
+      @result << "=" #@source[s-1]
       back_trace(s-1, t-1)
       @align.pop
       @result.chop!
