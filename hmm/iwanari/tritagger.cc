@@ -112,6 +112,8 @@ void TriTagger::forwardPropagate(
 	sentence.emplace(sentence.begin(), START_SYMBOL, START_SYMBOL);
 	sentence.emplace_back(END_SYMBOL, END_SYMBOL);
 	scores.resize(sentence.size());
+	if (scores.size() < sentence.size())
+		scores.resize(sentence.size());
 	
 	// start state
 	scores[0].emplace(START_SYMBOL, std::make_pair(1.0, ""));
@@ -124,11 +126,13 @@ void TriTagger::forwardPropagate(
 			
 			// prev.first: POS, prev.second: <prob, previous POS>
 			for (auto prev : m_triSuccFreqs[prevprev.first]) {
+				
 				// NOTE: using wordPosFreq may be faster than using triSuccFreqs
 				// because of the number of combination
 				// auto list = m_triSuccFreqs[prevprev.first][prev.first];
-				auto list = m_wordPosFreqs[word].size() != 0 ?
+				auto list = m_wordPosFreqs.find(word) != m_wordPosFreqs.end() ?
 					m_wordPosFreqs[word] : m_triSuccFreqs[prevprev.first][prev.first];
+				
 				// cur.first: POS, cur.second: freq
 				for (auto cur : list) {
 					double logProb = 0.0;
