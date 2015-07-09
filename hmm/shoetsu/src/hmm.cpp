@@ -90,7 +90,7 @@ void HmmNode::FeatureEmissionLearning(F_TYPE type, const int count){
 //         Hmm
 //========================
 
-Hmm::Hmm(const int th) : RareWordThreshold(th){
+Hmm::Hmm(const int th, const int n) : RareWordThreshold(th), N(n){
   m_nodes = make_unique<HmmNodes>();
   m_vocablary = make_unique<Vocablary>();
   CreateNode(START_NODE_KEY);
