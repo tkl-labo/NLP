@@ -164,7 +164,9 @@ string NGram::CreateRandomSentence(){
 string NGram::Transit(NGramNodePtr_t node){
   string output_str = EOS;
   NGramNodePtr_t next_node;
-  double r = (double)rand() / (double)RAND_MAX;
+
+
+  double r = Util::Random();
   float cum_prob = 0;
 
   for(auto freq :node->GetFreq()){
@@ -341,7 +343,8 @@ LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n) : NGram(n){}
 
 double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const string &str) const
 {
-   return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + m_vocablary->size() + 1);
+  const float SMOOTH = 0.1;
+  return (double)(node->GetFreq(str) + SMOOTH) / (double)(node->GetTotal() + m_vocablary->size() * SMOOTH+ 1);
 }
 
 

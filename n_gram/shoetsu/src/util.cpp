@@ -4,6 +4,7 @@
 #include <sstream>
 #include <sys/time.h>
 #include <wchar.h>
+#include <random>
 
 using namespace std;
 
@@ -79,3 +80,20 @@ vector<string> split(const string &str, const char delim){
   }
   return res;
 }
+
+
+
+//==========================
+//       Random
+//==========================
+
+namespace Util{
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<double> engine(0.0 ,1.0);
+  
+  double Random(){
+    return engine(mt);
+  }
+};

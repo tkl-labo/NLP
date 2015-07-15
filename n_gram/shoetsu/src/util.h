@@ -14,4 +14,10 @@ std::string narrow(const std::wstring &src);
 
 std::vector<std::string> split(const std::string &, const char delim = ' ');
 
+
+namespace Util{
+
+  double Random();
+};
+
 #endif
