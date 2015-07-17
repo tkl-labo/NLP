@@ -16,6 +16,8 @@
 #include <map>
 #include <unordered_set>
 
+#include "util.h"
+
 class NGram;
 class NGramNode;
 
@@ -25,9 +27,9 @@ class NGramNode;
 //================================
 
 
-typedef int WordID_t;
+typedef unsigned long WordID_t;
 typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
-typedef std::vector<std::string> NGramKey_t;
+typedef std::vector<WordID_t> NGramKey_t;
 typedef std::unique_ptr<NGramKey_t> NGramKeyPtr_t;
 
 
@@ -39,14 +41,14 @@ namespace std {
     size_t operator()(const NGramKey_t& v) const{
       size_t h = 0;
       for(auto it = v.begin(); it < v.end(); it++){
-	h = h ^ hash<string>()(*it);
+	h = h ^ hash<WordID_t>()(*it);
       }
       return h;
     }
   };
 }
 
-typedef std::unordered_map<std::string, int> NGramFreq_t;
+typedef std::unordered_map<WordID_t, int> NGramFreq_t;
 typedef std::unique_ptr<NGramFreq_t> NGramFreqPtr_t;
 
 
@@ -61,8 +63,8 @@ class NGramNode{
   virtual ~NGramNode() = default;
   inline NGramKey_t GetKey() const {return *m_key;};
   inline NGramFreq_t GetFreq() const { return *m_freq;};
-  inline int GetFreq(const std::string &str) const {
-    auto it = m_freq->find(str);
+  inline int GetFreq(const WordID_t &id) const {
+    auto it = m_freq->find(id);
     //キーが設定されている場合はキーバリューのPairが返る
     if(it != m_freq->end()){
       return it->second;
@@ -71,8 +73,8 @@ class NGramNode{
     }
   }
   inline int GetTotal() const {return m_total;}
-  void AddFreq(const std::string &);
-  void SetFreq(const std::string &, const int);
+  void AddFreq(const WordID_t &);
+  void SetFreq(const WordID_t &, const int);
 };
 
 
@@ -80,7 +82,7 @@ class NGramNode{
 //          NGram
 //================================
 
-typedef std::unordered_set<std::string> NGramVocablary_t;
+typedef StringConverter NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
@@ -90,12 +92,13 @@ typedef std::unique_ptr<NGramMap_t> NGramMapPtr_t;
 
 class NGram{
  private:
-  virtual inline double GetProb(NGramNodePtr_t node,const std::string &str) const{
+  virtual inline double GetProb(NGramNodePtr_t node,const WordID_t & id) const{
     if(node->GetTotal() == 0){
       return 0;
     }
-    return (double)(node->GetFreq(str)) / (double)(node->GetTotal());
+    return (double)(node->GetFreq(id)) / (double)(node->GetTotal());
   }
+  NGramKey_t StartNodeKey(const int n) const;
 
  protected:
   
@@ -106,15 +109,17 @@ class NGram{
   NGramNodePtr_t GetOrCreateNode(const NGramKey_t &key);
   NGramNodePtr_t GetNode(const NGramKey_t &key) const;
   inline NGramMap_t GetMap() const {return *m_map;}
-  inline NGramVocablary_t GetVocablary() const {return *m_vocablary;}
-  void AddToVocablary(std::string);
+  WordID_t AddToVocablary(const std::string&);
 
   virtual std::string ForwardTransit(NGramNodePtr_t node);
-  virtual std::string BackwardTransit(NGramNodePtr_t node);
+  //virtual WordID_t BackwardTransit(NGramNodePtr_t node);
 
-  double OutputProb(NGramNodePtr_t ,const std::string &) const;
+  double OutputProb(NGramNodePtr_t ,const WordID_t &) const;
   double OutputProb(NGramNodePtr_t) const;
- 
+  NGramKey_t StrvToNGramKey(const std::vector<std::string> &) ;
+  std::vector<std::string> NGramKeyToStrv(const NGramKey_t &) ;
+
+
  public:
   NGram(const int);
   virtual ~NGram() = default;
@@ -136,9 +141,9 @@ class NGram{
 
 class LaplaceSmoothedNGram : public NGram{
  private:
-  double GetProb(NGramNodePtr_t node,const std::string &str) const;
+  double GetProb(NGramNodePtr_t node,const WordID_t &str) const;
 
-  std::string ForwardTransit(NGramNodePtr_t node);
+  //std::string ForwardTransit(NGramNodePtr_t node);
 
  public:
   LaplaceSmoothedNGram(const int n);

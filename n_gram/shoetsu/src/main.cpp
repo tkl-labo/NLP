@@ -23,7 +23,7 @@ void NgramTest_Learn(int argc, char ** argv)
   double t0,t1;
   t0 = cur_time();
   n_gram->Learn();
-  //cout << "Output: " << n_gram->CreateRandomSentence() << endl;
+  cout << "Output: " << n_gram->CreateRandomSentence() << endl;
   n_gram->Save(filename);
   cout << "Saved File  : " << filename << endl;
   t1 = cur_time();

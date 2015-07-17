@@ -121,23 +121,22 @@ namespace Util{
 //   String and Numeric
 //============================
 
-
 StringConverter::StringConverter(){
-  m_str2id = make_unique<unordered_map<string, int>>();
+  m_str2id = make_unique<unordered_map<string, StrNum>>();
   m_id2str = make_unique<vector<string>>();
   m_count = 0;
 }
 
-int StringConverter::str2id(const string& str) const{
-  auto it = m_str2id ->find(str);
-  if (it != m_str2id ->end()){
+StrNum StringConverter::str2id(const string& str) const{
+  auto it = m_str2id->find(str);
+  if (it != m_str2id->end()){
     return it->second;
   }else{
     return -1;
   }
 }
 
-string StringConverter::id2str(const int id) const{
+string StringConverter::id2str(const StrNum id) const{
   string str;
   if(id < GetCount()){
     str = (*m_id2str)[id];
@@ -148,13 +147,13 @@ string StringConverter::id2str(const int id) const{
 }
 
 
-int StringConverter::AddStr(const string &str){
+StrNum StringConverter::AddStr(const string &str){
   if(m_str2id->find(str) == m_str2id->end()){
     (*m_str2id)[str] = m_count; 
     m_id2str->push_back(str);
     m_count++;
   }
-  return m_count-1;
+  return str2id(str);
 }
 
 

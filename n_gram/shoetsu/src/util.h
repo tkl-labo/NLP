@@ -23,18 +23,21 @@ namespace Util{
 };
 
 
+
+typedef unsigned long StrNum;
+
 class StringConverter{
   private:
-  std::unique_ptr<std::unordered_map<std::string, int>> m_str2id ;
+  std::unique_ptr<std::unordered_map<std::string, StrNum>> m_str2id ;
   std::unique_ptr<std::vector<std::string>> m_id2str ;
-  int m_count;
+  StrNum  m_count;
   public:
   StringConverter();
   virtual  ~StringConverter() = default;
-  int str2id(const std::string &str) const;
-  std::string id2str(const int id) const;
-  int AddStr(const std::string & str);
-  inline int GetCount() const {return m_count;};
+  StrNum str2id(const std::string &str) const;
+  std::string id2str(const StrNum id) const;
+  StrNum AddStr(const std::string & str);
+  inline StrNum GetCount() const {return m_count;};
 };
 
 
