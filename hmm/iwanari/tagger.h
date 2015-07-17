@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include "nlp.h"
 
 namespace std {
 template <>
@@ -47,21 +48,21 @@ public:
 	inline double getSuccProb(const std::string pos0, const std::string pos1) {
 		if (m_posFreqs.find(pos0) != m_posFreqs.end())
 			if (m_succFreqs[pos0].find(pos1) != m_succFreqs[pos0].end())
-				return (m_succFreqs[pos0][pos1] + 1)
-					/ (double) (m_posFreqs[pos0] + m_posFreqs.size() + 1);
+				return (m_succFreqs[pos0][pos1] + SMOOTHING_COEFFICIENT)
+					/ (double) (m_posFreqs[pos0] + (m_posFreqs.size() + 1) * SMOOTHING_COEFFICIENT);
 		
 		// UNKNOWN_SEQUENCE
-		return 1 / (double) (m_posFreqs.size() + 1);
+		return SMOOTHING_COEFFICIENT / (double) (m_posFreqs.size() + SMOOTHING_COEFFICIENT);
 	}
 	inline double getWordPosProb(const std::string word, const std::string pos) {
 		// NOTE: a speed up way
 		if (m_wordFreqs.find(word) != m_wordFreqs.end())
 			if (m_wordPosFreqs[word].find(pos) != m_wordPosFreqs[word].end())
-				return (m_wordPosFreqs[word][pos] + 1)
-					/ (double) (m_wordFreqs[word] + m_wordFreqs.size() + 1);
+				return (m_wordPosFreqs[word][pos] + SMOOTHING_COEFFICIENT)
+					/ (double) (m_wordFreqs[word] + (m_wordFreqs.size() + 1) * SMOOTHING_COEFFICIENT);
 		
 		// UNKNOWN_WORD
-		return 1 / (double) (m_wordFreqs.size() + 1);
+		return SMOOTHING_COEFFICIENT / (double) ((m_wordFreqs.size() + 1) * SMOOTHING_COEFFICIENT);
 	}
 
 protected:
