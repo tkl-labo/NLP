@@ -150,21 +150,27 @@ void NGram::Add(const NGramKey_t &source){
 
 }
 
-string NGram::CreateRandomSentence(){
-  NGramKey_t start_key = StartNodeKey(N);
-  auto start_node = GetOrCreateNode(start_key);
-  string str = Transit(start_node);
-
-  //start_node->OutputProb();
+string NGram::CreateRandomSentence(const string & keywords){
   
+  auto strv = split(keywords);
+
+  string str;
+
+  if(strv.size() > 0){
+
+  }else{
+    NGramKey_t start_key = StartNodeKey(N);
+    auto start_node = GetOrCreateNode(start_key);
+    str = ForwardTransit(start_node);
+  }
+
   return str;
 }
 
 
-string NGram::Transit(NGramNodePtr_t node){
+string NGram::ForwardTransit(NGramNodePtr_t node){
   string output_str = EOS;
   NGramNodePtr_t next_node;
-
 
   double r = Util::Random();
   float cum_prob = 0;
@@ -173,12 +179,11 @@ string NGram::Transit(NGramNodePtr_t node){
     output_str = freq.first;
     cum_prob += GetProb(node, output_str);
     if(r <= cum_prob){
-      //cout << output_str << ": " << GetProb(node, output_str) <<endl;
       OutputProb(node, output_str);
       NGramKey_t key = node->GetKey();
       key.erase(key.begin());
       key.push_back(output_str);
-      if(output_str == EOS){
+      if(output_str == EOS || output_str == START){
 	return "";
       }
       next_node = GetNode(key);
@@ -186,8 +191,33 @@ string NGram::Transit(NGramNodePtr_t node){
     }
   }
 
-  return output_str + Transit(next_node);
+  return output_str + ForwardTransit(next_node);
 }
+
+string NGram::BackwardTransit(NGramNodePtr_t node){
+  string output_str = START;
+  NGramNodePtr_t prev_node;
+
+  double r = Util::Random();
+  double max_prob = 0;
+
+
+  for(auto word : GetVocablary()){
+    NGramKey_t key = node->GetKey();
+    key.erase(key.begin());
+    key.insert(key.begin(), word);
+    prev_node = GetNode(key);
+    if(max_prob < GetProb(prev_node, word))
+    max_prob = GetProb(node, word);
+  }
+
+  if(output_str == EOS || output_str == START){
+    return "";
+  }
+  return  BackwardTransit(prev_node) + output_str;
+}
+
+
 
 void NGram::Save(const string & filename) const{
   ofstream ofs(filename);
@@ -348,7 +378,7 @@ double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const string &str) cons
 }
 
 
-string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
+string LaplaceSmoothedNGram::ForwardTransit(NGramNodePtr_t node){
   string output_str = EOS;
   NGramNodePtr_t next_node;
   double r = (double)rand() / (double)RAND_MAX;
@@ -369,7 +399,7 @@ string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
 	return "";
       }
       next_node = GetNode(key);
-      return output_str + Transit(next_node);
+      return output_str + ForwardTransit(next_node);
     }
   }
   
@@ -385,10 +415,10 @@ string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
 	return "";
       }
       next_node = GetNode(key);
-      return output_str + Transit(next_node);
+      return output_str + ForwardTransit(next_node);
 
     }
   }
 
-  return output_str + Transit(next_node);
+  return output_str + ForwardTransit(next_node);
 }

@@ -25,6 +25,7 @@ class NGramNode;
 //================================
 
 
+typedef int WordID_t;
 typedef std::shared_ptr<NGramNode> NGramNodePtr_t;
 typedef std::vector<std::string> NGramKey_t;
 typedef std::unique_ptr<NGramKey_t> NGramKeyPtr_t;
@@ -83,7 +84,6 @@ typedef std::unordered_set<std::string> NGramVocablary_t;
 typedef std::unique_ptr<NGramVocablary_t> NGramVocablaryPtr_t;
 
 typedef std::unordered_map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
-//typedef std::map<NGramKey_t, NGramNodePtr_t> NGramMap_t;
 typedef std::unique_ptr<NGramMap_t> NGramMapPtr_t;
 
 
@@ -109,7 +109,9 @@ class NGram{
   inline NGramVocablary_t GetVocablary() const {return *m_vocablary;}
   void AddToVocablary(std::string);
 
-  virtual std::string Transit(NGramNodePtr_t node);
+  virtual std::string ForwardTransit(NGramNodePtr_t node);
+  virtual std::string BackwardTransit(NGramNodePtr_t node);
+
   double OutputProb(NGramNodePtr_t ,const std::string &) const;
   double OutputProb(NGramNodePtr_t) const;
  
@@ -123,7 +125,7 @@ class NGram{
   void Load(const std::string & filename);
   double SequenceProb(const NGramKey_t &) const;
   double PerplexityTest();
-  std::string CreateRandomSentence();
+  std::string CreateRandomSentence(const std::string &keywords = "");
 }
 ;
 
@@ -136,7 +138,7 @@ class LaplaceSmoothedNGram : public NGram{
  private:
   double GetProb(NGramNodePtr_t node,const std::string &str) const;
 
-  std::string Transit(NGramNodePtr_t node);
+  std::string ForwardTransit(NGramNodePtr_t node);
 
  public:
   LaplaceSmoothedNGram(const int n);

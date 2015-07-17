@@ -19,6 +19,21 @@ double cur_time(){
 }
 
 
+//==========================
+//   Vector Operation
+//==========================
+
+void normalize(std::vector<double> &vec){
+  double sum = 0;
+  for(auto it = vec.begin(); it != vec.end(); it++){
+    sum += (*it) * (*it);
+  }
+  sum = sqrt(sum);
+  for(auto it = vec.begin(); it != vec.end(); it++){
+    *it /= sum;
+  }
+}
+
 
 //============================
 //   Multi-Byte String
@@ -62,6 +77,7 @@ string narrow(const std::wstring &src)
 //   return elems;
 // }
 
+
 //こっちのほうが速い
 vector<string> split(const string &str, const char delim){
   vector<string> res;
@@ -97,3 +113,49 @@ namespace Util{
     return engine(mt);
   }
 };
+
+
+
+
+//============================
+//   String and Numeric
+//============================
+
+
+StringConverter::StringConverter(){
+  m_str2id = make_unique<unordered_map<string, int>>();
+  m_id2str = make_unique<vector<string>>();
+  m_count = 0;
+}
+
+int StringConverter::str2id(const string& str) const{
+  auto it = m_str2id ->find(str);
+  if (it != m_str2id ->end()){
+    return it->second;
+  }else{
+    return -1;
+  }
+}
+
+string StringConverter::id2str(const int id) const{
+  string str;
+  if(id < GetCount()){
+    str = (*m_id2str)[id];
+  }else{
+    return "";
+  }
+  return str;
+}
+
+
+int StringConverter::AddStr(const string &str){
+  if(m_str2id->find(str) == m_str2id->end()){
+    (*m_str2id)[str] = m_count; 
+    m_id2str->push_back(str);
+    m_count++;
+  }
+  return m_count-1;
+}
+
+
+
