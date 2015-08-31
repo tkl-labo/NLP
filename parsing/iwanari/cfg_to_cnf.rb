@@ -46,6 +46,7 @@ end
 passed_2nd = cfg_rules
 
 # ----- 3rd step (Unit production reduction) -----
+# TODO: prob is not valid
 passed_3rd = Array.new
 
 def reachable_unit(rules, reachable, lhs)
