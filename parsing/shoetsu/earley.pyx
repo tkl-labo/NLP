@@ -32,7 +32,7 @@ class EarleyRule:
         return False
 
 class EarleyState:
-    def __init__(self, line, start = 0, dot = 0, position = 0,created_by = None, created_from = None):
+    def __init__(self, line, start = 0, dot = 0, position = 0, created_by = None, created_from = None):
         l = line.split()
 
         self.LHS = l[0]
@@ -82,7 +82,7 @@ class EarleyState:
 
     # ドットの右側にトークンが存在しない場合(＝それ以上展開できない場合)
     def isComplete(self):
-        if self.position() >= len(self.RHS):
+        if self.position() == len(self.RHS):
             return True
         return False
 
@@ -106,7 +106,7 @@ class Earley:
         for i in range(len(self.sentence)+1):
             self.chart.append([])
 
-        start = EarleyState("Dummy S 1.0", 0, 0, "Dummy", None)
+        start = EarleyState("Dummy S 1.0", 0, 0, 0, "Dummy", None)
         self.addState(start, 0)
         
         for i in range(len(self.sentence)+1):
