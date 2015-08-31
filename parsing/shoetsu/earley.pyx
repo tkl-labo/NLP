@@ -32,7 +32,7 @@ class EarleyRule:
         return False
 
 class EarleyState:
-    def __init__(self, line, start = 0, dot = 0, created_by = None, created_from = None):
+    def __init__(self, line, start = 0, dot = 0, position = 0,created_by = None, created_from = None):
         l = line.split()
 
         self.LHS = l[0]
@@ -44,18 +44,19 @@ class EarleyState:
 
         self.start = start
         self.dot = dot
+        self.position = position
         self.created_by = created_by
         self.created_from = created_from
 
 
     def position(self):
-        return  self.dot - self.start # 部分木上でのドットの相対位置
+        return self.position
+        #return  self.dot - self.start # 部分木上でのドットの相対位置
 
     def toRuleStr(self, lhs, rhs, prob):
         rulestr = lhs + " "
         for i,s in enumerate(rhs):
                 rulestr += s + " "
- 
         rulestr += str(prob)
         return rulestr
 
@@ -88,7 +89,6 @@ class EarleyState:
 
 
 class Earley:
-    # ckyの表は左三角行列（右上に'S', 左端に各単語が来る）
     def __init__(self):
         self.rules = []
         self.sentence = []
@@ -155,7 +155,7 @@ class Earley:
                 continue
             if rule.LHS == state.RHS[state.position()]:
                 new_state_str = rule.toRuleStr(rule.LHS, rule.RHS, rule.prob * state.prob)
-                new_state = EarleyState(new_state_str, state.dot, state.dot, "Predictor", [state])
+                new_state = EarleyState(new_state_str, state.dot, state.dot, 0, "Predictor", [state])
                 self.addState(new_state, state.dot)
 
     def scanner(self, state):
@@ -167,7 +167,7 @@ class Earley:
                 continue
             if rule.LHS == state.RHS[state.position()]:
                 new_state_str = rule.toRuleStr(rule.LHS, rule.RHS, rule.prob)
-                new_state = EarleyState(new_state_str, state.dot, state.dot+1, "Scanner", [state])
+                new_state = EarleyState(new_state_str, state.dot, state.dot + 1, 1 ,"Scanner", [state])
                 self.addState(new_state, state.dot+1)
 
         
@@ -182,7 +182,7 @@ class Earley:
                 continue
             if state.LHS == upper_state.RHS[upper_state.position()]:
                 new_state_str = upper_state.toRuleStr(upper_state.LHS, upper_state.RHS, upper_state.prob * state.prob)
-                new_state = EarleyState(new_state_str, upper_state.start, state.dot, "Completer", [upper_state, state])
+                new_state = EarleyState(new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
                 self.addState(new_state, state.dot)
             
         #new_state_str = 
