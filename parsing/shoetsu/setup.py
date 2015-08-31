@@ -4,5 +4,5 @@ from Cython.Distutils import build_ext
 
 setup(
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [Extension("pcfg", ["pcfg.pyx"]), Extension("earley", ["earley.pyx"]), Extension("str2int", ["str2int.pyx"])]
+    ext_modules = [Extension("pcfg", ["pcfg.pyx"]), Extension("earley", ["earley.pyx"])]
 )

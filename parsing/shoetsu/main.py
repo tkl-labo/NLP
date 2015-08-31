@@ -25,8 +25,8 @@ def earley(sentence):
     #earley.showRules()
     earley.parse(sentence)
     earley.showStates()
-    pass
-
+    print("")
+    #earley.traceRoot()
 
 def pcfg(sentence):
     pcfg = PCFG()
