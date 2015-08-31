@@ -1,0 +1,70 @@
+S NP VP 0.8
+X0 NP VP 1.0
+S Aux X0 0.15
+NP Det Nominal 0.2
+NP Nominal Noun 0.2
+Nominal Nominal Noun 0.2
+NP Nominal PP 0.05
+Nominal Nominal PP 0.05
+S Verb NP 0.2
+VP Verb NP 0.2
+X1 NP PP 1.0
+S Verb X1 0.1
+VP Verb X1 0.1
+S Verb PP 0.15
+VP Verb PP 0.15
+X2 NP NP 1.0
+S Verb X2 0.05
+VP Verb X2 0.05
+S VP PP 0.15
+VP VP PP 0.15
+PP Preposition NP 1.0
+Det _that 0.1
+Det _a 0.3
+Det _the 0.6
+NP _book 0.1
+Nominal _book 0.1
+Noun _book 0.1
+NP _flight 0.3
+Nominal _flight 0.3
+Noun _flight 0.3
+NP _meal 0.05
+Nominal _meal 0.05
+Noun _meal 0.05
+NP _money 0.05
+Nominal _money 0.05
+Noun _money 0.05
+NP _flights 0.4
+Nominal _flights 0.4
+Noun _flights 0.4
+NP _dinner 0.1
+Nominal _dinner 0.1
+Noun _dinner 0.1
+S _book 0.3
+VP _book 0.3
+Verb _book 0.3
+S _include 0.3
+VP _include 0.3
+Verb _include 0.3
+S _prefer 0.4
+VP _prefer 0.4
+Verb _prefer 0.4
+NP _I 0.4
+Pronoun _I 0.4
+NP _she 0.05
+Pronoun _she 0.05
+NP _me 0.15
+Pronoun _me 0.15
+NP _you 0.4
+Pronoun _you 0.4
+NP _Houston 0.6
+Proper-Noun _Houston 0.6
+NP _TWA 0.4
+Proper-Noun _TWA 0.4
+Aux _does 0.6
+Aux _can 0.4
+Preposition _from 0.3
+Preposition _to 0.3
+Preposition _on 0.2
+Preposition _near 0.15
+Preposition _through 0.05
