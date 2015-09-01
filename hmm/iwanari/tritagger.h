@@ -32,8 +32,9 @@ public:
 		if (m_triPosFreqs.find(pos0) != m_triPosFreqs.end())
 			if (m_triPosFreqs[pos0].find(pos1) != m_triPosFreqs[pos0].end())
 				if (m_triSuccFreqs[pos0][pos1].find(pos2) != m_triSuccFreqs[pos0][pos1].end())
-						return (m_triSuccFreqs[pos0][pos1][pos2] + 1) 
-								/ (double) (m_triPosFreqs[pos0][pos1] + m_triPosFreqs.size() + 1);
+						return (m_triSuccFreqs[pos0][pos1][pos2] + SMOOTHING_COEFFICIENT) 
+								/ (double) (m_triPosFreqs[pos0][pos1] 
+									+ (m_triPosFreqs.size() + 1) * SMOOTHING_COEFFICIENT);
 		
 		// if (m_posFreqs.find(pos1) != m_posFreqs.end())
 		// 	if (m_succFreqs[pos1].find(pos2) != m_succFreqs[pos1].end())
@@ -45,7 +46,7 @@ public:
 		// 			/ (double) (m_totalFreqs + m_posFreqs.size() + 1);
 		
 		// UNKNOWN_SEQUENCE
-		return 1.0 / (double) (m_triPosFreqs.size() + 1);
+		return SMOOTHING_COEFFICIENT / (double) ((m_triPosFreqs.size() + 1) * SMOOTHING_COEFFICIENT);
 	}
 
 protected:

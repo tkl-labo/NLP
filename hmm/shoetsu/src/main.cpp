@@ -72,7 +72,7 @@ opts * parse_cmdline(int argc, char * const * argv, opts * o) {
 void hmm_learn(const opts o)
 {
   const string TRAIN_DATA = "data/train.txt";
-  const string TEST_DATA = "data/test.txt";
+  const string TEST_DATA = "data/test_train_mini.txt";
   unique_ptr<Hmm> hmm = make_unique<Hmm>(o.rareword_threshold);
   double t0,t1,t2;
   t0 = cur_time();

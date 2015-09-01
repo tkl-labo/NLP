@@ -23,7 +23,7 @@ void NgramTest_Learn(int argc, char ** argv)
   double t0,t1;
   t0 = cur_time();
   n_gram->Learn();
-  //cout << "Output: " << n_gram->CreateRandomSentence() << endl;
+  cout << "Output: " << n_gram->CreateRandomSentence() << endl;
   n_gram->Save(filename);
   cout << "Saved File  : " << filename << endl;
   t1 = cur_time();
@@ -36,9 +36,12 @@ void NgramTest_Create(int argc, char ** argv)
   const int N = stoi(argv[2]);
   assert(N < 4);
   string filename = argv[3];
-  //unique_ptr<NGram> n_gram = make_unique<LaplaceSmoothedNGram>(N);
+
+  string keywords = argc > 4 ? argv[4] : "" ;
+
   unique_ptr<NGram> n_gram = make_unique<NGram>(N); 
   cout << "Loaded N-Gram Data: " << filename  << endl;
+
 
   double t0,t1;
   t0 = cur_time();
@@ -47,7 +50,7 @@ void NgramTest_Create(int argc, char ** argv)
   printf( "Elapsed Time(Load-Total): %.5f sec\n",t1-t0);
 
   t0 = cur_time();
-  cout << "Output: " << n_gram->CreateRandomSentence() << endl;
+  cout << "Output: " << n_gram->CreateRandomSentence(keywords) << endl;
   t1 = cur_time();
   printf( "Elapsed Time(Create): %.5f sec\n",t1-t0);
 }
@@ -76,7 +79,6 @@ void NgramTest_Perplexity(int argc, char ** argv)
 }
 
 
-
 int main(int argc, char** argv){
   
   if (argc < 3){
@@ -98,5 +100,6 @@ int main(int argc, char** argv){
   }
   return 0;
 }
+
 
 

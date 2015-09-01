@@ -1,0 +1,19 @@
+S NP VP .80
+S Aux NP VP .15
+S VP .05
+NP Pronoun .35
+NP Proper-Noun .30
+NP Det Nominal .20
+Nominal Noun .75
+Nominal Nominal Noun .20
+Nominal Nominal PP .05
+VP Verb .35
+VP Verb NP .20
+VP Verb NP PP .10
+VP Verb PP .15
+VP VP PP .15
+PP Preposition NP 1.0
+Det _the .60
+Noun _dinner .10
+Noun _flight .30
+Verb _book .30

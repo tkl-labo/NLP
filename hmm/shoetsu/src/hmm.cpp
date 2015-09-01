@@ -269,10 +269,10 @@ double Hmm::Test(const string & filename){
 
   vector<bool> unknown_flags;
   int unknown_word_count = 0;
-
+  
   while(getline(ifs,line)){
     auto strv = split(line);
-    
+ 
     if (strv.size() != 0){
       total_word_count++;
       if (m_vocablary->find(strv[0]) == m_vocablary->end()){
@@ -287,7 +287,7 @@ double Hmm::Test(const string & filename){
     }else{
       bool mistake_flag = false;
       auto pos_results = Viterbi(sentence);
-
+    
       //未知語or既知語に分けて正解と比較 
       for(int i = 0; i < pos_results.size(); i++){
 	if(pos_results[i] == pos_answers[i]){

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <sys/time.h>
 #include <wchar.h>
+#include <random>
 
 using namespace std;
 
@@ -17,6 +18,21 @@ double cur_time(){
   return tp->tv_sec + 1.0e-6 * tp->tv_usec;
 }
 
+
+//==========================
+//   Vector Operation
+//==========================
+
+void normalize(std::vector<double> &vec){
+  double sum = 0;
+  for(auto it = vec.begin(); it != vec.end(); it++){
+    sum += (*it) * (*it);
+  }
+  sum = sqrt(sum);
+  for(auto it = vec.begin(); it != vec.end(); it++){
+    *it /= sum;
+  }
+}
 
 
 //============================
@@ -61,6 +77,7 @@ string narrow(const std::wstring &src)
 //   return elems;
 // }
 
+
 //こっちのほうが速い
 vector<string> split(const string &str, const char delim){
   vector<string> res;
@@ -79,3 +96,65 @@ vector<string> split(const string &str, const char delim){
   }
   return res;
 }
+
+
+
+//==========================
+//       Random
+//==========================
+
+namespace Util{
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<double> engine(0.0 ,1.0);
+  
+  double Random(){
+    return engine(mt);
+  }
+};
+
+
+
+
+//============================
+//   String and Numeric
+//============================
+
+StringConverter::StringConverter(){
+  m_str2id = make_unique<unordered_map<string, StrNum>>();
+  m_id2str = make_unique<vector<string>>();
+  m_count = 0;
+}
+
+StrNum StringConverter::str2id(const string& str) const{
+  auto it = m_str2id->find(str);
+  if (it != m_str2id->end()){
+    return it->second;
+  }else{
+    return -1;
+  }
+}
+
+string StringConverter::id2str(const StrNum id) const{
+  string str;
+  if(id < GetCount()){
+    str = (*m_id2str)[id];
+  }else{
+    return "";
+  }
+  return str;
+}
+
+
+StrNum StringConverter::AddStr(const string &str){
+  if(m_str2id->find(str) == m_str2id->end()){
+    (*m_str2id)[str] = m_count; 
+    m_id2str->push_back(str);
+    m_count++;
+  }
+  return str2id(str);
+}
+
+
+

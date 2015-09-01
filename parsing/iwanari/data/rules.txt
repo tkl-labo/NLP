@@ -1,0 +1,42 @@
+S NP VP .80
+S Aux NP VP .15
+S VP .05
+NP Pronoun .35
+NP Proper-Noun .30
+NP Det Nominal .20
+NP Nominal .15
+Nominal Noun .75
+Nominal Nominal Noun .20
+Nominal Nominal PP .05
+VP Verb .35
+VP Verb NP .20
+VP Verb NP PP .10
+VP Verb PP .15
+VP Verb NP NP .05
+VP VP PP .15
+PP Preposition NP 1.0
+Det _that .10
+Det _a .30
+Det _the .60
+Noun _book .10
+Noun _flight .30
+Noun _meal .05
+Noun _money .05
+Noun _flights .40
+Noun _dinner .10
+Verb _book .30
+Verb _include .30
+Verb _prefer .40
+Pronoun _I .40
+Pronoun _she .05
+Pronoun _me .15
+Pronoun _you .40
+Proper-Noun _Houston .60
+Proper-Noun _TWA .40
+Aux _does .60
+Aux _can .40
+Preposition _from .30
+Preposition _to .30
+Preposition _on .20
+Preposition _near .15
+Preposition _through .05

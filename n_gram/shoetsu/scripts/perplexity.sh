@@ -5,7 +5,7 @@ NLINE=50
 
 
 if [ $# -lt 1 ]; then
-  echo "./perplexity (2|3) [N_GRAM_FILE] [NLINE] [CORPUS_FILE]"
+  echo "./perplexity (2|3) [N_GRAM_FILE] [NLINE] [TEST_CORPUS_FILE]"
   exit 1 
 fi
 

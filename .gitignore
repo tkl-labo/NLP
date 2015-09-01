@@ -142,3 +142,4 @@ Session.vim
 sftp-config.json
 
 .powrc
+.DS_Store

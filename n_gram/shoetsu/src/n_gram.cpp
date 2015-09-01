@@ -1,7 +1,6 @@
 
 
 #include "n_gram.h"
-#include "util.h"
 
 #include <cassert>
 #include <iostream>
@@ -26,10 +25,7 @@ const string HEAD = "";    // ダンプ時のノード毎の区切り
 
 const double LLimit = 1.0e-307; //ある文章の出力確率の下限(0になるとperplexityがinfになるので)
 
-static NGramKey_t StartNodeKey(int n){
-  NGramKey_t key(n, START);
-  return key;
-}
+
 
 
 static void OutputKey(NGramNodePtr_t node){
@@ -53,12 +49,12 @@ NGramNode::NGramNode(const NGramKey_t &key){
   m_key = make_unique<NGramKey_t>(key); 
 }
 
-void NGramNode::AddFreq(const string &word){
+void NGramNode::AddFreq(const WordID_t &word){
   m_total++;
   (*m_freq)[word]++;
 }
 
-void NGramNode::SetFreq(const string &word, const int freq){
+void NGramNode::SetFreq(const WordID_t &word, const int freq){
   m_total+= freq;
   (*m_freq)[word]+= freq;
 }
@@ -73,10 +69,19 @@ NGram::NGram(const int n){
   N = n-1;
   m_map = make_unique<NGramMap_t>();
   m_vocablary = make_unique<NGramVocablary_t>();
+ 
+  AddToVocablary(START);
+  AddToVocablary(EOS);
 
   GetOrCreateNode(StartNodeKey(N));
 }
 
+
+NGramKey_t NGram::StartNodeKey(const int n) const{
+  auto start_id = m_vocablary->str2id(START);
+  NGramKey_t key(n, start_id);
+  return key;
+}
 
 
 NGramNodePtr_t NGram::GetNode(const NGramKey_t &key) const{
@@ -106,29 +111,32 @@ NGramNodePtr_t NGram::GetOrCreateNode(const NGramKey_t &key){
 
 
 
-void NGram::AddToVocablary(string str){
-  m_vocablary->insert(str);
+WordID_t NGram::AddToVocablary(const string &str){
+  auto id = m_vocablary->AddStr(str);
+  return id;
 }
 
 
 void NGram::Learn(){
   //1つのEOSまでを1シークエンスとする
   string str;
-  NGramKey_t strv;
+  NGramKey_t key;
   int c = 0;
   while( cin >> str ){ 
     c++;
+
     if (str == CORPUS_EOS_STRING){
       str = EOS;  // コーパス中のEOS記号から変換
-      Add(strv);
-      strv.clear();
+      AddToVocablary(str);
+      Add(key);
+      key.clear();
     }else{
-      strv.push_back(str);
+      auto id = AddToVocablary(str);
+      key.push_back(id);
     }
-    AddToVocablary(str);
   }
   cout << "Learned from: " << c << " words" <<endl;
-  cout << "Vocablary   : " << m_vocablary->size() << " words" << endl;
+  cout << "Vocablary   : " << m_vocablary->GetCount() << " words" << endl;
 };
 
 
@@ -146,46 +154,88 @@ void NGram::Add(const NGramKey_t &source){
 
   //最後にEOSへ飛ばす 
   node = GetOrCreateNode(key);
-  node->AddFreq(EOS);
+  auto eos_id = m_vocablary->str2id(EOS);
+  node->AddFreq(eos_id);
 
 }
 
-string NGram::CreateRandomSentence(){
-  NGramKey_t start_key = StartNodeKey(N);
-  auto start_node = GetOrCreateNode(start_key);
-  string str = Transit(start_node);
-
-  //start_node->OutputProb();
+string NGram::CreateRandomSentence(const string & keywords){
   
+  auto strv = split(keywords);
+
+  string str;
+
+  if(strv.size() > 0){
+
+  }else{
+    NGramKey_t start_key = StartNodeKey(N);
+    auto start_node = GetOrCreateNode(start_key);
+    str = ForwardTransit(start_node);
+  }
+
   return str;
 }
 
 
-string NGram::Transit(NGramNodePtr_t node){
+string NGram::ForwardTransit(NGramNodePtr_t node){
   string output_str = EOS;
   NGramNodePtr_t next_node;
-  double r = (double)rand() / (double)RAND_MAX;
+
+  double r = Util::Random();
   float cum_prob = 0;
 
   for(auto freq :node->GetFreq()){
-    output_str = freq.first;
-    cum_prob += GetProb(node, output_str);
+    auto id = freq.first;
+    cum_prob += GetProb(node, id);
     if(r <= cum_prob){
-      //cout << output_str << ": " << GetProb(node, output_str) <<endl;
-      OutputProb(node, output_str);
+      OutputProb(node, id);
       NGramKey_t key = node->GetKey();
       key.erase(key.begin());
-      key.push_back(output_str);
-      if(output_str == EOS){
+      key.push_back(id);
+      output_str = m_vocablary->id2str(id);
+      if(output_str == EOS || output_str == START){
 	return "";
       }
       next_node = GetNode(key);
+    
       break;
     }
   }
 
-  return output_str + Transit(next_node);
+  auto s = node->GetFreq().size();
+  cout << s <<endl;
+  if(s == 0){
+    for(auto id : node->GetKey()){
+      cout << m_vocablary->id2str(id) << endl;
+    }
+  }
+  return output_str + ForwardTransit(next_node);
 }
+
+// string NGram::BackwardTransit(NGramNodePtr_t node){
+//   string output_str = START;
+//   NGramNodePtr_t prev_node;
+
+//   double r = Util::Random();
+//   double max_prob = 0;
+
+
+//   for(auto word : GetVocablary()){
+//     NGramKey_t key = node->GetKey();
+//     key.erase(key.begin());
+//     key.insert(key.begin(), word);
+//     prev_node = GetNode(key);
+//     if(max_prob < GetProb(prev_node, word))
+//     max_prob = GetProb(node, word);
+//   }
+
+//   if(output_str == EOS || output_str == START){
+//     return "";
+//   }
+//   return  BackwardTransit(prev_node) + output_str;
+// }
+
+
 
 void NGram::Save(const string & filename) const{
   ofstream ofs(filename);
@@ -199,11 +249,11 @@ void NGram::Save(const string & filename) const{
     auto node = m.second;
     ofs << HEAD << endl;
     for(auto key: node->GetKey()){
-      ofs << key << " ";
+      ofs << m_vocablary->id2str(key) << " ";
     }
     ofs << endl;
     for(auto freq: node->GetFreq()){
-      ofs << freq.first << " " << freq.second << endl;
+      ofs << m_vocablary->id2str(freq.first) << " " << freq.second << endl;
     }
   }
 
@@ -225,7 +275,7 @@ void NGram::Load(const string & filename){
   }
   string line;
   NGramNodePtr_t node; 
-  NGramKey_t key;
+  vector<string> strv;
   string word;
   int freq;
 
@@ -233,43 +283,36 @@ void NGram::Load(const string & filename){
   while(getline(ifs, line)){
     if(line == HEAD){
       getline(ifs, line);
-      t0 = cur_time();
-      key = split(line);
-      t1 = cur_time();
+      strv = split(line);
+      for(auto str: strv){
+	AddToVocablary(str);
+      }
+      NGramKey_t key = StrvToNGramKey(strv);
       node = GetOrCreateNode(key);
-      t2 = cur_time();
-      t3 = cur_time();
 
     }else{
-      t0 = cur_time();
-      NGramKey_t wf = split(line);
-      t1 = cur_time(); 
+      vector<string> wf = split(line);
       word = wf[0];
       freq = stoi(wf[1]);
-      node->SetFreq(word, freq);
-      t2 = cur_time();
-      AddToVocablary(word);
-      t3 = cur_time();
+      auto id = AddToVocablary(word);
+      node->SetFreq(id, freq);
     }
-    ta += t1-t0;
-    tb += t2-t1;
-    tc += t3-t2;
   }
-  printf( "Elapsed Time(Load-split): %.5f sec\n",ta);
-  printf( "Elapsed Time(Load-node) : %.5f sec\n",tb);
-  printf( "Elapsed Time(Load-addtovocab) : %.5f sec\n",tc);
+  //printf( "Elapsed Time(Load-split): %.5f sec\n",ta);
+  //printf( "Elapsed Time(Load-node) : %.5f sec\n",tb);
+  //printf( "Elapsed Time(Load-addtovocab) : %.5f sec\n",tc);
 }
 
-double NGram::OutputProb(NGramNodePtr_t node, const string& str) const{
-  float prob = GetProb(node, str);
+double NGram::OutputProb(NGramNodePtr_t node, const WordID_t& id) const{
+  float prob = GetProb(node, id);
   cout << "Prob[" 
-       << str 
+       << m_vocablary->id2str(id) 
        << " | (" ; 
   NGramKey_t key = node->GetKey();
-  for(auto str = key.begin(); str < key.end()-1; str++){
-    cout << *str << ", ";
+  for(auto id = key.begin(); id < key.end()-1; id++){
+    cout << m_vocablary->id2str(*id) << ", ";
   }
-  cout << key.back()
+  cout <<  m_vocablary->id2str(key.back())
        << ")] : " 
        << prob <<endl;
   return prob;
@@ -280,6 +323,25 @@ double NGram::OutputProb(NGramNodePtr_t node) const{
     OutputProb(node ,it.first);
   }
 }
+
+
+NGramKey_t NGram::StrvToNGramKey(const std::vector<std::string>& strv){
+  NGramKey_t key;
+  for(auto it = strv.begin(); it != strv.end(); it++){
+    auto id = m_vocablary->str2id(*it);
+    key.push_back(id);
+  }
+  return key;
+}
+
+vector<string> NGram::NGramKeyToStrv(const NGramKey_t & key){
+  vector<string> strv;
+  for(auto it = key.begin(); it != key.end(); it++){
+    auto str = m_vocablary->id2str(*it);
+    strv.push_back(str);
+  }
+  return strv;
+} 
 
 
 double NGram::SequenceProb(const NGramKey_t & strv) const{
@@ -303,7 +365,8 @@ double NGram::SequenceProb(const NGramKey_t & strv) const{
 double NGram::PerplexityTest(){
   //1つのEOSまでを1シークエンスとする
   string str;
-  NGramKey_t strv;
+  vector<string> strv;
+  NGramKey_t key;
   int n = 0;
   double perplexity = 1.0;
 
@@ -316,7 +379,8 @@ double NGram::PerplexityTest(){
     strv.push_back(str);
 
     if(str == EOS){
-      double prob = SequenceProb(strv);
+      auto key = StrvToNGramKey(strv);
+      double prob = SequenceProb(key);
       seqprob_list.push_back(prob);
       n += strv.size();
       strv.clear();
@@ -339,53 +403,54 @@ double NGram::PerplexityTest(){
 
 LaplaceSmoothedNGram::LaplaceSmoothedNGram(const int n) : NGram(n){}
 
-double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const string &str) const
+double LaplaceSmoothedNGram::GetProb(NGramNodePtr_t node,const WordID_t &str) const
 {
-   return (double)(node->GetFreq(str) + 1) / (double)(node->GetTotal() + m_vocablary->size() + 1);
+  const float SMOOTH = 0.1;
+  return (double)(node->GetFreq(str) + SMOOTH) / (double)(node->GetTotal() + m_vocablary->GetCount() * SMOOTH+ 1);
 }
 
 
-string LaplaceSmoothedNGram::Transit(NGramNodePtr_t node){
-  string output_str = EOS;
-  NGramNodePtr_t next_node;
-  double r = (double)rand() / (double)RAND_MAX;
-  float cum_prob = 0;
-  NGramVocablary_t vocablary = this->GetVocablary();
+// string LaplaceSmoothedNGram::ForwardTransit(NGramNodePtr_t node){
+//   string output_str = EOS;
+//   NGramNodePtr_t next_node;
+//   double r = (double)rand() / (double)RAND_MAX;
+//   float cum_prob = 0;
+//   NGramVocablary_t vocablary = this->GetVocablary();
 
-  // NGramに記録されているものを優先的に
-  for(auto freq : node->GetFreq()){
-    output_str = freq.first;
-    vocablary.erase(output_str); 
-    cum_prob += GetProb(node, output_str);
-    if(r <= cum_prob){
-      OutputProb(node, output_str);
-      NGramKey_t key = node->GetKey();
-      key.erase(key.begin());
-      key.push_back(output_str);
-      if(output_str == EOS){
-	return "";
-      }
-      next_node = GetNode(key);
-      return output_str + Transit(next_node);
-    }
-  }
+//   // NGramに記録されているものを優先的に
+//   for(auto freq : node->GetFreq()){
+//     output_str = freq.first;
+//     vocablary.erase(output_str); 
+//     cum_prob += GetProb(node, output_str);
+//     if(r <= cum_prob){
+//       OutputProb(node, output_str);
+//       NGramKey_t key = node->GetKey();
+//       key.erase(key.begin());
+//       key.push_back(output_str);
+//       if(output_str == EOS){
+// 	return "";
+//       }
+//       next_node = GetNode(key);
+//       return output_str + ForwardTransit(next_node);
+//     }
+//   }
   
-  for(auto str : vocablary){
-    output_str = str;
-    cum_prob += GetProb(node, output_str);
-    if(r <= cum_prob){
-      OutputProb(node, output_str);
-      NGramKey_t key = node->GetKey();
-      key.erase(key.begin());
-      key.push_back(output_str);
-      if(output_str == EOS){
-	return "";
-      }
-      next_node = GetNode(key);
-      return output_str + Transit(next_node);
+//   for(auto str : vocablary){
+//     output_str = str;
+//     cum_prob += GetProb(node, output_str);
+//     if(r <= cum_prob){
+//       OutputProb(node, output_str);
+//       NGramKey_t key = node->GetKey();
+//       key.erase(key.begin());
+//       key.push_back(output_str);
+//       if(output_str == EOS){
+// 	return "";
+//       }
+//       next_node = GetNode(key);
+//       return output_str + ForwardTransit(next_node);
 
-    }
-  }
+//     }
+//   }
 
-  return output_str + Transit(next_node);
-}
+//   return output_str + ForwardTransit(next_node);
+// }
