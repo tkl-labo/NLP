@@ -36,6 +36,8 @@ class Parse
   def cky_prob_parse
   end
   def early_parse
+  end
+  def include_rules filename
     File.open(filename).each do |rule|
       rule_ary=rule.split(" ")
       if rule_ary.size == 3
