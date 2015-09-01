@@ -21,12 +21,13 @@ def main(argc, argv):
 
 def earley(sentence):
     earley = Earley()
+    #earley.readCFGRules(FilePath.ROOT + "rules_small.txt")
     earley.readCFGRules(FilePath.ROOT + "rules.txt")
     #earley.showRules()
     earley.parse(sentence)
     earley.showStates()
     print("")
-    #earley.traceRoot()
+    earley.traceRoot()
 
 def pcfg(sentence):
     pcfg = PCFG()

@@ -32,7 +32,7 @@ class EarleyRule:
         return False
 
 class EarleyState:
-    def __init__(self, line, start = 0, dot = 0, position = 0, created_by = None, created_from = None):
+    def __init__(self, id, line, start = 0, dot = 0, position = 0, created_by = None, created_from = None):
         l = line.split()
 
         self.LHS = l[0]
@@ -42,17 +42,13 @@ class EarleyState:
                 self.RHS.append(r)
         self.prob = float(l[len(l)-1])
 
+        self.id = id
         self.start = start
         self.dot = dot
         self.position = position
         self.created_by = created_by
         self.created_from = created_from
-
-
-    def position(self):
-        return self.position
-        #return  self.dot - self.start # 部分木上でのドットの相対位置
-
+    
     def toRuleStr(self, lhs, rhs, prob):
         rulestr = lhs + " "
         for i,s in enumerate(rhs):
@@ -61,8 +57,11 @@ class EarleyState:
         return rulestr
 
     def toStateStr(self, lhs, rhs, prob):
-        p = self.position()
-        statestr = lhs + " "
+
+        statestr = "[%2d] " % + self.id
+
+        statestr += lhs + " "
+        p = self.position
         for i,s in enumerate(rhs):
             if i == p:
                 statestr += "." + " " + s + " "
@@ -74,6 +73,13 @@ class EarleyState:
         statestr += str(prob)
         statestr += " [%d,%d]" % (self.start, self.dot)
         statestr += " " + self.created_by 
+        if not self.created_from == None:
+            statestr += " [ "
+            for cf in self.created_from:
+                statestr += str(cf.id) + " "
+
+            statestr += "]"
+
         return statestr
 
     def __str__(self):
@@ -82,7 +88,7 @@ class EarleyState:
 
     # ドットの右側にトークンが存在しない場合(＝それ以上展開できない場合)
     def isComplete(self):
-        if self.position() == len(self.RHS):
+        if self.position >= len(self.RHS):
             return True
         return False
 
@@ -93,6 +99,7 @@ class Earley:
         self.rules = []
         self.sentence = []
         self.chart = []
+        self.maxid = 0
 
     def parse(self, ori_sentence):
         self.sentence.clear()
@@ -102,20 +109,24 @@ class Earley:
         for w in sentence: 
             self.sentence.append('_' + w.lower()) 
 
+        print(self.sentence)
 
         for i in range(len(self.sentence)+1):
             self.chart.append([])
 
-        start = EarleyState("Dummy S 1.0", 0, 0, 0, "Dummy", None)
+        start = EarleyState(0, "Dummy S 1.0", start=0, dot=0, position=0, created_by="Dummy", created_from = None)
         self.addState(start, 0)
-        
-        for i in range(len(self.sentence)+1):
+
+        for i in range(len(self.sentence)):
             for state in self.chart[i]:
                 self.completer(state)
             for state in self.chart[i]:
                 self.predictor(state)
             for state in self.chart[i]:
                 self.scanner(state)
+            
+        for state in self.chart[len(self.sentence)]:
+            self.completer(state)
  
 
     def traceRoot(self):
@@ -124,25 +135,24 @@ class Earley:
             if root.LHS == 'S' and root.start == 0:
                 print(root)
                 self.trace(root.created_from)
-                exit(1)
-        
+                print("")
+                #exit(1)
+                
+    def trace(self, states, depth = 1):
+        try:
+            for state in states:
+                if state.LHS == "Dummy" or state.created_by == "Predictor":
+                    continue
+                print ("   " * depth + str(state))
+                if state.created_from != None and state.created_by != "Scanner":
+                    self.trace(state.created_from, depth+1)
 
-    def trace(self, states):
-        if states == None:
-            return
-        for state in states:
-            if state.LHS == "Dummy":
-                continue
-            print ("  " + str(state))
-            for s in state.created_from:
-                print ("    " + str(s))
-            #if state.created_by != "Dummy":
-                #self.trace(state.created_from)
-
+        except:
+            print("Trace Error")
 
     def checkdup(self, state, index):
         for s in self.chart[index]:
-            if s.LHS == state.LHS and s.RHS == state.RHS:
+            if s.LHS == state.LHS and s.RHS == state.RHS and s.start == state.start: 
                 return True
         return False
 
@@ -153,9 +163,9 @@ class Earley:
         for rule in self.rules:
             if rule.isTerminal():
                 continue
-            if rule.LHS == state.RHS[state.position()]:
-                new_state_str = rule.toRuleStr(rule.LHS, rule.RHS, rule.prob * state.prob)
-                new_state = EarleyState(new_state_str, state.dot, state.dot, 0, "Predictor", [state])
+            if rule.LHS == state.RHS[state.position]:
+                new_state_str = rule.toRuleStr(rule.LHS, rule.RHS, rule.prob)
+                new_state = EarleyState(self.maxid, new_state_str, state.dot, state.dot, 0, "Predictor", [state])
                 self.addState(new_state, state.dot)
 
     def scanner(self, state):
@@ -165,11 +175,10 @@ class Earley:
         for rule in self.rules:
             if not rule.isTerminal():
                 continue
-            if rule.LHS == state.RHS[state.position()]:
+            if rule.LHS == state.RHS[state.position] and self.sentence[state.position+state.start] == rule.RHS[0]:
                 new_state_str = rule.toRuleStr(rule.LHS, rule.RHS, rule.prob)
-                new_state = EarleyState(new_state_str, state.dot, state.dot + 1, 1 ,"Scanner", [state])
+                new_state = EarleyState(self.maxid, new_state_str, state.dot, state.dot + 1, 1 ,"Scanner", [state])
                 self.addState(new_state, state.dot+1)
-
         
 
     # ドットが右端まで到達したStateについて、その部分木を適用でき、ドットが対象とするLHSの左にある他のStateを探す
@@ -180,9 +189,10 @@ class Earley:
         for upper_state in self.chart[state.start]:
             if upper_state.isComplete():
                 continue
-            if state.LHS == upper_state.RHS[upper_state.position()]:
+            if state.LHS == upper_state.RHS[upper_state.position]:
                 new_state_str = upper_state.toRuleStr(upper_state.LHS, upper_state.RHS, upper_state.prob * state.prob)
-                new_state = EarleyState(new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
+                #new_state = EarleyState(self.maxid, new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
+                new_state = EarleyState(self.maxid, new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
                 self.addState(new_state, state.dot)
             
         #new_state_str = 
@@ -193,6 +203,7 @@ class Earley:
     def addState(self, state, index):
         #重複チェック
         if not self.checkdup(state, index):
+            self.maxid += 1
             self.chart[index].append(state)
 
     def addRule(self, rule):
