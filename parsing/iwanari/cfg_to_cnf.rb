@@ -4,7 +4,7 @@ require "./colored"
 require "./nlp_util"
 
 is_debug = true
-is_debug = false
+# is_debug = false
 
 # ===== Initialize =====
 # check input argument
@@ -49,7 +49,7 @@ passed_2nd = cfg_rules
 # TODO: prob is not valid
 passed_3rd = Array.new
 
-def reachable_unit(rules, reachable, lhs)
+def reachable_unit(rules, reachable, lhs, prob)
     new_reachable = Array.new
     # add new reachable symbols
     for rule in rules do
@@ -61,14 +61,14 @@ def reachable_unit(rules, reachable, lhs)
         lhs_, rhs_, prob_ = rule
         if lhs == lhs_ and rhs_.length == 1 and rhs_[0].nonterminal? and 
             !reachable.include?(rhs_) then
-            reachable.push(rhs_[0])
-            new_reachable.push(rhs_[0])
+            reachable.push([rhs_[0], prob * prob_])
+            new_reachable.push([rhs_[0], prob_])
         end
     end
     
     # search more reachable symbols recursively
-    for lhs_ in new_reachable do
-        reachable_unit(rules, reachable, lhs_)
+    for lhs_, prob_ in new_reachable do
+        reachable_unit(rules, reachable, lhs_, prob * prob_)
     end
 end
 
@@ -82,8 +82,8 @@ for rule in passed_2nd do
     end
     
     # search unit production
-    reachable = [lhs]
-    reachable_unit(passed_2nd, reachable, lhs)
+    reachable = [[lhs, prob]]
+    reachable_unit(passed_2nd, reachable, lhs, 1.0)
     reachable_symbols[lhs] = Array.new(reachable)
 end
 
@@ -97,8 +97,10 @@ for rule in passed_2nd do
     
     # add more rules
     reachable_symbols.each {|key, value|
-        if value.include?(lhs)
-            passed_3rd.push([key, rhs, prob])
+        for rhs_, prob_ in value do
+            if rhs_.include?(lhs) then
+                passed_3rd.push([key, rhs, prob_ * prob])
+            end
         end
     }
 end
