@@ -35,11 +35,14 @@ class Parse
     #debug length
     display length
   end
+
   def cky_prob_parse sentence
     cky_parse sentence, pflag: true
   end
+
   def early_parse
   end
+
   def include_rules filename
     File.open(filename).each do |rule|
       rule_ary=rule.split(" ")
@@ -54,6 +57,7 @@ class Parse
       end
     end
   end
+
   def left_hand_of symptr1, symptr2: nil
     symbols = []
     unless symptr2
@@ -69,6 +73,7 @@ class Parse
     end
     symbols
   end
+
   def merge_bp_array new_ary, i, j 
     new_ary.each do |new|
       if (same_left_bp = @memo[i][j].find {|upd| new[:left] == upd[:left]})
@@ -86,6 +91,7 @@ class Parse
     end
     @memo[i][j].concat(new_ary)
   end
+
   def display length
     unless @memo[0][length].empty?
       puts "success"
@@ -98,6 +104,7 @@ class Parse
       puts "failed"
     end
   end
+
   def display_tree rule, count
     if rule.is_a?(Array)
       if rule.count == 1 && rule[0].is_a?(String)
@@ -118,6 +125,7 @@ class Parse
       display_tree rule[:right], count+1
     end
   end
+
   def debug length
     1.upto(length) do |i|
       (i-1).downto(0) do |j|
