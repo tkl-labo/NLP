@@ -11,7 +11,7 @@ class Parse
     input = sentence.split(" ")#(/\s+|\.|,|/)
     length = input.size
     @memo = Array.new(length).map{Array.new(length+1).map{Array.new}}
-    @count= Array.new(length).map{Array.new(length+1).map{Array.new}}
+    @prob= Array.new(length).map{Array.new(length+1).map{Hash.new}}
     #POSタグを終端記号として入れる
     input.each_with_index do |word, ind|
       raise word + " doesn't exist in lexicon" if (rules = @lexicon.select {|item| item[1][1..-1] == word}).empty?
@@ -26,11 +26,12 @@ class Parse
               merge_bp_array(left_hand_of(sym1, symptr2: sym2), @memo[j][i])
             end
           end
-          @memo[j][i].each {|sym| merge_bp_array(left_hand_of(sym), @memo[j][i])}
         end
+        @memo[j][i].each {|sym| merge_bp_array(left_hand_of(sym), @memo[j][i])}
       end
     end
     #debug length
+    #@memo[0][length][2][:right].each {|i| p i}
     display length
   end
   def cky_prob_parse
@@ -55,7 +56,9 @@ class Parse
     symbols = []
     unless symptr2
       @rules_1.each do |rule|
-        symbols.push({left: rule[0], right: [symptr1]}) if rule[1] == symptr1[:left]
+        if rule[1] == symptr1[:left]
+          symbols.push({left: rule[0], right: [symptr1]})
+        end
       end
     else
       @rules_2.each do |rule|
@@ -78,7 +81,7 @@ class Parse
       puts "success"
       puts "edges: "
       puts "trees: "+ @memo[0][length].count.to_s
-      @memo[0][length].delete_if {|tree| tree[:left].match(/^X\d+/)}
+      @memo[0][length].select! {|tree| tree[:left] == "S"}
       display_tree  @memo[0][length], 0
     else
       puts "failed"
