@@ -3,6 +3,7 @@ class Parse
     @rules_1 = []
     @rules_2 = []
     @lexicon = []
+    @trace = []
     include_rules(rules_file)
   end
 
@@ -10,35 +11,31 @@ class Parse
     input = sentence.split(" ")#(/\s+|\.|,|/)
     length = input.size
     @memo = Array.new(length).map{Array.new(length+1).map{Array.new}}
+    @count= Array.new(length).map{Array.new(length+1).map{Array.new}}
     #POSタグを終端記号として入れる
     input.each_with_index do |word, ind|
       raise word + " doesn't exist in lexicon" if (rules = @lexicon.select {|item| item[1][1..-1] == word}).empty?
-      rules.each {|rule| @memo[ind][ind+1].push(BackPointer.new rule[0], right: rule[1])}
-      #p @memo[ind][ind+1]
+      rules.each {|rule| @memo[ind][ind+1].push({left: rule[0], right: [rule[1]]})}
+      @memo[ind][ind+1].each {|sym| merge_bp_array(left_hand_of(sym), @memo[ind][ind+1])} #loopがあっても大丈夫
     end
-    debug length
     1.upto(length) do |i|
       (i-2).downto(0) do |j|
-        (i+1).upto(j-1) do |k|
-          @memo[i][k].each do |sym1|
-            @memo[k][j].each do |sym2|
-              (left_hand_of(sym1, sym2)).merge(@memo[i][j])
+        (j+1).upto(i-1) do |k|
+          @memo[j][k].each do |sym1|
+            @memo[k][i].each do |sym2|
+              merge_bp_array(left_hand_of(sym1, symptr2: sym2), @memo[j][i])
             end
           end
-          @memo[i][j].each {|sym| (left_hand_of(sym)).merge(@memo[i][j])}
+          @memo[j][i].each {|sym| merge_bp_array(left_hand_of(sym), @memo[j][i])}
         end
       end
     end
-    debug length
+    #debug length
+    display length
   end
   def cky_prob_parse
   end
   def early_parse
-  end
-  def early_prob_parse
-  end
-
-  def include_rules filename
     File.open(filename).each do |rule|
       rule_ary=rule.split(" ")
       if rule_ary.size == 3
@@ -56,38 +53,61 @@ class Parse
     symbols = []
     unless symptr2
       @rules_1.each do |rule|
-        symbols.push(BackPointer.new rule[0], right: [symptr1]) if rule[1] == symptr1.left
+        symbols.push({left: rule[0], right: [symptr1]}) if rule[1] == symptr1[:left]
       end
     else
       @rules_2.each do |rule|
-        symbols.push(BackPointer.new rule[0], right: [symptr1, symptr1]) if rule[1] == symptr1.left && rule[2] == symptr2.left
+        symbols.push({left: rule[0], right: [symptr1, symptr2]}) if rule[1] == symptr1[:left] && rule[2] == symptr2[:left]
       end
     end
     symbols
+  end
+  def merge_bp_array new_ary, updated
+    new_ary.each do |new|
+      if (same_left_bp = updated.find {|upd| new[:left] == upd[:left]})
+        same_left_bp[:right] = [same_left_bp[:right], new[:right]]
+        new_ary.delete(new)
+      end
+    end
+    updated.concat(new_ary)
+  end
+  def display length
+    unless @memo[0][length].empty?
+      puts "success"
+      puts "edges: "
+      puts "trees: "+ @memo[0][length].count.to_s
+      @memo[0][length].delete_if {|tree| tree[:left].match(/^X\d+/)}
+      display_tree  @memo[0][length], 0
+    else
+      puts "failed"
+    end
+  end
+  def display_tree rule, count
+    if rule.is_a?(Array)
+      if rule.count == 1 && rule[0].is_a?(String)
+        puts " "*count + rule[0]
+        @trace.push(" "*count+rule[0])
+      else
+        size = @trace.size
+        rule.each_with_index do |subtree, index|
+          puts @trace if index > 0 && subtree.is_a?(Array)
+          display_tree subtree, count
+          @trace.slice!(size..-1)
+        end
+      end
+    elsif rule.is_a?(Hash)
+      indent = " "*count
+      puts indent+rule[:left]
+      @trace.push(indent+rule[:left])
+      display_tree rule[:right], count+1
+    end
   end
   def debug length
     1.upto(length) do |i|
       (i-1).downto(0) do |j|
         p "["+j.to_s+", "+i.to_s+"]"
-        p @memo[j][i]#.each {|k| p k.left}
+        p @memo[j][i]
       end
-    end
-  end
-end
-class BackPointer
-  attr_accessor :left, :right
-  def initialize left, right: []
-    @left = left
-    @right = [right]
-  end
-  def add_right right: []
-    @right.push(right)
-  end
-  def merge bp_array
-    if same_left = bp_array.find{|bp| bp.left == self.left}
-      self.add_right(same_left.add_right(self.right))
-    else
-      bp_array.push(self)
     end
   end
 end
