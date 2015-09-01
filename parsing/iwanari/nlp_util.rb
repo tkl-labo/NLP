@@ -42,3 +42,11 @@ def show_and_normalized_check(rules)
     end
 end
 
+def unit_production?(rule)
+    lhs, rhs, prob = rule
+    if rhs.length == 1 and rhs[0].nonterminal? then
+        return true
+    else
+        return false
+    end
+end

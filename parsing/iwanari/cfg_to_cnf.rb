@@ -3,16 +3,14 @@
 require "./colored"
 require "./nlp_util"
 
-is_debug = true
-# is_debug = false
-
 # ===== Initialize =====
 # check input argument
 source = ARGV[0]
 if source.nil? then
-    puts "Usage: " + __FILE__ + " cfg_rule_file"
+    puts "Usage: " + __FILE__ + " cfg_rule_file [debug: 1]"
     exit
 end
+is_debug = ARGV[1].to_i == 1
 # ===== /Initialize =====
 
 # ===== Read Rules =====
@@ -46,7 +44,6 @@ end
 passed_2nd = cfg_rules
 
 # ----- 3rd step (Unit production reduction) -----
-# TODO: prob is not valid
 passed_3rd = Array.new
 
 def reachable_unit(rules, reachable, lhs, prob)
@@ -59,8 +56,7 @@ def reachable_unit(rules, reachable, lhs, prob)
         
         # search unit production
         lhs_, rhs_, prob_ = rule
-        if lhs == lhs_ and rhs_.length == 1 and rhs_[0].nonterminal? and 
-            !reachable.include?(rhs_) then
+        if unit_production?(rule) and lhs == lhs_ and !reachable.include?(rhs_) then
             reachable.push([rhs_[0], prob * prob_])
             new_reachable.push([rhs_[0], prob_])
         end
@@ -82,7 +78,7 @@ for rule in passed_2nd do
     end
     
     # search unit production
-    reachable = [[lhs, prob]]
+    reachable = [[lhs, 1.0]]
     reachable_unit(passed_2nd, reachable, lhs, 1.0)
     reachable_symbols[lhs] = Array.new(reachable)
 end
@@ -99,7 +95,7 @@ for rule in passed_2nd do
     reachable_symbols.each {|key, value|
         for rhs_, prob_ in value do
             if rhs_.include?(lhs) then
-                passed_3rd.push([key, rhs, prob_ * prob])
+                passed_3rd.push([key, rhs, (prob_ * prob).round(6)])
             end
         end
     }

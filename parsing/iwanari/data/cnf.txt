@@ -2,64 +2,76 @@ S NP VP 0.8
 X0 NP VP 1.0
 S Aux X0 0.15
 NP Det Nominal 0.2
-NP Nominal Noun 0.2
+NP Nominal Noun 0.03
 Nominal Nominal Noun 0.2
-NP Nominal PP 0.05
+NP Nominal PP 0.0075
 Nominal Nominal PP 0.05
-S Verb NP 0.2
+S Verb NP 0.01
 VP Verb NP 0.2
 X1 NP PP 1.0
-S Verb X1 0.1
+S Verb X1 0.005
 VP Verb X1 0.1
-S Verb PP 0.15
+S Verb PP 0.0075
 VP Verb PP 0.15
 X2 NP NP 1.0
-S Verb X2 0.05
+S Verb X2 0.0025
 VP Verb X2 0.05
-S VP PP 0.15
+S VP PP 0.0075
 VP VP PP 0.15
 PP Preposition NP 1.0
 Det _that 0.1
 Det _a 0.3
 Det _the 0.6
-NP _book 0.1
-Nominal _book 0.1
+NP _book 0.03
+NP _book 0.01125
+Nominal _book 0.075
 Noun _book 0.1
-NP _flight 0.3
-Nominal _flight 0.3
+Proper-Noun _book 0.1
+NP _flight 0.09
+NP _flight 0.03375
+Nominal _flight 0.225
 Noun _flight 0.3
-NP _meal 0.05
-Nominal _meal 0.05
+Proper-Noun _flight 0.3
+NP _meal 0.015
+NP _meal 0.005625
+Nominal _meal 0.0375
 Noun _meal 0.05
-NP _money 0.05
-Nominal _money 0.05
+Proper-Noun _meal 0.05
+NP _money 0.015
+NP _money 0.005625
+Nominal _money 0.0375
 Noun _money 0.05
-NP _flights 0.4
-Nominal _flights 0.4
+Proper-Noun _money 0.05
+NP _flights 0.12
+NP _flights 0.045
+Nominal _flights 0.3
 Noun _flights 0.4
-NP _dinner 0.1
-Nominal _dinner 0.1
+Proper-Noun _flights 0.4
+NP _dinner 0.03
+NP _dinner 0.01125
+Nominal _dinner 0.075
 Noun _dinner 0.1
-S _book 0.3
-VP _book 0.3
+Proper-Noun _dinner 0.1
+S _book 0.00525
+VP _book 0.105
 Verb _book 0.3
-S _include 0.3
-VP _include 0.3
+S _include 0.00525
+VP _include 0.105
 Verb _include 0.3
-S _prefer 0.4
-VP _prefer 0.4
+S _prefer 0.007
+VP _prefer 0.14
 Verb _prefer 0.4
-NP _I 0.4
+NP _I 0.14
 Pronoun _I 0.4
-NP _she 0.05
+NP _she 0.0175
 Pronoun _she 0.05
-NP _me 0.15
+NP _me 0.0525
 Pronoun _me 0.15
-NP _you 0.4
+NP _you 0.14
 Pronoun _you 0.4
-NP _Houston 0.6
+NP _Houston 0.18
 Proper-Noun _Houston 0.6
-NP _TWA 0.4
+NP _TWA 0.12
 Proper-Noun _TWA 0.4
 Aux _does 0.6
 Aux _can 0.4
