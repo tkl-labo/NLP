@@ -46,7 +46,7 @@ class Parse
     @trace_e = []
     @POS = @lexicon.map{|sym| sym[0]}.uniq
     @chart=Array.new(length+1).map{Array.new}
-    @chart[0].push({left: "gamma", right: ["S"], dot: 0, start: 0, end: 0, func: "Init"})
+    @chart[0].push({left: "gamma", right: ["S"], dot: 0, start: 0, end: 0, func: "Init", prob: 1.0})
     0.upto(length) do |i|
       @chart[i].each do |state|
         if incomplete?(state)
@@ -57,14 +57,19 @@ class Parse
       end
     end
     chart_count = count_and_display_chart length
-    display_earley length, chart_count
+    display_earley length, chart_count, pflag
+  end
+
+  def earley_prob_parse sentence
+    earley_parse sentence, pflag:true
   end
 
   def predictor state
+    puts "pred"
     (@rules_1+@rules_2).each do |rule|
       dot = state[:dot]
       if rule[0] == state[:right][dot]
-        new_state = {left: rule[0], right: rule[1..-2], dot: 0, start: state[:end], end: state[:end], func: "Pred"}
+        new_state = {left: rule[0], right: rule[1..-2], dot: 0, start: state[:end], end: state[:end], func: "Pred", prob: rule[-1].to_f}
         unless  @chart[state[:end]].include?(new_state)
           @chart[state[:end]].push(new_state)
         end
@@ -73,8 +78,9 @@ class Parse
   end
 
   def scanner state, input
-    if @lexicon.select{|entry| entry[0] == state[:right][state[:dot]]}.find {|word| word[1][1..-1] == input[state[:end]]}
-      new_state = {left: state[:right][state[:dot]], right: [input[state[:end]]], dot: 1, start: state[:end], end: state[:end]+1, func: "Scan"}
+    puts "scan"
+    if rule = @lexicon.select{|entry| entry[0] == state[:right][state[:dot]]}.find {|word| word[1][1..-1] == input[state[:end]]}
+      new_state = {left: state[:right][state[:dot]], right: [input[state[:end]]], dot: 1, start: state[:end], end: state[:end]+1, func: "Scan", prob: rule[-1].to_f}
       unless state[:end] == input.length || @chart[state[:end]+1].include?(new_state) 
         @chart[state[:end]+1].push(new_state)
       end
@@ -84,18 +90,23 @@ class Parse
   def completer state, pflag
     @chart[state[:start]].each do |entry|
       if entry[:right][entry[:dot]] == state[:left] && entry[:left] != "gamma"
-        new_state = {left: entry[:left], right: entry[:right], dot: entry[:dot]+1, start: entry[:start], end: state[:end], func: "Comp", bp: [{incomp: entry, comp: state}]}
+        puts "com", entry, state
+        new_state = {left: entry[:left], right: entry[:right], dot: entry[:dot]+1, start: entry[:start], end: state[:end], func: "Comp", bp: [{incomp: entry, comp: state}], prob: entry[:prob]*state[:prob]}
         unless same = @chart[state[:end]].find{|s| same_state?(s, new_state)}
           @chart[state[:end]].push(new_state)
         else
-          same[:bp].push(new_state[:bp])
+          if pflag && same[:prob] < new_state[:prob]
+            same[:bp] = new_state[:bp]
+            same[:prob] = new_state[:prob]
+          elsif !pflag
+            same[:bp].push(new_state[:bp])
+          end
         end
       end
     end
   end
 
   def same_state? state1, state2
-    puts "1", state1, "2", state2
     (state1[:left] == state2[:left] && state1[:right] == state2[:right] && state1[:dot] == state2[:dot] && state1[:start] == state2[:start] && state1[:end] == state2[:end] && state1[:func] == state2[:func])? true:false
   end
 
@@ -123,7 +134,7 @@ class Parse
     @POS.include?(symbol)
   end
 
-  def display_earley length, count
+  def display_earley length, count, pflag
     if root = @chart[length].find{|state| state[:left] == "S" && !incomplete?(state) && state[:start] == 0 && state[:end] == length}
       @tree_count = 1
       puts "success"
@@ -131,6 +142,7 @@ class Parse
       puts "state: "+count.to_s
       count_tree_e(root)
       puts "tree: "+@tree_count.to_s
+      puts root[:prob] if pflag
       display_tree_e root, 0
     end
   end
