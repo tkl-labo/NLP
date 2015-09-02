@@ -191,7 +191,6 @@ class Earley:
                 continue
             if state.LHS == upper_state.RHS[upper_state.position]:
                 new_state_str = upper_state.toRuleStr(upper_state.LHS, upper_state.RHS, upper_state.prob * state.prob)
-                #new_state = EarleyState(self.maxid, new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
                 new_state = EarleyState(self.maxid, new_state_str, upper_state.start, state.dot, upper_state.position+1 , "Completer", [upper_state, state])
                 self.addState(new_state, state.dot)
             
