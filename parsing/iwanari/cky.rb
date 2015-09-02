@@ -25,12 +25,11 @@ begin
         rules.push([lhs, rhs, prob])
         
         if rhs.length == 1 and rhs[0].terminal? then
-            # dict[rhs[0]] = lhs
             word = rhs[0].slice(1..-1)
             if dict.has_key?(word) then
-                dict[word].push(lhs)
+                dict[word].push([lhs, rule])
             else
-                dict[word] = [lhs]
+                dict[word] = [[lhs, rule]]
             end
         end
     end
@@ -57,13 +56,29 @@ for i in 0...N do
 end
 # ---- /Initialize -----
 
-def draw(rules, r, l)
+def draw(rules, table, i, k, j)
+    l, r = table[i][k], table[k+1][j]
     parents = Array.new
     for rule in rules do
         lhs, rhs, prob = rule
-        if rhs.length == 2 and
-            r.include?(rhs[0]) and l.include?(rhs[1]) then
-            parents.push(lhs)
+        if rhs.length == 2 then
+            is_find = false
+            p = prob
+            for lhs_, rule_, i_, k_, j_ in l do
+                if lhs_ == rhs[0] then
+                    p = p * rule_[2].to_f
+                    is_find = true
+                end
+            end
+            
+            next unless is_find
+            
+            for lhs_, rule_, i_, k_, j_ in r do
+                if lhs_ == rhs[1] then
+                    p = p * rule_[2].to_f
+                    parents.push([lhs, rule, [i, k, j], p]) unless does_include
+                end
+            end
         end
     end
     return parents
@@ -74,9 +89,9 @@ for d in 0...N do
         j = i + d
         for k in i...j do
             if cky_table[i][j].nil? then
-                cky_table[i][j] = draw(rules, cky_table[i][k], cky_table[k+1][j])
+                cky_table[i][j] = draw(rules, cky_table, i, k, j)
             else
-                cky_table[i][j] = cky_table[i][j] + draw(rules, cky_table[i][k], cky_table[k+1][j])
+                cky_table[i][j] = cky_table[i][j] + draw(rules, cky_table, i, k, j)
             end
         end
     end
@@ -85,11 +100,69 @@ end
 
 puts "-----"
 
-# p cky_table
+# def show_table(table, n)
+#     for i in 0...n do
+#         print table[i]
+#         puts ""
+#     end
+# end
+# show_table(cky_table, N)
 
-
-if cky_table[0][N-1].include?("S") then
-    puts "Good!".green
-else
-    puts "Bad...".red
+# ===== Show result =====
+is_correct = false
+start_symbols = Array.new
+for lhs_, rule_, (i_, k_, j_) in cky_table[0][N-1] do
+    if lhs_ == "S" then
+        is_correct = true
+        start_symbols.push([rule_, i_, k_, j_])
+    end
 end
+if is_correct then
+    puts "Correct Grammar!".green
+else
+    puts "Not Correct Grammar...".red
+    exit
+end
+# ===== /Show result =====
+
+
+puts "-----"
+
+
+# ===== Show grammar tree =====
+def search_tree(table, rule, i, k, j)
+    if i.nil? or i == -1 then
+        print "( " + rule[1] + " ) "
+        return rule[2].to_f
+    end
+    lhs, rhs, prob = rule
+    l, r = table[i][k], table[k+1][j]
+    
+    print "( " + rhs[0] + " " 
+    for lhs_, rule_, (i_, k_, j_) in l do
+        if lhs_ == rhs[0] then
+            prob = prob * search_tree(table, rule_, i_, k_, j_)
+        end
+    end
+    
+    print rhs[1] + " "
+    for lhs_, rule_, (i_, k_, j_) in r do
+        if lhs_ == rhs[1] then
+            prob = prob * search_tree(table, rule_, i_, k_, j_)
+        end
+    end
+    print ") "
+    return prob
+end
+
+for symbol in start_symbols do
+    rule, i, k, j = symbol
+    print "( " + rule[0] + " "
+    prob = search_tree(cky_table, rule, i, k, j)
+    puts ")"
+    puts "prob: " + prob.to_s
+    puts "---"
+end
+
+# ===== /Show grammar tree =====
+

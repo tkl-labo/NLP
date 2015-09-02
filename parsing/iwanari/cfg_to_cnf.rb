@@ -93,8 +93,8 @@ for rule in passed_2nd do
     
     # add more rules
     reachable_symbols.each {|key, value|
-        for rhs_, prob_ in value do
-            if rhs_.include?(lhs) then
+        for symbol, prob_ in value do
+            if symbol == lhs then
                 passed_3rd.push([key, rhs, (prob_ * prob).round(6)])
             end
         end
