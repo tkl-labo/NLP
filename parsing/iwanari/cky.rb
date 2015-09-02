@@ -76,7 +76,7 @@ def draw(rules, table, i, k, j)
             for lhs_, rule_, i_, k_, j_ in r do
                 if lhs_ == rhs[1] then
                     p = p * rule_[2].to_f
-                    parents.push([lhs, rule, [i, k, j], p]) unless does_include
+                    parents.push([lhs, rule, [i, k, j], p])
                 end
             end
         end
