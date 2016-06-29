@@ -20,9 +20,9 @@ class Edist:
 
 		m, n = len(self.source), len(self.target)
 		dp = [[0]*(n+1) for _ in range(m+1)]
-		for i in range(1, m):
+		for i in range(1, m+1):
 			dp[i][0] = i
-		for j in range(1, n):
+		for j in range(1, n+1):
 			dp[0][j] = j
 
 		for i in range(1, m+1):
@@ -42,9 +42,9 @@ class Edist:
 		m, n = len(self.source), len(self.target)
 		path = [[(0, 0, 0)]*(n+1) for _ in range(m+1)]
 
-		for i in range(1, m):
+		for i in range(1, m+1):
 			path[i][0] = (i-1, 0, Action.DE)
-		for j in range(1, n):
+		for j in range(1, n+1):
 			path[0][j] = (0, j-1, Action.INS)
 
 		for i in range(1, m+1):
@@ -106,4 +106,5 @@ if __name__ == "__main__":
 	print()
 	print("edit distance: %d" % edist.dist())
 	print()
+
 	edist.eprint(edist.edit())
