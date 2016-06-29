@@ -9,7 +9,7 @@
 using namespace std;
 
 
-unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, int N, char* file_name, string mode);
+unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, int N, char* file_name, string mode, int& nwords);
 double compute_perplexity(unordered_map<string,int>& n_gram_map, unordered_map<string,int>& n_minus_1_gram_map, int N, char* file_name, int nwords, int V);
 
 double compute_perplexity_1(unordered_map<string,int>& n_gram_map, char * file_name, int nwords,int V);
@@ -24,13 +24,13 @@ int main(int argc, char** argv){
 	//ifstream ifs(argv[1]);
 	//ifstream ifs("../../../../takayasu/slp/test2.txt");
 	//ifstream ifs("../../../../takayasu/slp/20120101.cdr");
-
+	int nwords = 0;
 	unordered_map<string,int> n_gram_map;
 	unordered_map<string,int> n_minus_1_gram_map;
 	unordered_map<string,int> one_gram_map;
-	count_n_gram(n_gram_map,N,train_file_name,"train");
-	if(N != 1) count_n_gram(n_minus_1_gram_map,N-1,train_file_name,"train");
-	count_n_gram(one_gram_map,1,train_file_name,"train");
+	count_n_gram(n_gram_map,N,train_file_name,"train",nwords);
+	if(N != 1) count_n_gram(n_minus_1_gram_map,N-1,train_file_name,"train",nwords);
+	count_n_gram(one_gram_map,1,train_file_name,"train",nwords);
 	
 	/*
 	int V_train=0;
@@ -40,18 +40,17 @@ int main(int argc, char** argv){
 	}
 	cout << "V_train = " << V_train << endl;
 	*/
-	
-	count_n_gram(n_gram_map,N,test_file_name,"");
-	if(N != 1)count_n_gram(n_minus_1_gram_map,N-1,test_file_name,"");
-	count_n_gram(one_gram_map,1,test_file_name,"");
+	//int nwords = 0
+	count_n_gram(n_gram_map,N,test_file_name,"",nwords);
+	if(N != 1)count_n_gram(n_minus_1_gram_map,N-1,test_file_name,"",nwords);
+	count_n_gram(one_gram_map,1,test_file_name,"count_line", nwords);
 	int V = 0;
-	int nwords = 0;
 	for(auto itr = one_gram_map.begin(); itr != one_gram_map.end(); ++itr){
 		++V;
-		nwords += itr->second;
-		cout << itr->first << "\t" << itr->second << "\n";
+		//nwords += itr->second;
+		//cout << itr->first << "\t" << itr->second << "\n";
 	}
-	nwords -= one_gram_map["<s>,"];
+	//nwords -= one_gram_map["<s>,"];
 	int nsentences = one_gram_map["</s>,"];
 	cout << "V = " << V << endl;
 	cout << "nwords = " << nwords << endl;
@@ -94,7 +93,7 @@ double compute_perplexity_1(unordered_map<string,int>& n_gram_map, char * file_n
 		}
 		n_gram_key = word + ",";
 		double x = (nwords+V)/n_gram_map[n_gram_key];
-		perplexity *= pow(x,1.0/nwords);
+		perplexity *= pow(x,-1.0/nwords);
 	}
 	return perplexity;
 }
@@ -143,12 +142,12 @@ double compute_perplexity(unordered_map<string,int>& n_gram_map, unordered_map<s
 			n_minus_1_gram_key += (n_gram[i]+ ",") ;
 		}
 		double x = (n_minus_1_gram_map[n_minus_1_gram_key]+V)/n_gram_map[n_gram_key];
-		perplexity *= pow(x,1.0/nwords);
+		perplexity *= pow(x,-1.0/nwords);
 	}
 	return perplexity;
 }
 
-unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, int N, char* file_name, string mode){
+unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, int N, char* file_name, string mode, int& nwords){
 		ifstream ifs(file_name);
 	//ofstream ofs(argv[3]);
 	if(!ifs){
@@ -192,6 +191,9 @@ unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, in
 			n_gram_map[n_gram_key]+=1;
 		}
 		else{
+			if(mode == "count_line"){
+				nwords += 1;
+			}
 			n_gram_map[n_gram_key]+=0; //キーと値のペアがなければ0で作成、あればそのまま
 		}
 		//cout << n_gram_key << n_gram_map[n_gram_key] << endl;
