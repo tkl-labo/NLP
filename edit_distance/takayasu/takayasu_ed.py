@@ -1,3 +1,4 @@
+#Python3
 # -*- coding: utf-8 -*-
 
 import sys
@@ -16,7 +17,7 @@ def edit_distance(source,target,mode=0):
 	n = len(source)
 	m = len(target)
 
-	distance = [[-1000 for j in range(m+1)] for i in range(n+1)]
+	distance = [[-1000 for j in range(m+1)] for i in range(n+1)] #どうせ0以上になるのでわざわざいらない
 	
 	distance[0][0] = 0
 	for i in range(1,n+1):
@@ -32,7 +33,7 @@ def edit_distance(source,target,mode=0):
 	#表をプリント。デバッグ用
 	if mode == 1:
 		for l in range(n+1):
-			print (distance[l])
+			print(distance[l])
 	
 	return distance[n][m]
 
@@ -48,7 +49,7 @@ if len(sys.argv) >=3:
 else:
 	source = "夜明け前より瑠璃色な"
 	target = "けよりな"
-print (source,target)
+print(source,target)
 
 #デバッグ用
 mode = 0
@@ -57,4 +58,4 @@ if len(sys.argv) >= 4:
 
 
 dist = edit_distance(source,target,mode)
-print ("dist =",dist)
+print("dist =",dist)
