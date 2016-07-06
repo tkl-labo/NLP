@@ -6,9 +6,9 @@
 using namespace std;
 
 /*
-ŠwKƒf[ƒ^‚ğ“Ç‚İ‚Ş(n_gram,n-1_gram,1-gram)
-ƒeƒXƒgƒf[ƒ^(•¶Í)‚ğ“Ç‚İ‚İA1-gram‚ğg‚Á‚ÄV‚ğŒˆ‚ß‚é
-ƒeƒXƒgƒf[ƒ^‚ğ“Ç‚İ‚İAp‚Æperplexity‚ğŒvZ
+å­¦ç¿’ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€(n_gram,n-1_gram,1-gram)
+ãƒ†ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿(æ–‡ç« )ã‚’èª­ã¿è¾¼ã¿ã€1-gramã‚’ä½¿ã£ã¦Vã‚’æ±ºã‚ã‚‹
+ãƒ†ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã¿ã€pã¨perplexityã‚’è¨ˆç®—
 
 */
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 	//unordered_map<string,int> all_n-1_grams;
 	//unordered_map<string,int> vocabulary_count;
 	
-	//ŠwKƒf[ƒ^‚Ì“Ç‚İ‚İ(ƒtƒ@ƒCƒ‹‚©‚ç)
+	//å­¦ç¿’ãƒ‡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿(ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰)
 	string sbuf;
 	string n_gram;
 	int counted_num;
@@ -59,7 +59,7 @@ int main(int argc, char** argv){
 		counted_num = stoi(sbuf.substr(index+1,10));
 		train_1_grams[n_gram] = counted_num;
 	}
-	//ƒeƒXƒgƒf[ƒ^‚ÌŒêœb‚ğƒ`ƒFƒbƒN
+	//ãƒ†ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿ã®èªå½™ã‚’ãƒã‚§ãƒƒã‚¯
 	string sentence;
 	string word;
 	int test_N;
@@ -77,7 +77,7 @@ int main(int argc, char** argv){
 		}
 	}
 	cout << "test_N" << test_N << endl;
-	//Œêœb”‚ÌƒJƒEƒ“ƒg
+	//èªå½™æ•°ã®ã‚«ã‚¦ãƒ³ãƒˆ
 	int V;
 	unordered_map<string,int>::iterator itr;
 	for(itr=train_1_grams.begin();itr!=train_1_grams.end();++itr){
@@ -86,7 +86,7 @@ int main(int argc, char** argv){
 	cout << "voc = " << V << endl;
 	train_1_grams.clear();
 	
-	//ƒeƒXƒgƒf[ƒ^‚Ì“Ç‚İ‚İ
+	//ãƒ†ã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿
 	string test_n_gram[N];
 	int C,C1;
 	double P;
