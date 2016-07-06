@@ -39,9 +39,12 @@ int main(int argc, char** argv){
 	string n_gram;
 	int counted_num;
 	string::size_type index;
+	int counter = 0;
 	while(!ifs_train.eof()){
 		getline(ifs_train,sbuf);
 		if(sbuf=="") continue;
+		++counter;
+		if(counter % 10000 == 0) cout << counter << endl;
 		index = sbuf.rfind("\t");
 		n_gram = sbuf.substr(index);
 		counted_num = stoi(sbuf.substr(index+1,10));
