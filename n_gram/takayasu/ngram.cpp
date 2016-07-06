@@ -13,7 +13,7 @@ unordered_map<string,int> count_n_gram(unordered_map<string,int>& n_gram_map, in
 double compute_perplexity(unordered_map<string,int>& n_gram_map, unordered_map<string,int>& n_minus_1_gram_map, int N, char* file_name, int nwords, int V);
 
 double compute_perplexity_1(unordered_map<string,int>& n_gram_map, char * file_name, int nwords,int V);
-
+//
 //laplace_smoothing
 
 int main(int argc, char** argv){
@@ -56,10 +56,11 @@ int main(int argc, char** argv){
 	cout << "nwords = " << nwords << endl;
 	cout << "nsentences = " << nsentences << endl;
 	//laplace smoothing
+	/*
 	for(auto itr = n_gram_map.begin(); itr != n_gram_map.end(); ++itr){
 		itr->second += 1;
 	}
-	
+	*/
 	//perplexity
 	double perplexity;
 	if(N != 1){

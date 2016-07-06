@@ -48,7 +48,7 @@ def edit_distance(source,target,mode=0):
 def backtrace_sub(i,j,actions):
 	if i==0 and j==0:
 		global actions_list
-		actions_list.append(actions)
+		actions_list.append(actions) #plint
 		return None
 	if backpointer[i][j][0] == 1:
 		backtrace_sub(i-1,j,['del']+actions)
@@ -123,8 +123,3 @@ for i in range(len(actions_list)):
 	print(align_source)
 	print(align_target)
 	
-
-
-
-
-
