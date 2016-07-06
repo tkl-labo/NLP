@@ -43,8 +43,8 @@ int main(int argc, char** argv){
 	while(!ifs_train.eof()){
 		getline(ifs_train,sbuf);
 		if(sbuf=="") continue;
-		++counter;
-		if(counter % 10000 == 0) cout << counter << endl;
+		//++counter;
+		//if(counter % 10000 == 0) cout << counter << endl;
 		index = sbuf.rfind("\t");
 		n_gram = sbuf.substr(index);
 		counted_num = stoi(sbuf.substr(index+1,10));
@@ -72,7 +72,7 @@ int main(int argc, char** argv){
 	//テストデータの語彙をチェック
 	string sentence;
 	string word;
-	int test_N;
+	int test_N=0;
 	while(!ifs_test.eof()){
 		getline(ifs_test,sentence);
 		if(sentence == "") continue;
@@ -82,14 +82,15 @@ int main(int argc, char** argv){
 			new_index = sentence.find("\t",index);
 			if(new_index == string::npos) break;
 			word = sentence.substr(index,new_index-index);
+			//cout << word << endl;
 			train_1_grams[word] += 0;
 			test_N += 1;
 			index = new_index+1;
 		}
 	}
-	cout << "test_N" << test_N << endl;
+	cout << "test_N " << test_N << endl;
 	//語彙数のカウント
-	int V;
+	int V=0;
 	unordered_map<string,int>::iterator itr;
 	for(itr=train_1_grams.begin();itr!=train_1_grams.end();++itr){
 		++V;
@@ -101,7 +102,9 @@ int main(int argc, char** argv){
 	string test_n_gram[N];
 	int C,C1;
 	double P;
-	double sum_logP;
+	double sum_logP=0;
+	ifs_test.clear();
+	ifs_test.seekg(0);
 	while(!ifs_test.eof()){
 		getline(ifs_test,sentence);
 		if(sentence == "") continue;
@@ -120,7 +123,9 @@ int main(int argc, char** argv){
 			C = train_n_grams[string_n_gram]+1;
 			C1 = train_n_1_grams[string_n_1_gram]+V;
 			P = (double)C / C1;
+			//cout << P << endl;
 			sum_logP += log(P);
+			//cout << sum_logP << endl;
 			index = new_index+1; 
 		}
 	}
