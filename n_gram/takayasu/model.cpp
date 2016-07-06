@@ -3,6 +3,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <cmath>
+#include <sstream>
 using namespace std;
 
 /*
@@ -18,9 +19,12 @@ int main(int argc, char** argv){
 	if(argc < 1){ cerr << "few args" << endl; exit(1); }
 	const int N = stoi(argv[1]);
 	
+	stringstream ss,ss1;
+	ss << N-1;
+	ss1 << N;
 	ifstream ifs_train_1("train_1_grams");
-	ifstream ifs_train("train_"+to_string(N)+"_grams");
-	ifstream ifs_train_n_1("train_"+to_string(N-1)+"_grams");
+	ifstream ifs_train("train_"+ss1.str()+"_grams");
+	ifstream ifs_train_n_1("train_"+ss.str()+"_grams");
 	ifstream ifs_test("test_sentences");
 	if(!ifs_train || !ifs_test){cerr<< "cannot open" << endl; exit(1);}
 	int i,j,k,l;
@@ -59,6 +63,9 @@ int main(int argc, char** argv){
 		counted_num = stoi(sbuf.substr(index+1,10));
 		train_1_grams[n_gram] = counted_num;
 	}
+	ifs_train.close();
+	ifs_train_1.close();
+	ifs_train_n_1.close();
 	//テストデータの語彙をチェック
 	string sentence;
 	string word;
