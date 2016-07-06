@@ -84,6 +84,7 @@ int main(int argc, char** argv){
 			word = sentence.substr(index,new_index-index);
 			train_1_grams[word] += 0;
 			test_N += 1;
+			index = new_index+1;
 		}
 	}
 	cout << "test_N" << test_N << endl;
