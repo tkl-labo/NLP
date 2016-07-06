@@ -1,11 +1,59 @@
 #include "ngram.h"
+#include <boost/program_options.hpp>
+#include <iostream>
+#include <string>
+#include <cstdio>
+#include <cstdio>
+#include <unistd.h>
 
+namespace po = boost::program_options;
 using namespace std;
 using namespace nlp;
 
-int main()
+int main(int argc, char *argv[])
 {
-	Ngram bigram(3);
-	bigram.train("../files/01.cdr.mini");
-	bigram.test("../files/01.cdr.mini");
+	int n = 1;
+        string train_file = "";
+        string test_file  = "";
+
+	po::options_description desc("Allowed options");
+	desc.add_options()
+		("help", "produce help message")
+		("train", "train ngram")
+		("test", "test ngram")
+		(",n", po::value<int>(&n)->default_value(1), "use  n-gram")
+		("file-train", po::value<string>(&train_file)->default_value(""), "train file path")
+		("file-test", po::value<string>(&test_file)->default_value(""), "test file path")
+	;
+	po::positional_options_description p;
+	p.add("-n", -1);
+
+	po::variables_map vm;
+	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+	po::notify(vm);    
+
+	if (vm.count("help")) 
+	{
+    		cout << desc << endl;
+    		return 1;
+	}
+	
+	if (vm.count("train") && vm.count("test") && train_file=="" && test_file=="")
+	{
+		cout << desc << endl;
+		return 1;
+	}
+	Ngram ngram(n);
+	if (vm.count("train") || !vm.count("train")&&!vm.count("test"))
+	{	if (train_file == "" && isatty(fileno(stdin)))
+			cout << "No train file specified!" << endl;
+		else
+			ngram.train(train_file);
+	}	
+	if (vm.count("test"))
+	{	if (test_file == "" && isatty(fileno(stdin)))
+			cout << "No test file specified!" << endl;
+		else
+			ngram.test(test_file);
+	}
 }

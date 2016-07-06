@@ -1,42 +1,48 @@
 #pragma once
 #include <vector>
+#include <string>
 #include <unordered_map>
 
 namespace nlp
 {
-class Entry;
-typedef std::vector<std::string> TableVectorKey;
-typedef std::string TableKey;
-typedef Entry* TableValue;
-typedef std::unordered_map<TableKey, TableValue> TableType;
+	class Entry;
+	using TableKey		 = std::string;
+	using TableValue	 = Entry*;
+	using TableVectorKey = std::vector<std::string>;
+	using TableType		 = std::unordered_map<TableKey, TableValue>;
 
-class Entry
-{
-public:
-	int count;
-	std::unordered_map<std::string, int> cells;
+	enum Smoothing {none, laplace};
 
-	Entry(const std::string key);
-	void insert(std::string key);
-};
+	class Entry
+	{
+	public:
+		int count;
+		const Smoothing SM;
+		std::unordered_map<std::string, int> cells;
 
-class Ngram
-{
-private:
-	const int N;
-	std::string ngram_file;
-	TableType table;
-	std::unordered_map<std::string, float> prob_map;
+		Entry(const std::string key, const Smoothing sm);
+		void insert(std::string key);
+	};
 
-public:
-	Ngram(const int n);
-	void train(const std::string train_file);
-	void test(const std::string test_file);
-private:
-	void insert(const TableVectorKey& tvkey, const std::string cell);
-	void store();
-	void load();
-	TableKey hash(const TableVectorKey& tvkey);
+	class Ngram
+	{
+	private:
+		const int N;
+		const Smoothing SM;
+		TableType table;
+		std::string ngram_file;
+		std::unordered_map<std::string, double> prob_map;
 
-};
+	public:
+		Ngram(const int n);
+		Ngram(const int n, Smoothing sm);
+		~Ngram();
+		void train(const std::string train_file);
+		void test(const std::string test_file);
+	private:
+		void insert(const TableVectorKey& tvkey, const std::string cell);
+		void save();
+		void load();
+		TableKey hash(const TableVectorKey& tvkey);
+	};
 }

@@ -5,120 +5,164 @@
 #include <iterator>
 #include <algorithm>
 #include <cmath>
-//#include <cstdio>
+
 using std::cout;
 using std::endl;
 using std::string;
 
 using namespace nlp;
 
-const string START = "<s>";
-const string END = "</s>";
-const string UNK = "<unk>";
-const string BREAK = "EOS";
-const string DELIMITER = "\t";
+const string START		= "<s>";
+const string END		= "</s>";
+const string UNK		= "<unk>";
+const string BREAK		= "EOS";
+const string DELIMITER	= "\t";
 
-Ngram::Ngram(const int n): N(n)
+Ngram::Ngram(const int n) : N(n), SM(none)
 {
-	ngram_file = std::to_string(N) + "-gram.store";
+	ngram_file = std::to_string(N) + "-gram.save";
+}
+
+Ngram::Ngram(const int n, Smoothing sm) : N(n), SM(sm)
+{
+	if (sm == laplace)
+		ngram_file = std::to_string(N) + "-gram-laplace.save";
+	else
+		ngram_file = std::to_string(N) + "-gram.save";
+}
+
+Ngram::~Ngram()
+{
+	for (auto entry = table.begin(); entry != table.end(); entry++)
+		delete entry->second;
 }
 
 void Ngram::train(const string train_file)
 {
-	string line, word;
-	TableVectorKey tvkey = {START};
-	const int full = N-1;
+	const int KEY_SIZE = N - 1;
+	TableVectorKey vk_start(KEY_SIZE, START);
+	TableVectorKey vk = vk_start;
+	std::istream *fin = nullptr;
+	if (train_file == "")
+		fin = &std::cin;
+	else
+	{ 
+		std::ifstream *_fin = new std::ifstream(train_file);
+		if (!_fin->is_open()) {
+			std::cerr << "ERROR: No such file (" << train_file << ")" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
+		fin = _fin;
+	}
 
-	std::ifstream fin(train_file);
-	if (!fin.is_open()) {
-        std::cerr << "ERROR: No such file ("  << train_file << ")" << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-
-	while(std::getline(fin, line))
-	{	
+	string line = "";
+	while (std::getline(*fin, line))
+	{
 		std::istringstream iss(line);
+		string word = "";
 		std::getline(iss, word, '\t');
 		if (word == BREAK)
 		{
-			if (tvkey.size() == full)
-				insert(tvkey, END);
-			tvkey.clear();
-			tvkey.push_back(START);
+			insert(vk, END);
+			if (KEY_SIZE > 0)
+				vk = vk_start;
 		}
-		else 
+		else
 		{
-			if (tvkey.size() < full)
-				tvkey.push_back(word);
-			else
+			insert(vk, word);
+			if (KEY_SIZE > 0)
 			{
-				insert(tvkey, word);
-				tvkey.erase(tvkey.begin());
-				tvkey.push_back(word);
+				vk.erase(vk.begin());
+				vk.push_back(word);
 			}
-		}		
+		}
 	}
-	fin.close();
-	store();
+	if (train_file != "")
+	{
+		((std::ifstream*)fin)->close();
+		delete fin;
+	}
+	else
+		std::cin.clear();
+	save();
 }
 
 void Ngram::test(const string test_file)
 {
-	string line, word;
-	TableVectorKey tvkey = {START};
-	const int full = N-1;
+	load();
+	
+	const int KEY_SIZE = N - 1;
+	TableVectorKey vk_start(KEY_SIZE, START);
+	TableVectorKey vk = vk_start;
+
+	std::istream *fin = nullptr;
+        if (test_file == "")
+                fin = &std::cin;
+        else
+        {
+                std::ifstream *_fin = new std::ifstream(test_file);
+                if (!_fin->is_open()) {
+                        std::cerr << "ERROR: No such file (" << test_file << ")" << std::endl;
+                        std::exit(EXIT_FAILURE);
+                }
+                fin = _fin;
+        }
+
+	string line = "";
 	long n = 0;
-	float total_prob;
-
-	std::ifstream fin(test_file);
-	if (!fin.is_open()) {
-        std::cerr << "ERROR: No such file ("  << test_file << ")" << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-
-	while(std::getline(fin, line))
-	{	
+	double total_prob = 0;
+	while (std::getline(*fin, line))
+	{
+		n++;
 		std::istringstream iss(line);
+		string word = "";
 		std::getline(iss, word, '\t');
 		if (word == BREAK)
 		{
-			if (tvkey.size() == full)
-			{
-				tvkey.push_back(END);
-				total_prob += prob_map[hash(tvkey)];
-				n++;
-			}
-			tvkey.clear();
-			tvkey.push_back(START);
-		}
-		else 
-		{
-			if (tvkey.size() < full)
-				tvkey.push_back(word);
+			vk.push_back(END);
+			if (prob_map.find(hash(vk)) != prob_map.end())
+				total_prob += prob_map[hash(vk)];
 			else
-			{
-				tvkey.push_back(word);
-				total_prob += prob_map[hash(tvkey)];
-				tvkey.erase(tvkey.begin());
-				n++;
-			}
-		}		
+				total_prob += std::log10(1 / n);
+			vk = vk_start;
+		}
+		else
+		{
+			vk.push_back(word);
+			total_prob += prob_map[hash(vk)];
+			vk.erase(vk.begin());
+		}
 	}
-	cout << "perplexity of " << N << "-gram: " << std::pow(10, -total_prob/float(n)) << endl;
-	fin.close();	
+	if (test_file != "")
+	{
+		((std::ifstream*)fin)->close();
+		delete fin;
+	}
+	double perplexity = std::pow(10, -total_prob / double(n));
+	if (SM == laplace)
+		cout << "perplexity of " << N << "-gram-laplace: " << perplexity << endl;
+	else
+		cout << "perplexity of " << N << "-gram: " << perplexity << endl;
+		
 }
 
-void Ngram::store()
+void Ngram::save()
 {
 	std::ofstream fout(ngram_file);
-	for (auto itr1 : table)
+	for (auto key_entry : table)
 	{
-		TableKey tkey = itr1.first;
-		TableValue entry = itr1.second;
-		for (auto itr2 : entry->cells)
+		TableKey   tkey   = key_entry.first;
+		TableValue entry  = key_entry.second;
+		double total_count = (double)entry->count;
+		for (auto cell : entry->cells)
 		{
-			float prob = std::log10((float)itr2.second / (float)entry->count);
-			fout << prob << DELIMITER << tkey << DELIMITER << itr2.first << endl;
+			string word = cell.first;
+			double count	= (double)cell.second;
+			double prob = std::log10(count / total_count);
+			if (tkey.size() > 0)
+				fout << prob << DELIMITER << tkey << DELIMITER << word << endl;
+			else
+				fout << prob << DELIMITER << word << endl;
 		}
 	}
 	fout.close();
@@ -126,57 +170,82 @@ void Ngram::store()
 
 void Ngram::load()
 {
-	string line, seq, prob_str;
-	float prob;
 	std::ifstream fin(ngram_file);
-	if (!fin.is_open()) {
-        std::cerr << "ERROR: No such file ("  << ngram_file << ")" << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-
-	while(std::getline(fin, line))
-	{	
+	if (!fin.is_open()) 
+	{
+		std::cerr << "ERROR:" << N <<"-gram file not found." << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+	string line = "";
+	while (std::getline(fin, line))
+	{
 		std::istringstream iss(line);
+		string prob_str = "";
 		std::getline(iss, prob_str, '\t');
-		prob = std::stof(prob_str);
+		double prob = std::stof(prob_str);
+		string seq = "";
 		std::getline(iss, seq);
-		prob_map[seq] = prob;		
-	}    
-
+		prob_map[seq] = prob;
+	}
 	fin.close();
 }
 
-void Ngram::insert(const TableVectorKey& tvkey, const std::string cell)
+void Ngram::insert(const TableVectorKey& vk, const std::string cell)
 {
-	TableKey tkey = hash(tvkey);
+	TableKey tkey = hash(vk);
 	auto entry = table.find(tkey);
 	if (entry == table.end())
-		table[tkey] = new Entry(cell);
+		table[tkey] = new Entry(cell, SM);
 	else
 		entry->second->insert(cell);
 }
 
-TableKey Ngram::hash(const TableVectorKey& tvkey)
+TableKey Ngram::hash(const TableVectorKey& vk)
 {
 	std::stringstream ss;
 	string str_key;
-	std::copy(tvkey.begin(), tvkey.end(),std::ostream_iterator<std::string>(ss, "\t"));
+	std::copy(vk.begin(), vk.end(), std::ostream_iterator<std::string>(ss, "\t"));
 	str_key = ss.str();
-	str_key.pop_back();
+	//str_key equals 0 in unigram.
+	if (str_key.size() > 0)
+		str_key.pop_back();
 	return str_key;
 }
 
-Entry::Entry(const string key): count(1)
+Entry::Entry(const string key, const Smoothing sm) : SM(sm)
 {
-	cells[key] = 1;
+	switch (sm)
+	{
+	case laplace:
+		cells[key] = 2;
+		count = 2;
+		break;
+	default:
+		cells[key] = 1;
+		count = 1;
+		break;
+	}
 }
 
-void Entry::insert(const string ekey)
+void Entry::insert(const string entry_key)
 {
-	auto cell = cells.find(ekey);
+	auto cell = cells.find(entry_key);
 	if (cell == cells.end())
-		cells[ekey] = 1;
+	{
+		switch (SM)
+		{
+		case laplace:
+			cells[entry_key] = 2;
+			count += 2;
+		default:
+			cells[entry_key] = 1;
+			count++;
+			break;
+		}
+	}
 	else
+	{
 		cell->second++;
-	count ++;
+		count++;
+	}
 }
