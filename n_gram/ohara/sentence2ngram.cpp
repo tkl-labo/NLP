@@ -44,6 +44,7 @@ int main(int argc, char** argv)
             updateNgramFreq(NGRAM_START_SYMBOL);
         for (std::string word : words)
             updateNgramFreq(word);
+        updateNgramFreq(NGRAM_END_SYMBOL);
     }
 
     // output

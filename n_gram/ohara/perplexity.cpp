@@ -1,13 +1,13 @@
 //
 // perplexityをカウントするスクリプト
 //
-#include "utility.h"
 #include "common.h"
 #include <cmath>
 #include <unordered_set>
 
 int getNgramCount(const std::string& ngram_file, const std::string& ngram);
-void countVocabularySize(const std::string& ngram_file, int *v, int *n);
+void countVocabularySize(const std::string& ngram_file, int *vs, int *vt, int *n);
+int countWords(const std::string& test_file);
 
 int main(int argc, char** argv)
 {
@@ -36,14 +36,17 @@ int main(int argc, char** argv)
         std::exit(EXIT_FAILURE);
     }
 
-    // V: vocabulary size, C: number of ngrams
-    int V, C;
-    countVocabularySize(ngram_file, &V, &C);
-    std::cout << "vocabulary: " << V << ", ";
-    std::cout << N << "-grams: " << C << std::endl;
+    // VS: vocabulary size, VT: vocabulary type, nof_ngrams: number of ngrams
+    int VS, VT, nof_ngrams;
+    countVocabularySize(ngram_file, &VS, &VT, &nof_ngrams);
+    std::cout << "vocabulary: " << VT << ", ";
+    std::cout << N << "-grams: " << nof_ngrams << std::endl;
+
+    // </s>の分で+1
+    int nof_words = countWords(test_file) + 1;
 
     // perplexity計算
-    double total_pp = 1.0;
+    double total_logPP = 0.0;
     std::string line;
     // testファイルの各行でloopを回す
     while (std::getline(test_input, line))
@@ -51,28 +54,38 @@ int main(int argc, char** argv)
         // 一文に含まれる単語をvectorに
         auto words = split(line, SENTENCE_DELIMITER);
         int words_size = words.size();
-        // N-1個<s>を先頭に追加
+        // N-1個<s>を先頭に、1個</s>を末尾に追加
         auto words_begin = words.begin();
         words.insert(words_begin, N-1, NGRAM_START_SYMBOL);
+        words.push_back(NGRAM_END_SYMBOL);
         // 単語数分loop
-        for (int i = 0; i < words_size; i++)
+        for (int i = 0; i < (words_size + 1); i++)
         {
             // ngram, n-1gramを切り出す
             auto first = words.begin() + i;
             auto last = first + N;
             auto n_1gram_last = last - 1;
             std::string ngram = join(first, last, SENTENCE_DELIMITER);
-            std::string n_1gram = join(first, n_1gram_last, SENTENCE_DELIMITER);
             // 学習したデータからcとc_1を取得（c: ngramのcount, c_1: n-1gramのcount）
             int c = 0;
-            int c_1 = 0;
             c = getNgramCount(ngram_file, ngram);
-            c_1 = getNgramCount(n_1gram_file, n_1gram);
-            double p = (double) (c + 1) / (c_1 + V);
-            double pp = std::pow(1.0 / p, 1.0 / C);
-            total_pp *= pp;
+            double p = 0.0;
+            if (N != 1) {
+                std::string n_1gram = join(first, n_1gram_last, SENTENCE_DELIMITER);
+                int c_1 = 0;
+                c_1 = getNgramCount(n_1gram_file, n_1gram);
+                p = (double) (c + 1) / (c_1 + VT + 1);
+            }
+            else
+            {
+                // unigramの場合
+                p = (double) (c + 1) / (VS + VT + 1);
+            }
+            double pp = 1.0 / p;
+            total_logPP += log(pp);
             std::cout << *(last-1) << SENTENCE_DELIMITER << pp << std::endl;
         }
+        double total_pp = exp(total_logPP / nof_words);
         std::cout << "perplexity: " << total_pp << std::endl;
     }
 }
@@ -90,8 +103,9 @@ int getNgramCount(const std::string& ngram_file, const std::string& ngram)
     std::string ngram_line;
     while (std::getline(ngram_input, ngram_line))
     {
-        std::size_t found = ngram_line.find(ngram);
-        if (found != std::string::npos)
+        std::vector<std::string> ngram_count = split(ngram_line, SENTENCE_DELIMITER);
+        std::string ngram_from_file = join(ngram_count.begin()+1, ngram_count.end(), SENTENCE_DELIMITER);
+        if (ngram == ngram_from_file)
             return std::stoi(split(ngram_line, SENTENCE_DELIMITER)[0]);
     }
     return 0;
@@ -101,13 +115,14 @@ int getNgramCount(const std::string& ngram_file, const std::string& ngram)
 //
 // Vocabularyのsize（uniqueな単語数）を数える関数
 // @param ngram_file: ngramとその出現回数を記述したファイル
-// @param V: vocabulary size
+// @param
+// @param V: vocabulary type
 // @param C: number of ngrams
 //
-void countVocabularySize(const std::string& ngram_file, int *V, int *C)
+void countVocabularySize(const std::string& ngram_file, int *VS, int *VT, int *nof_ngrams)
 {
-    *V = 0;
-    *C = 0;
+    *VT = 0;
+    *nof_ngrams = 0;
     std::unordered_set<std::string> vocabulary;
     std::ifstream ngram_input(ngram_file);
     std::string ngram_line;
@@ -116,8 +131,27 @@ void countVocabularySize(const std::string& ngram_file, int *V, int *C)
         std::vector<std::string> ngram_count = split(ngram_line, SENTENCE_DELIMITER);
         // ngramの末尾を取得する
         std::string target_word = ngram_count.back();
+        if (target_word == NGRAM_START_SYMBOL)
+            continue;
         vocabulary.insert(target_word);
-        *C += 1;
+        *VS += std::stoi(ngram_count.front());
+        *nof_ngrams += 1;
     }
-    *V = vocabulary.size();
+    *VT = vocabulary.size();
+}
+
+//
+// コーパスの単語数を返す関数
+//
+int countWords(const std::string& test_file)
+{
+    std::ifstream test_input(test_file);
+    std::string line;
+    int nof_words = 0;
+    while (std::getline(test_input, line))
+    {
+        auto words = split(line, SENTENCE_DELIMITER);
+        nof_words += words.size();
+    }
+    return nof_words;
 }
