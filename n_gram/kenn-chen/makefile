@@ -1,4 +1,4 @@
-CC 		= g++
+CC 	= g++
 CFLAGS 	= -std=c++11
 LIBS	= -lboost_program_options
 
