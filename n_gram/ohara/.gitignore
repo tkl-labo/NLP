@@ -1,0 +1,9 @@
+data/*
+.idea/*
+CMakeFiles/*
+CmakeCache.txt
+
+# executable file
+cdr2sentence
+sentence2ngram
+perplexity
