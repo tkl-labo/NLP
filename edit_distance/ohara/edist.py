@@ -16,6 +16,7 @@ class MinimumEditDistance(object):
         '''
         self.source = source
         self.target = target
+        self.dist_matrix = np.zeros((len(self.source)+1, len(self.target)+1))
 
     @classmethod
     def _ins_cost(cls, tgt_char):
@@ -37,21 +38,21 @@ class MinimumEditDistance(object):
 
     def calc(self):
         # initialize
-        distance = np.zeros((len(self.source)+1, len(self.target)+1))
-        distance[0] = range(len(self.target)+1)
-        distance[:,0] = range(len(self.source)+1)
+        dist_matrix = self.dist_matrix
+        dist_matrix[0] = range(len(self.target)+1)
+        dist_matrix[:,0] = range(len(self.source)+1)
 
-        # update from distance[1,1] to distance[len(self.source), len(self.target)]
+        # update from dist_matrix[1,1] to dist_matrix[len(self.source), len(self.target)]
         for i, src_char in enumerate(self.source):
             for j, tgt_char in enumerate(self.target):
                 src_idx = i+1
                 tgt_idx = j+1
-                distance[src_idx, tgt_idx] = min(
-                    distance[src_idx-1, tgt_idx]+self._ins_cost(tgt_char),
-                    distance[src_idx-1, tgt_idx-1]+self._subst_cost(src_char, tgt_char),
-                    distance[src_idx, tgt_idx-1]+self._del_cost(src_char),
+                dist_matrix[src_idx, tgt_idx] = min(
+                    dist_matrix[src_idx-1, tgt_idx]+self._ins_cost(tgt_char),
+                    dist_matrix[src_idx-1, tgt_idx-1]+self._subst_cost(src_char, tgt_char),
+                    dist_matrix[src_idx, tgt_idx-1]+self._del_cost(src_char),
                 )
-        return int(distance[len(self.source), len(self.target)])
+        return int(dist_matrix[len(self.source), len(self.target)])
 
 
 if __name__ == "__main__":
