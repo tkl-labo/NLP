@@ -13,14 +13,18 @@ using namespace nlp;
 int main(int argc, char *argv[])
 {
 	int n = 1;
-        string train_file = "";
-        string test_file  = "";
+    string train_file = "";
+    string test_file  = "";
+	Smoothing smoothing = none;
+
+	cout.precision(6);
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help", "produce help message")
 		("train", "train ngram")
 		("test", "test ngram")
+		("laplace", "apply laplace smoothing")
 		(",n", po::value<int>(&n)->default_value(1), "use  n-gram")
 		("file-train", po::value<string>(&train_file)->default_value(""), "train file path")
 		("file-test", po::value<string>(&test_file)->default_value(""), "test file path")
@@ -43,17 +47,34 @@ int main(int argc, char *argv[])
 		cout << desc << endl;
 		return 1;
 	}
-	Ngram ngram(n);
+
+	if (vm.count("laplace"))
+		smoothing = laplace;
+
 	if (vm.count("train") || !vm.count("train")&&!vm.count("test"))
 	{	if (train_file == "" && isatty(fileno(stdin)))
+		{
 			cout << "No train file specified!" << endl;
+			cout << desc << endl;
+			return 1;
+		}
 		else
+		{
+			Ngram ngram(n, smoothing);
 			ngram.train(train_file);
+		}
 	}	
 	if (vm.count("test"))
 	{	if (test_file == "" && isatty(fileno(stdin)))
+		{
 			cout << "No test file specified!" << endl;
+			cout << desc << endl;
+			return 1;
+		}
 		else
+		{
+			Ngram ngram(n, smoothing);
 			ngram.test(test_file);
+		}
 	}
 }

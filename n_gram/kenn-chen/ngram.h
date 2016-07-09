@@ -2,26 +2,29 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace nlp
 {
-	class Entry;
-	using TableKey		 = std::string;
-	using TableValue	 = Entry*;
-	using TableVectorKey = std::vector<std::string>;
-	using TableType		 = std::unordered_map<TableKey, TableValue>;
+	class Value;
+	using NGMapKey		= std::string;
+	using NGMapValue	= Value*;
+	using NGMap			= std::unordered_map<NGMapKey, NGMapValue>;
+	using TokenMap		= std::unordered_map<std::string, long>;
+	using StrVec 		= std::vector<std::string>;
 
 	enum Smoothing {none, laplace};
 
-	class Entry
+	class Value
 	{
 	public:
-		int count;
-		const Smoothing SM;
-		std::unordered_map<std::string, int> cells;
+		long count;
+		TokenMap token_map;
 
-		Entry(const std::string key, const Smoothing sm);
-		void insert(std::string key);
+		Value(const std::string key);
+		Value(const std::string key, const long total_count, const long token_count);
+		void insert(const std::string token);
+		void insert(const std::string token, const long token_count);
 	};
 
 	class Ngram
@@ -29,9 +32,10 @@ namespace nlp
 	private:
 		const int N;
 		const Smoothing SM;
-		TableType table;
+		long vocab_size;
+		NGMap ngram_map;
 		std::string ngram_file;
-		std::unordered_map<std::string, double> prob_map;
+		std::unordered_set<std::string> vocab;
 
 	public:
 		Ngram(const int n);
@@ -40,9 +44,9 @@ namespace nlp
 		void train(const std::string train_file);
 		void test(const std::string test_file);
 	private:
-		void insert(const TableVectorKey& tvkey, const std::string cell);
+		void insert(const StrVec& tvkey, const std::string token);
 		void save();
 		void load();
-		TableKey hash(const TableVectorKey& tvkey);
+		NGMapKey hash(const StrVec& tvkey);
 	};
 }
