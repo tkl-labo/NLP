@@ -9,46 +9,49 @@ class MinimumEditDistance(object):
     DEL_COST = 1
     SUBST_COST = 2
 
-    def __init__(self):
-        pass
-
-
-    def _ins_cost(self):
-        return MinimumEditDistance.INS_COST
-
-
-    def _subst_cost(self, src_char, tgt_char):
-        if src_char == tgt_char:
-            return MinimumEditDistance.NO_COST
-        else:
-            return MinimumEditDistance.SUBST_COST
-
-
-    def _del_cost(self):
-        return MinimumEditDistance.DEL_COST
-
-
-    def calc(self, source, target):
+    def __init__(self, source, target):
         '''
         target: 行方向 (a column is a character of the target word)
         source: 列方向 (a row is a character of the source word)
         '''
-        # initialize
-        distance = np.zeros((len(source)+1, len(target)+1))
-        distance[0] = range(len(target)+1)
-        distance[:,0] = range(len(source)+1)
+        self.source = source
+        self.target = target
 
-        # update from distance[1,1] to distance[len(source), len(target)]
-        for i, src_char in enumerate(source):
-            for j, tgt_char in enumerate(target):
+    @classmethod
+    def _ins_cost(cls, tgt_char):
+        return cls.INS_COST
+
+
+    @classmethod
+    def _subst_cost(cls, src_char, tgt_char):
+        if src_char == tgt_char:
+            return cls.NO_COST
+        else:
+            return cls.SUBST_COST
+
+
+    @classmethod
+    def _del_cost(cls, src_char):
+        return cls.DEL_COST
+
+
+    def calc(self):
+        # initialize
+        distance = np.zeros((len(self.source)+1, len(self.target)+1))
+        distance[0] = range(len(self.target)+1)
+        distance[:,0] = range(len(self.source)+1)
+
+        # update from distance[1,1] to distance[len(self.source), len(self.target)]
+        for i, src_char in enumerate(self.source):
+            for j, tgt_char in enumerate(self.target):
                 src_idx = i+1
                 tgt_idx = j+1
                 distance[src_idx, tgt_idx] = min(
-                    distance[src_idx-1, tgt_idx]+self._ins_cost(),
+                    distance[src_idx-1, tgt_idx]+self._ins_cost(tgt_char),
                     distance[src_idx-1, tgt_idx-1]+self._subst_cost(src_char, tgt_char),
-                    distance[src_idx, tgt_idx-1]+self.DEL_COST,
+                    distance[src_idx, tgt_idx-1]+self._del_cost(src_char),
                 )
-        return int(distance[len(source), len(target)])
+        return int(distance[len(self.source), len(self.target)])
 
 
 if __name__ == "__main__":
@@ -64,5 +67,5 @@ if __name__ == "__main__":
     source_word = arr[0]
     target_word = arr[1]
 
-    med = MinimumEditDistance()
-    print(med.calc(source_word, target_word))
+    med = MinimumEditDistance(source_word, target_word)
+    print(med.calc())

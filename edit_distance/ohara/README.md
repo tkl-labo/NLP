@@ -1,12 +1,13 @@
 ## 環境
 python 3.5.1
 
-## 実行方法
+### 必要なライブラリ
+numpy
 
+## 実行方法
 ```
-#python3.5.1環境で
 $ python edist.py
-> intention execution 
+> intention execution
 8
 ```
 
