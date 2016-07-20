@@ -9,7 +9,7 @@ options:
   -n, --ngram         use ngram HMM (int [=2])
   -t, --train-file    specify training file (string [=])
   -T, --test-file     specify test file (string [=])
-      --train         training the data
+      --train         train the model
       --test          test the model
   -?, --help          print this message
 ```
