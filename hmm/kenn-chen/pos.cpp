@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <queue>
+#include <functional>
 
 using std::cout;
 using std::endl;
@@ -13,25 +15,43 @@ using std::string;
 
 using namespace nlp;
 
-const string START		= "<s>";
-const string END		= "</s>";
-const string UNK		= "<unk>";
-const string BREAK		= "";
-const string DELIMITER	= " ";
-const char	DELIMITER_C = ' ';
+const string START = "<s>";
+const string END = "</s>";
+const string UNK = "<unk>";
+const string BREAK = "";
+const string DELIMITER = " ";
+const char DELIMITER_C = ' ';
+
+double threshold = 0;
+const int top_k = 2;
 
 POS::POS(const int n) : N(n)
 {
-	vocab_size				= 2;
-	vocab					= {END, UNK};
-	transition_table_file	= "transition_table-" + std::to_string(N) + "-gram.save";
-	observation_table_file	= "observation_table.save";
-	param_save_file			= "param.save";
+	max_sentence_size = 0;
+	dp = nullptr;
+	bp = nullptr;
+	vocab = {END, UNK};
+	transition_table_file = "transition_table-" + std::to_string(N) + "-gram.save";
+	observation_table_file = "observation_table.save";
+	vocab_file = "vocab.save";
+}
+
+POS::~POS()
+{
+	int tagger_size = taggers.size();
+	for (int i = 0; i < tagger_size; i++)
+	{
+		delete[] dp[i];
+		delete[] bp[i];
+	}
+	delete[] dp;		
+	delete[] bp;
 }
 
 void POS::train(const string train_file)
 {
 	const int KEY_SIZE = N - 1;
+	int sentence_count = 0, token_count = 0;
 	StrVec vkey_start(KEY_SIZE, START);
 	StrVec vkey = vkey_start;
 	std::istream *fin = nullptr;
@@ -53,12 +73,14 @@ void POS::train(const string train_file)
 	{
 		if (line == BREAK)
 		{
+			sentence_count++;
 			transition_table.insert(hash(vkey), END);
 			if (KEY_SIZE > 0)
 				vkey = vkey_start;
 		}
 		else
 		{
+			token_count++;
 			std::istringstream iss(line);
 			string token;
 			std::getline(iss, token, DELIMITER_C);
@@ -83,63 +105,81 @@ void POS::train(const string train_file)
 		((std::ifstream*)fin)->close();
 		delete fin;
 	}
-	
-	vocab_size = vocab.size();
 
-	save_param(param_save_file);
+	save_vocab(vocab_file);
 	observation_table.serialize(observation_table_file);
 	transition_table.serialize(transition_table_file);
+
+	cout << "#sentences: " << sentence_count << endl
+	     << "#tokens:    " << token_count << endl
+	     << "#words:     " << vocab.size() - 2 << endl
+	     << "#tags:      " << observation_table.keys().size() << endl;
 }
 
 void POS::test(const string test_file)
 {
-	load_param(param_save_file);
+	load_vocab(vocab_file);
+	cout << "loading observation table..." << endl;
 	observation_table.deserialize(observation_table_file);
+	cout << "loading transition table..." << endl;
 	transition_table.deserialize(transition_table_file);
 
+	taggers = observation_table.keys();
+
+	cout << "reading test data..." << endl;
 	read_test_data(test_file);
 
-	double acc = 0;
-	size_t size = test_tagger_list.size();
-	for (int i = 0; i < size; i++)
+	cout << "tagging..." << endl;
+
+	create_dynamic_space();
+
+	int test_size = test_taggers_list.size();
+	long coc = 0, total_count = 0;
+	long coc_kn = 0, total_count_kn = 0;
+	for (int i = 0; i < test_size; i++)
 	{
-		StrVec predict_taggers = viterbi(test_token_list[i]);
-		double a = accuracy(test_tagger_list[i], predict_taggers);
-		cout << "acc: " << a << endl;
-		acc += accuracy(test_tagger_list[i], predict_taggers);
+		StrVec predict_taggers = viterbi(test_tokens_list[i]);
+		total_count += predict_taggers.size();
+		coc += correct_count(test_taggers_list[i], predict_taggers, test_tokens_list[i], coc_kn, total_count_kn);
 	}
-	acc /= size;
 
-	cout << "accuracy: " << acc << endl;
+	double accuracy = (double)coc / (double)total_count;
+	double accuracy_kn = (double)coc_kn / (double)total_count_kn;
+	double accuracy_ukn = (double)(coc - coc_kn) / (double)(total_count - total_count_kn);
 
-	//StrVec sv {"Rockwell", "International", "Corp", "'s", "Tulsa", "unit", "said","it","signed","a","tentative","agreement","extending",
-	//		  "its", "contract", "with", "Boeing", "Co.NNP", "to", "provide", "structural", "parts", "for", "Boeing", "'s", "747", "jetliners", "."};
-	//StrVec sv{ "He", "reckons", "the", "current", "account", "deficit", "will", "narrow",
-	//	"to", "only", "# #", "1.8", "billion", "in", "September", "." };
-	
-	//viterbi(sv);
-
-	//StrVec sv1 {"nice", "I", "are", "jump"};
-	//viterbi(sv1);
-
-	//StrVec sv2{ "I", "am", "good", "people" };
-	//viterbi(sv2);
+	cout << "accuracy: " << accuracy << endl;
+	cout << "accuracy for known words: " << accuracy_kn << endl;
+	cout << "accuracy for unknown words: " << accuracy_ukn << endl;
 }
 
-double POS::accuracy(StrVec sv1, StrVec sv2)
+long POS::correct_count(StrVec sv1, StrVec sv2, StrVec &tokens, long &coc_kn, long &total_count_kn)
 {
-	size_t size = sv1.size();
-	unsigned count = 0;
+	int size = sv1.size();
+	long count = 0;
 	for (int i = 0; i < size; i++)
-		if (sv1[i] == sv2[i])
+	{
+		if (vocab.find(tokens[i]) != vocab.end())
+		{
+			if (sv1[i] == sv2[i])
+			{
+				count++;
+				coc_kn++;
+			}
+			total_count_kn++;
+		}
+		else if (sv1[i] == sv2[i])
+		{
 			count++;
-	return double(count) / double(size);
+		}
+		
+	}
+	return count;
 }
 
 void POS::read_test_data(string test_file)
 {
 	const int KEY_SIZE = N - 1;
-	StrVec	vkey_start(KEY_SIZE, START);
+	StrVec vkey_start(KEY_SIZE, START);
 	StrVec vkey = vkey_start;
 
 	std::istream *fin = nullptr;
@@ -156,24 +196,30 @@ void POS::read_test_data(string test_file)
 	}
 
 	string line;
-	StrVec tokens, taggers;
+	StrVec _tokens, _taggers;
+	int sentence_len = 0;
 	while (std::getline(*fin, line))
 	{
 		if (line == BREAK)
 		{
-			test_token_list.push_back(tokens);
-			test_tagger_list.push_back(taggers);
-			tokens.clear();
-			taggers.clear();
+			if (sentence_len > max_sentence_size)
+				max_sentence_size = sentence_len;
+			sentence_len = 0;
+
+			test_tokens_list.push_back(_tokens);
+			test_taggers_list.push_back(_taggers);
+			_tokens.clear();
+			_taggers.clear();
 		}
 		else
 		{
+			sentence_len++;
 			std::istringstream iss(line);
 			string str;
 			std::getline(iss, str, DELIMITER_C);
-			tokens.push_back(str);
+			_tokens.push_back(str);
 			std::getline(iss, str, DELIMITER_C);
-			taggers.push_back(str);
+			_taggers.push_back(str);
 		}
 	}
 
@@ -184,147 +230,133 @@ void POS::read_test_data(string test_file)
 	}
 }
 
-void POS::forward(StrVec sentence)
+void POS::create_dynamic_space()
 {
-	double prob = dp_algo(sentence, "forward").first;
+	int tagger_size = taggers.size();
+	dp = new double *[tagger_size];
+	for (int i = 0; i < tagger_size; i++)
+		dp[i] = new double[max_sentence_size];
+
+	bp = new int *[tagger_size];
+	for (int i = 0; i < tagger_size; i++)
+		bp[i] = new int[max_sentence_size];
+}
+
+void POS::forward(StrVec &sentence)
+{
+	double prob = bi_dp_algo(sentence, "forward");
 	cout << "likelihood: " << prob << endl;
 }
 
-StrVec POS::viterbi(StrVec sentence)
+StrVec POS::viterbi(StrVec &sentence)
 {
-	pos_pair result = dp_algo(sentence, "viterbi");
-	cout << "taggers: " << hash(result.second) << endl
-		 << "probability: " << result.first << endl;
-	return result.second;
+	double prob = bi_dp_algo(sentence, "viterbi");
+
+	int backpointer = bp[0][0];
+	StrVec tagged {taggers[backpointer]};
+
+	int sentence_size = sentence.size();
+	for (int i = sentence_size-1; i > 0; i--)
+	{
+		backpointer = bp[backpointer][i];
+		tagged.insert(tagged.begin(), taggers[backpointer]);
+	}
+
+	return tagged;
 }
 
-pos_pair POS::dp_algo(StrVec sentence, const string type)
+double POS::bi_dp_algo(StrVec &sentence, const string type)
 {
-	pos_pair  result;
-	StrVec	  taggers		= observation_table.keys();
-	const int tagger_size	= taggers.size();
+	const int tagger_size = taggers.size();
 	const int sentence_size = sentence.size();
 
-	double **dp = new double *[tagger_size];
-	for (int i = 0; i < tagger_size; i++)
-		dp[i] = new double[sentence_size];
-
-	Number **bp = nullptr;
-	if (type == "viterbi")
+	for (int h = 0; h < sentence_size; h++)
 	{
-		bp = new Number *[tagger_size];
-		for (int i = 0; i < tagger_size; i++)
-			bp[i] = new Number[sentence_size];
-	}
-	for (int i = 0; i < sentence_size; i++)
-	{
-		for (int j = 0; j < tagger_size; j++)
+		std::priority_queue<double, std::vector<double>, std::greater<double> > min_heap;
+		for (int v = 0; v < tagger_size; v++)
 		{
-			double	 pt	  = n_gram_p_transition(dp, bp, taggers, sentence, i, j, type);
-			double	 po   = p_observation(taggers[j], sentence[i]);
-			dp[j][i] = pt * po;
-		}
-	}
+			double pt = bigram_p_transition(sentence, h, v, type);
+			double po = p_observation(taggers[v], sentence[h]);
+			dp[v][h] = pt * po;
 
-	result.first = n_gram_p_transition(dp, bp, taggers, sentence, sentence_size, -1, type);
-
-	for (int i = 0; i < tagger_size; i++)
-		delete[] dp[i];
-	delete[] dp;
-
-	if (type == "viterbi")
-	{	
-		StrVec	tagged;
-		Number	backpointer = bp[0][0];
-		int		bp_h = sentence_size;
-		int		bp_v;
-		while (true)
-		{
-			int digits = backpointer.get_digits();
-			for (int i = digits; i > 0; i--)
-				tagged.insert(tagged.begin(), taggers[backpointer[i-1]]);
-
-			bp_h -= (N - 1);
-			if (digits < N - 1 || bp_h == 0) break;
-			bp_v = backpointer[0];
-			backpointer = bp[bp_v][bp_h];
-		}
-
-		result.second = tagged;
-
-		for (int i = 0; i < tagger_size; i++)
-			delete[] bp[i];
-		delete[] bp;
-	}
-
-	return result;
-}
-
-double POS::n_gram_p_transition(double **dp, Number **bp, const StrVec &taggers,
-								const StrVec &sentence, const int h, const int v, const string type)
-{
-	string	 tagger = v == -1 ? END : taggers[v];
-	int		 tagger_size = taggers.size();
-	int		 cond_size = N - 1;
-	int		 number_of_start_symbols = cond_size > h ? cond_size - h : 0;
-	StrVec	 start(number_of_start_symbols, START);
-
-	if (h == 0)
-		return p_transition(start, tagger);
-
-	int		number_of_taggers = cond_size - number_of_start_symbols;
-	int		loop_total = (int)std::pow(tagger_size, number_of_taggers);
-	double	sum_pt = 0;
-	double	max_pt = 0;
-	Number	backpointer(0, tagger_size, number_of_taggers);
-	Number	index(0, tagger_size, number_of_taggers);
-	for (; index.to_decimal() < loop_total; index++)
-	{
-		double p_0 = h >= cond_size ? dp[index[0]][h-cond_size] : 1;
-		if (p_0 == 0) continue;
-
-		StrVec cond = start;
-		for (int j = 0; j < number_of_taggers; j++)
-			cond.push_back(taggers[index[j]]);
-
-		if (type == "forward")
-			sum_pt += p_0 * p_transition(cond, tagger);
-		else if (type == "viterbi")
-		{
-			double pt = p_0 * p_transition(cond, tagger);
-			if (pt > max_pt)
+			if (min_heap.size() < top_k)
+				min_heap.push(dp[v][h]);
+			else if(dp[v][h] > min_heap.top())
 			{
-				max_pt = pt;
-				backpointer = index;
+				min_heap.pop();
+				min_heap.push(dp[v][h]);
 			}
 		}
-	}
-	if (type == "viterbi")
-	{
-		if (v != -1)
-			bp[v][h] = backpointer;
-		else
-			bp[0][0] = backpointer;
+		threshold = min_heap.top();
 	}
 
-	return sum_pt ? sum_pt : max_pt ? max_pt : 0;
+	return bigram_p_transition(sentence, sentence_size, 0, type);
+}
+
+double POS::bigram_p_transition(const StrVec &sentence, const int h, const int v, const string type)
+{
+	int tagger_size = taggers.size();
+	int sentence_size = sentence.size();
+	string tagger = h == sentence_size ? END : taggers[v];
+
+	if (h == 0)
+		return p_transition(START, tagger);
+
+	if (type == "forward")
+	{
+		double sum_pt = 0;
+		for (int i = 0; i < tagger_size; i++)
+		{
+			double p_dp = dp[i][h-1];
+			if (p_dp == 0) continue;
+
+			sum_pt += p_dp * p_transition(taggers[i], tagger);
+		}
+		return sum_pt;
+	}
+
+	double max_pt = 0;
+	int backpointer = 0;
+	for (int i = 0; i < tagger_size; i++)
+	{
+		double p_dp = dp[i][h-1];
+		if (p_dp < threshold) continue;
+
+		double pt = p_dp * p_transition(taggers[i], tagger);
+
+		if (pt > max_pt)
+		{
+			max_pt = pt;
+			backpointer = i;
+		}
+	}
+
+	if (h < sentence_size)
+		bp[v][h] = backpointer;
+	else
+		bp[0][0] = backpointer;
+
+	return max_pt;
+}
+
+double POS::p_transition(string cond, string tagger)
+{
+	TableMap &table = transition_table.table;
+	const auto &key_value = table.find(cond);
+	if (key_value == table.end())
+		return 0;
+
+	CounterMap &counter = key_value->second->counter;
+	const auto &counter_pair = counter.find(tagger);
+	if (counter_pair == counter.end())
+		return 0;
+
+	return (double)counter_pair->second / (double)key_value->second->count;
 }
 
 double POS::p_transition(StrVec cond, string tagger)
 {
-	TableMap &table = transition_table.table;
-	auto key_value  = table.find(hash(cond));
-	if (key_value == table.end())
-		return 0;
-	
-	CounterMap &counter = key_value->second->counter;
-	long total_count	= key_value->second->count;
-	auto counter_pair	= counter.find(tagger);
-	if (counter_pair == counter.end())
-		return 0;
-
-	long count = counter_pair->second;
-	return (double)count / (double)total_count;
+	return p_transition(hash(cond), tagger);
 }
 
 double POS::p_observation(string tagger, string token)
@@ -332,16 +364,16 @@ double POS::p_observation(string tagger, string token)
 	TableMap &table = observation_table.table;
 	auto key_value = table.find(tagger);
 	if (key_value == table.end())
-		return 1 / (double)vocab_size;
+		return 1 / (double)vocab.size();
 
 	CounterMap &counter = key_value->second->counter;
 	long total_count = key_value->second->count;
 	auto counter_pair = counter.find(token);
 	if (counter_pair == counter.end())
-		return 1 / ((double)(total_count + vocab_size));
+		return 1 / ((double)(total_count + vocab.size()));
 
 	long count = counter_pair->second;
-	return (double)(count + 1) / ((double)(total_count + vocab_size));
+	return (double)(count + 1) / ((double)(total_count + vocab.size()));
 }
 
 TableKey POS::hash(const StrVec& v)
@@ -357,14 +389,16 @@ TableKey POS::hash(const StrVec& v)
 	return str_key;
 }
 
-void POS::save_param(string file_name)
+void POS::save_vocab(string file_name)
 {
 	std::ofstream fout(file_name);
-	fout << "vocab_size" << DELIMITER << vocab_size << endl;
+	for (const auto& elem: vocab)
+    	fout << elem << endl;
+
 	fout.close();
 }
 
-void POS::load_param(string file_name)
+void POS::load_vocab(string file_name)
 {
 	std::ifstream fin(file_name);
 	if (!fin.is_open())
@@ -376,12 +410,9 @@ void POS::load_param(string file_name)
 	string line;
 	while (std::getline(fin, line))
 	{
-		std::istringstream iss(line);
-		string str;
-		std::getline(iss, str, DELIMITER_C);
-		std::getline(iss, str);
-		vocab_size = std::stol(str);
+		vocab.insert(line);
 	}
+
 	fin.close();
 }
 
@@ -503,3 +534,98 @@ void Counter::insert(const string target, const long target_count)
 {
 	counter[target] = target_count;
 }
+
+
+
+/*pos_pair POS::dp_algo(double **dp, Number **bp, StrVec &taggers, StrVec &sentence, const string type)
+{
+	pos_pair result;
+	const int tagger_size = taggers.size();
+	const int sentence_size = sentence.size();
+
+	for (int i = 0; i < sentence_size; i++)
+	{
+		for (int j = 0; j < tagger_size; j++)
+		{
+			double	 pt	  = n_gram_p_transition(dp, bp, taggers, sentence, i, j, type);
+			double	 po   = p_observation(taggers[j], sentence[i]);
+			dp[j][i] = pt * po;
+		}
+	}
+
+	result.first = n_gram_p_transition(dp, bp, taggers, sentence, sentence_size, -1, type);
+
+	if (type == "viterbi")
+	{	
+		StrVec tagged;
+		Number backpointer = bp[0][0];
+		int bp_h = sentence_size;
+		int bp_v;
+		while (true)
+		{
+			int digits = backpointer.get_digits();
+			for (int i = digits; i > 0; i--)
+				tagged.insert(tagged.begin(), taggers[backpointer[i-1]]);
+
+			bp_h -= (N - 1);
+			if (digits < N - 1 || bp_h == 0) break;
+			bp_v = backpointer[0];
+			backpointer = bp[bp_v][bp_h];
+		}
+
+		result.second = tagged;
+	}
+
+	return result;
+}*/
+
+	/*double POS::n_gram_p_transition(double **dp, Number **bp, const StrVec &taggers,
+								const StrVec &sentence, const int h, const int v, const string type)
+{
+	int tagger_size = taggers.size();
+	int sentence_size = sentence.size();
+	string tagger = h == sentence_size ? END : taggers[v];
+	int cond_size = N - 1;
+	int number_of_start_symbols = cond_size > h ? cond_size - h : 0;
+	StrVec start(number_of_start_symbols, START);
+
+	if (h == 0)
+		return p_transition(start, tagger);
+
+	int number_of_taggers = cond_size - number_of_start_symbols;
+	int loop_total = (int)std::pow(tagger_size, number_of_taggers);
+	double sum_pt = 0;
+	double max_pt = 0;
+	Number backpointer(0, tagger_size, number_of_taggers);
+	Number index(0, tagger_size, number_of_taggers);
+	for (; index.to_decimal() < loop_total; index++)
+	{
+		double p_dp = h >= cond_size ? dp[index[0]][h-cond_size] : 1;
+		if (p_dp == 0) continue;
+
+		StrVec cond = start;
+		for (int j = 0; j < number_of_taggers; j++)
+			cond.push_back(taggers[index[j]]);
+
+		if (type == "forward")
+			sum_pt += p_dp * p_transition(cond, tagger);
+		else if (type == "viterbi")
+		{
+			double pt = p_dp * p_transition(cond, tagger);
+			if (pt > max_pt)
+			{
+				max_pt = pt;
+				backpointer = index;
+			}
+		}
+	}
+	if (type == "viterbi")
+	{
+		if (v < sentence_size)
+			bp[v][h] = backpointer;
+		else
+			bp[0][0] = backpointer;
+	}
+
+	return sum_pt ? sum_pt : max_pt;
+}*/
