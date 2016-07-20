@@ -94,7 +94,7 @@ int main(){
 		//for(j=0;j<n_tags;++j) cout << forward[0][j] << "+" ;
 		//cout << endl;
 		int i2 = 1;
-		for(;;++i2){//recursion 単語のループ
+		for(;;++i2){//recursion step単語のループ
 			//cout << i2 << endl;
 			getline(ifste,buf);
 			if(buf=="") break;
@@ -154,15 +154,6 @@ int main(){
 			ofst << output_tags[i] << endl;
 		}
 		ofst << endl;
-		
-		/*
-		for(l=0;l<i2;++l){
-			for(k=0;k<n_tags;++k){
-				cout << forward[l][k] << " ";
-			}
-			cout << endl;
-		}
-		*/
 	}
 
 }
