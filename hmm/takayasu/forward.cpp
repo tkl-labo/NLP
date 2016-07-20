@@ -66,7 +66,7 @@ int main(){
 	
 	int loop = 0;
 	while(1){//•¶‚Ìƒ‹[ƒv
-		if(loop>0) break;
+		//if(loop>0) break;
 		++loop;
 		getline(ifste,buf);
 		if(ifste.eof()) break;
@@ -151,9 +151,9 @@ int main(){
 		//cout << term_max_x << endl;
 		
 		for(i=i2-1;i>=0;--i){
-			cout << output_tags[i] << endl;
+			ofst << output_tags[i] << endl;
 		}
-		
+		ofst << endl;
 		
 		/*
 		for(l=0;l<i2;++l){
