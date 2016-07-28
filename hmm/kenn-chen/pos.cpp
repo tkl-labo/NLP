@@ -51,7 +51,7 @@ POS::~POS()
 	delete[] bp;
 }
 
-void POS::train(const string train_file)
+void POS::train(const string &train_file)
 {
 	const int KEY_SIZE = N - 1;
 	int sentence_count = 0, token_count = 0;
@@ -136,7 +136,7 @@ void POS::train(const string train_file)
 	     << "#tags:      " << observation_table.keys().size() << endl;
 }
 
-void POS::test(const string test_file)
+void POS::test(const string &test_file)
 {
 	load_vocab(vocab_file);
 	cout << "loading observation table..." << endl;
@@ -177,7 +177,7 @@ void POS::test(const string test_file)
 }
 
 //hit:0, hit_unk:1, total:2, total_unk:3
-void POS::hit_count(StrVec &test_taggers, StrVec &predict_taggers, StrVec &tokens, long *count)
+void POS::hit_count(const StrVec &test_taggers, const StrVec &predict_taggers, const StrVec &tokens, long *count)
 {
 	size_t size = test_taggers.size();
 	count[2] += size;
@@ -200,7 +200,7 @@ void POS::hit_count(StrVec &test_taggers, StrVec &predict_taggers, StrVec &token
 	}
 }
 
-void POS::read_test_data(string test_file)
+void POS::read_test_data(const string &test_file)
 {
 	const int KEY_SIZE = N - 1;
 	StrVec vkey_start(KEY_SIZE, START);
@@ -266,13 +266,13 @@ void POS::create_dynamic_space()
 		bp[i] = new int[max_sentence_size];
 }
 
-void POS::forward(StrVec &sentence)
+void POS::forward(const StrVec &sentence)
 {
 	double prob = dp_algo(sentence, "forward");
 	cout << "likelihood: " << prob << endl;
 }
 
-StrVec POS::viterbi(StrVec &sentence)
+StrVec POS::viterbi(const StrVec &sentence)
 {
 	double prob = dp_algo(sentence, "viterbi");
 
@@ -289,7 +289,7 @@ StrVec POS::viterbi(StrVec &sentence)
 	return tagged;
 }
 
-double POS::dp_algo(StrVec &sentence, const string type)
+double POS::dp_algo(const StrVec &sentence, const string &type)
 {
 	const int tagger_size = taggers.size();
 	const int sentence_size = sentence.size();
@@ -298,13 +298,14 @@ double POS::dp_algo(StrVec &sentence, const string type)
 	{
 		string token;
 		bool unk = false;
-		if (vocab.find(sentence[h]) == vocab.end())
+		if (vocab.find(sentence[h]) != vocab.end())
+			token = sentence[h];
+		else
 		{
 			token = classify_unk(sentence[h]);
 			unk = true;
 		}
-		else
-			token = sentence[h];
+			
 
 		std::priority_queue<double, std::vector<double>, std::greater<double> > min_heap;
 		for (int v = 0; v < tagger_size; v++)
@@ -313,7 +314,6 @@ double POS::dp_algo(StrVec &sentence, const string type)
 			double po = observation_prob(taggers[v], token, unk);
 
 			dp[v][h] = pt * po;
-
 			if (min_heap.size() < top_k)
 				min_heap.push(dp[v][h]);
 			else if(dp[v][h] > min_heap.top())
@@ -328,7 +328,7 @@ double POS::dp_algo(StrVec &sentence, const string type)
 	return path_prob(sentence, sentence_size, 0, type);
 }
 
-double POS::path_prob(const StrVec &sentence, const int h, const int v, const string type)
+double POS::path_prob(const StrVec &sentence, const int h, const int v, const string &type)
 {
 	int tagger_size = taggers.size();
 	int sentence_size = sentence.size();
@@ -355,7 +355,7 @@ double POS::path_prob(const StrVec &sentence, const int h, const int v, const st
 	for (int i = 0; i < tagger_size; i++)
 	{
 		double p_dp = dp[i][h-1];
-		if (p_dp < threshold) continue;
+		if (p_dp == 0 || p_dp < threshold) continue;
 
 		double pt = p_dp * transition_prob(taggers[i], tagger);
 
@@ -374,7 +374,7 @@ double POS::path_prob(const StrVec &sentence, const int h, const int v, const st
 	return max_pt;
 }
 
-double POS::transition_prob(string cond, string tagger)
+double POS::transition_prob(const string &cond, const string &tagger)
 {
 	TableMap &table = transition_table.table;
 	const auto &key_value = table.find(cond);
@@ -389,7 +389,7 @@ double POS::transition_prob(string cond, string tagger)
 	return (double)counter_pair->second / (double)key_value->second->count;
 }
 
-double POS::observation_prob(string tagger, string token, bool unk)
+double POS::observation_prob(const string &tagger, const string &token, bool unk)
 {
 	TableMap &table = unk ? unk_table.table : observation_table.table;
 	auto key_value = table.find(tagger);
@@ -419,7 +419,7 @@ TableKey POS::hash(const StrVec& v)
 	return str_key;
 }
 
-string POS::classify_unk(string token)
+string POS::classify_unk(const string &token)
 {
 	if (token.find('-') != string::npos)
 		return "F_HYP";
@@ -439,7 +439,7 @@ string POS::classify_unk(string token)
 	return "F_OTHER";
 }
 
-void POS::load_suffix(string file_name)
+void POS::load_suffix(const string &file_name)
 {
 	std::ifstream fin(file_name);
 	if (!fin.is_open())
@@ -461,7 +461,7 @@ void POS::load_suffix(string file_name)
 	fin.close();
 }
 
-void POS::save_vocab(string file_name)
+void POS::save_vocab(const string &file_name)
 {
 	std::ofstream fout(file_name);
 	for (const auto& elem: vocab)
@@ -470,7 +470,7 @@ void POS::save_vocab(string file_name)
 	fout.close();
 }
 
-void POS::load_vocab(string file_name)
+void POS::load_vocab(const string &file_name)
 {
 	std::ifstream fin(file_name);
 	if (!fin.is_open())
@@ -490,7 +490,7 @@ void POS::load_vocab(string file_name)
 
 Table::Table() {}
 
-Table::Table(string serialized_file)
+Table::Table(const string &serialized_file)
 {
 	deserialize(serialized_file);
 }
@@ -528,7 +528,7 @@ StrVec Table::keys()
 	return ks;
 }
 
-void Table::serialize(string file_name)
+void Table::serialize(const string &file_name)
 {
 	std::ofstream fout(file_name);
 	//save the total_count in the first line in the ngram file
@@ -547,7 +547,7 @@ void Table::serialize(string file_name)
 	fout.close();
 }
 
-void Table::deserialize(string file_name)
+void Table::deserialize(const string &file_name)
 {
 	std::ifstream fin(file_name);
 	if (!fin.is_open())

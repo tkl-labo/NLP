@@ -17,7 +17,7 @@ using StrVec = std::vector<std::string>;
 
 struct suffix_cmp
 {
-	bool operator()(const std::string& a, const std::string& b) const
+	bool operator()(const std::string &a, const std::string &b) const
 	{
 		if (a.length() != b.length())
 			return a.length() > b.length();
@@ -44,12 +44,12 @@ public:
 	TableMap table;
 
 	Table();
-	Table(std::string serialized_file);
+	Table(const std::string &serialized_file);
 	~Table();
 	void insert(const TableKey key, const std::string target);
 	void insert(const TableKey key, const std::string target, const long total_count, const long count);
-	void serialize(std::string file_name);
-	void deserialize(std::string file_name);
+	void serialize(const std::string &file_name);
+	void deserialize(const std::string &file_name);
 	StrVec keys();
 };
 
@@ -77,23 +77,23 @@ private:
 public:
 	POS(const int n);
 	~POS();
-	void train(const std::string train_file);
-	void test(const std::string test_file);
+	void train(const std::string &train_file);
+	void test(const std::string &test_file);
 
 private:
-	void forward(StrVec &sentence);
-	StrVec viterbi(StrVec &sentence);
-	double dp_algo(StrVec &sentence, const std::string type);
-	double transition_prob(std::string cond, std::string tagger);
-	double observation_prob(std::string tagger, std::string token, bool unk);
-	double path_prob(const StrVec &sentence, const int h, const int v, const std::string type);
-	std::string classify_unk(std::string token);
-	void read_test_data(std::string test_file);
-	void load_suffix(std::string file_name);
-	void save_vocab(std::string file_name);
-	void load_vocab(std::string file_name);
-	TableKey hash(const StrVec& v);
-	void hit_count(StrVec &test_taggers, StrVec &predict_taggers, StrVec &tokens, long *count);
+	void forward(const StrVec &sentence);
+	StrVec viterbi(const StrVec &sentence);
+	double dp_algo(const StrVec &sentence, const std::string &type);
+	double transition_prob(const std::string &cond, const std::string &tagger);
+	double observation_prob(const std::string &tagger, const std::string &token, bool unk);
+	double path_prob(const StrVec &sentence, const int h, const int v, const std::string &type);
+	std::string classify_unk(const std::string &token);
+	void read_test_data(const std::string &test_file);
+	void load_suffix(const std::string &file_name);
+	void save_vocab(const std::string &file_name);
+	void load_vocab(const std::string &file_name);
+	TableKey hash(const StrVec &v);
+	void hit_count(const StrVec &test_taggers, const StrVec &predict_taggers, const StrVec &tokens, long *count);
 	void create_dynamic_space();
 };
 }
