@@ -5,49 +5,56 @@
 #include<unordered_map>
 using namespace std;
 
+
+//
+//cutコマンド
+//後のタグ→前のタグを読み込む、みたいな感じにするとキャッシュミスが減る!
+
+
 int main(){
-	ifstream ifst2("tag_2gram.txt");
-	ifstream ifstr("train2.txt");
-	ifstream ifste("test2.txt");
-	//ofstream ofsde("debug_1gram.txt");
-	ofstream ofst("output_tag.txt");
+	int i,j,k,l;
+	string buf;
 	
-	unordered_map<string,int>count_1gram;
-	unordered_map<string,int>count_2gram;
+	ifstream ifstl("tag_list.txt");
+	ifstream ifst1("tag_1gram4.txt");
+	ifstream ifst2("tag_2gram4.txt");
+	ifstream ifst3("tag_3gram4.txt");
+	ifstream ifstr("train3.txt");
+	ifstream ifste("test3.txt");
+	ofstream ofst("output_tagss.txt");
+	ofstream ofst2("output_tags2.txt");
+	const int n_tags = 44;
+	int tag_1gram[n_tags+2]={0};
+	int tag_2gram[n_tags+2][n_tags+2]={0};
+	int tag_3gram[n_tags+2][n_tags+2][n_tags+2]={0};
+	for(i=0;i<n_tags+2;++i){
+		getline(ifst1,buf);
+		//cout << buf << endl;
+		tag_1gram[i]=stoi(buf);
+		for(j=0;j<n_tags+2;++j){
+			getline(ifst2,buf);
+			tag_2gram[i][j]=stoi(buf);
+			for(k=0;k<n_tags+2;++k){
+				getline(ifst3,buf);
+				tag_3gram[i][j][k]=stoi(buf);
+			}
+		}
+	}
+	ifst1.close();
+	ifst2.close();
+	ifst3.close();
 	unordered_map<string,int>word_tag;
 	unordered_map<string,int>count_words;
-	vector<string>tags;
+	unordered_map<string,int>::const_iterator itr;
+
+
 	vector<int>counts;
-	int count_start=0;
+	int V=0;
+	int count;
+	string word,tag,ngram;
 	int n_correct=0;
 	int n_wrong=0;
-	int i,j,k,l;
-	
-	string buf;
-	string word,tag;
-	
-	//タグの2gramのファイルの読み込み→出現回数(1gram)も確認
-	while(1){
-		getline(ifst2,buf);
-		if(ifst2.eof()) break;
-		count_2gram[buf]+=1;
-		word = buf.substr(0,buf.find(" "));
-		if(word!="<s>") count_1gram[word]+=1;
-		else count_start+=1;
-	}
-	ifst2.close();
-	//count_1gram["</s>"]=0;
-	//int sum=0;
-	int n_tags=0;//n_tagsには<s>と</s>を含まない
-	unordered_map<string,int>::const_iterator itr;
-	for(itr=count_1gram.begin(); itr!=count_1gram.end();++itr){
-		//ofsde << itr->first << " " << itr->second << endl;
-		n_tags += 1;
-		tags.push_back(itr->first);
-		counts.push_back(itr->second);
-	}
-	cout << "n_tags = " << n_tags << endl;
-	
+
 	//単語とタグのセットを読み込み
 	while(1){
 		getline(ifstr,buf);
@@ -58,16 +65,16 @@ int main(){
 		count_words[word]+=1;
 	}
 	ifstr.close();
-	//語彙のカウント
-	int V = 0; //Vに<UNK>は含まない
+	//語彙のカウント <UNK>は含まない
 	for(itr=count_words.begin();itr!=count_words.end();++itr) ++V;
-	cout << "V = " << V << endl;
+	cerr << "V = " << V << endl;
 	
 	
-	int loop = 0;
+	//int loop = 0;
 	while(1){//文のループ
 		//if(loop>0) break;
-		++loop;
+		//if(loop%100 == 0) cerr << loop << endl;
+		//++loop;
 		getline(ifste,buf);
 		if(ifste.eof()) break;
 		if(buf=="") continue;
@@ -78,11 +85,15 @@ int main(){
 		vector<double>vf(n_tags);
 		vector<double>vv(n_tags);
 		vector<int>vb(n_tags);
-		vector<string>output_tags;
+		vector<int>input_tags;
+		vector<int>output_tags;
+		input_tags.push_back(stoi(buf.substr(buf.rfind(" ")+1)));
+		
+		
 		for(j=0;j<n_tags;++j){
 			double a,b;
-			a = (double)(count_2gram["<s> "+tags[j]+" "]) / count_start;
-			b = (double)(word_tag[word+" "+tags[j]]+1) / (counts[j]+V+1) ;
+			a = (double)(tag_2gram[j][n_tags]) / tag_1gram[n_tags+1];
+			b = (double)(word_tag[word+" "+to_string(j)]+1) / (tag_1gram[j]+V+1) ;
 			vf[j] = a * b;
 			vv[j] = vf[j];
 			vb[j] = 0;
@@ -91,14 +102,14 @@ int main(){
 		viterbi.push_back(vv);
 		backpointer.push_back(vb);
 		
-		//for(j=0;j<n_tags;++j) cout << forward[0][j] << "+" ;
-		//cout << endl;
 		int i2 = 1;
 		for(;;++i2){//recursion step単語のループ
 			//cout << i2 << endl;
 			getline(ifste,buf);
 			if(buf=="") break;
-			word = buf.substr(0,buf.find(" "));
+			word = buf.substr(0,buf.rfind(" "));
+			input_tags.push_back(stoi(buf.substr(buf.rfind(" ")+1)));
+			ofst2 << input_tags[i2-1] << endl;
 			for(j=0;j<n_tags;++j){
 				double x = 0;
 				double max_x = 0;
@@ -106,8 +117,8 @@ int main(){
 				for(k=0;k<n_tags;++k){
 					double a,b;
 					double y;
-					a = (double)(count_2gram[tags[k]+" "+tags[j]+" "]) / (counts[k]);
-					b = (double)(word_tag[word+" "+tags[j]]+1) / (counts[j]+V+1);
+					a = (double)(tag_2gram[j][k]) / (tag_1gram[k]);
+					b = (double)(word_tag[word+" "+to_string(j)]+1) / (tag_1gram[j]+V+1);
 					x += forward[i2-1][k] * a * b;
 					y = viterbi[i2-1][k] * a * b;
 					if(y>max_x){
@@ -132,7 +143,7 @@ int main(){
 		for(j=0;j<n_tags;++j){
 			double a;
 			double y;
-			a = (double)(count_2gram[tags[j]+" </s> "]+1) / (counts[j]);
+			a = (double)(tag_2gram[n_tags+1][j]+1) / (tag_1gram[j]);
 			term_x += forward[i2-1][j] * a;
 			y = viterbi[i2-1][j] * a;
 			if(y>term_max_x){
@@ -144,16 +155,21 @@ int main(){
 		//output_tags.push_back(tags[term_argmax]);
 		//int bp;
 		for(i=0;i<i2;++i){
-			output_tags.push_back(tags[bp]);
+			output_tags.push_back(bp);
 			bp = backpointer[i2-1-i][bp];
 			//cout << bp << endl;
 		}
+		//
 		//cout << term_max_x << endl;
 		
 		for(i=i2-1;i>=0;--i){
-			ofst << output_tags[i] << endl;
+			cerr << output_tags[i] << " " << input_tags[i2-1-i] << endl;
+			if(output_tags[i] == input_tags[i2-1-i]) ++n_correct;
+			else ++n_wrong;
+			//ofst << output_tags[i] << endl;
 		}
-		ofst << endl;
+		//ofst << endl;
 	}
-
+	cerr << n_correct << endl;
+	cerr << n_correct + n_wrong << endl;
 }

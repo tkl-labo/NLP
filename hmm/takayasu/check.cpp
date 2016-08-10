@@ -4,8 +4,8 @@
 using namespace std;
 
 int main(){
-	ifstream ifs1("test2.txt");
-	ifstream ifs2("output_tag.txt");
+	ifstream ifs1("test3.txt");
+	ifstream ifs2("output_tags.txt");
 	int n_correct = 0;
 	int n_wrong = 0;
 	string buf1,buf2;
