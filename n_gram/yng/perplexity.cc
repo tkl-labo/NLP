@@ -9,7 +9,7 @@
 int main (int argc, char** argv) {
   if (argc < 3)
     { std::fprintf (stderr, "Usage: %s\n", argv[0]); std::exit (1); }
-  enum smoothing_t { NONE = 0, LAPLACE = 1 };
+  enum smoothing_t { NONE = 0, LAPLACE = 1, ADDK = 2 };
   
   typedef cedar::da <int, -1, -2, true>  trie_t;
   trie_t trie;
@@ -50,6 +50,7 @@ int main (int argc, char** argv) {
   std::vector <const char*> words (N - 1, "<s>");
   size_t sum  = 0;
   double logP = 0;
+  double k    = std::strtod (argv[2], NULL);
   while (std::fgets (line, 1 << 21, stdin) != NULL) {
     words.resize (N - 1);
     for (char* p = line; *p != '\n'; ++p) {
@@ -81,6 +82,7 @@ int main (int argc, char** argv) {
       switch (type) {
         case NONE:    P = m * 1.0 / n; break;
         case LAPLACE: P = (m + 1.0) / (n + V + 1.0); break;
+        case ADDK:    P = (m + k)   / (n + k * (V + 1.0)); break;
       }
       std::fprintf (stdout, "%s\t%f\n", words[i], std::exp (- std::log (P)));
       logP += std::log (P);
